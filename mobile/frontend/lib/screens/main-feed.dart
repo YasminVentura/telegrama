@@ -1,42 +1,115 @@
 import 'package:flutter/material.dart';
-import 'modules/header.dart';
+import 'modules/header/header.dart';
+import 'modules/menu/menu.dart';
+import 'modules/post/send-post.dart';
+import 'modules/post/post-card.dart';
+import '../themes/app_themes.dart';
 
-class MainFeedScreen extends StatelessWidget {
+class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
+
+  @override
+  State<MainFeedScreen> createState() => _MainFeedScreenState();
+}
+
+class _MainFeedScreenState extends State<MainFeedScreen> {
+  AppTheme _currentTheme = AppTheme.retroGreen;
+
+  final List<AppTheme> _themes = [
+    AppTheme.retroGreen,
+    AppTheme.cyberpunk,
+    AppTheme.synthwave,
+    AppTheme.hacker,
+    AppTheme.espresso,
+  ];
+
+  int _currentThemeIndex = 0;
+
+  void _toggleTheme() {
+    setState(() {
+      _currentThemeIndex = (_currentThemeIndex + 1) % _themes.length;
+      _currentTheme = _themes[_currentThemeIndex];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F8F5), // Cor de fundo levemente esverdeada da sua imagem
+      backgroundColor: _currentTheme.backgroundColor,
       body: Column(
         children: [
-          // 1. TOPO: O Header fica fixo em cima de ponta a ponta
-          const HeaderWidget(), // Substitua pelo seu widget de header.dart
+          HeaderWidget(currentTheme: _currentTheme),
           
-          // 2. CORPO PRINCIPAL: Dividido entre Menu Lateral (Esquerda) e Conteúdo (Direita)
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Menu Lateral esquerdo
-                const SizedBox(
+                SizedBox(
                   width: 260,
-                  //child: MenuWidget(), // Substitua pelo seu menu.dart
+                  child: MenuWidget(currentTheme: _currentTheme, activeRoute: 'Home Feed', onItemSelected: (route) {
+                  }),
                 ),
                 
-                // Área central do Feed de Posts com rolagem
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Caixa para criar novo post
-
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.black, width: 2),
+                          ),
+                          onPressed: _toggleTheme, 
+                          child: Text('Mudar Tema (Atual: ${_currentTheme.name})'),
+                        ),
                         const SizedBox(height: 24),
-                        
-                        // Lista de Posts (Aqui você usaria uma ListView.builder no futuro)
-                        
+                        SendPostWidget(currentTheme: _currentTheme, onPostSubmitted: (post) {
+                          // Lógica para lidar com o envio do post
+                        }),
+                        const SizedBox(height: 24),
+                        PostCard(
+                          currentTheme: _currentTheme,
+                          name: 'Alice Johnson',
+                          handle: '@alicej',
+                          timeAgo: '2h',
+                          content: 'Explorando o mundo do Flutter! #FlutterDev',
+                          imageUrl: null,
+                          likesCount: 34,
+                          commentsCount: 12,
+                          repostsCount: 5,
+                          onLikePressed: () {
+                            // Lógica para curtir o post
+                          },
+                          onCommentPressed: () {
+                            // Lógica para comentar no post
+                          },
+                          onRepostPressed: () {
+                            // Lógica para repostar
+                          },
+                        ),
+                        PostCard(
+                          currentTheme: _currentTheme,
+                          name: 'Alice Johnson',
+                          handle: '@alicej',
+                          timeAgo: '2h',
+                          content: 'Explorando o mundo do Flutter! #FlutterDev',
+                          imageUrl: 'https://cdn0.peritoanimal.com.br/pt/posts/2/4/2/pele_seca_22242_0_600.jpg',
+                          likesCount: 34,
+                          commentsCount: 12,
+                          repostsCount: 5,
+                          onLikePressed: () {
+                            // Lógica para curtir o post
+                          },
+                          onCommentPressed: () {
+                            // Lógica para comentar no post
+                          },
+                          onRepostPressed: () {
+                            // Lógica para repostar
+                          },
+                        ),
                       ],
                     ),
                   ),
