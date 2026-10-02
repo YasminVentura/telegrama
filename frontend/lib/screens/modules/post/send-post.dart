@@ -23,7 +23,7 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
 
   late final AnimationController _planeController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 500), // Duração perfeita para o percurso
+    duration: const Duration(milliseconds: 500), 
   );
 
   late final Animation<double> _slideAnimation = Tween<double>(begin: 0.0, end: 120.0).animate(
