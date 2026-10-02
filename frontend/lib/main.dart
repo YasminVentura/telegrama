@@ -3,6 +3,7 @@ import 'screens/main-feed.dart';
 import 'screens/auth/login.dart';
 import 'screens/auth/sign-up.dart'; // Ajuste para register_screen.dart se for o caso
 import 'screens/auth/welcome.dart';
+import 'screens/auth/forget-password-screen.dart';
 import 'themes/app_themes.dart';
 
 void main() {
@@ -49,6 +50,7 @@ class _MyAppState extends State<MyApp> {
             setState(() => _currentRoute = 'feed');
           },
           onNavigateToRegister: () => setState(() => _currentRoute = 'register'),
+          onNavigateToForgotPassword: () => setState(() => _currentRoute = 'forget-password'),
         );
 
       case 'register':
@@ -57,6 +59,12 @@ class _MyAppState extends State<MyApp> {
           onRegisterSuccess: () {
             setState(() => _currentRoute = 'feed');
           },
+          onNavigateToLogin: () => setState(() => _currentRoute = 'login'),
+        );
+
+      case 'forget-password':
+        return ForgotPasswordScreen(
+          currentTheme: _currentTheme,
           onNavigateToLogin: () => setState(() => _currentRoute = 'login'),
         );
 

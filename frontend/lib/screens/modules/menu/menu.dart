@@ -57,12 +57,6 @@ class _MenuWidgetState extends State<MenuWidget> {
             activeIcon: Icons.chat_bubble,
             title: 'Wave Chats',
           ),
-          const SizedBox(height: 8),
-          _buildMenuItem(
-            icon: Icons.bookmark_border,
-            activeIcon: Icons.bookmark,
-            title: 'Saved Reels',
-          ),
           const SizedBox(height: 16),
           Divider(color: widget.currentTheme.shadowColor, thickness: 2, height: 24),
           const SizedBox(height: 8),

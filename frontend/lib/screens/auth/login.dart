@@ -5,12 +5,14 @@ class LoginScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final VoidCallback onLoginSuccess;
   final VoidCallback onNavigateToRegister;
+  final VoidCallback onNavigateToForgotPassword;
 
   const LoginScreen({
     super.key,
     required this.currentTheme,
     required this.onLoginSuccess,
     required this.onNavigateToRegister,
+    required this.onNavigateToForgotPassword,
   });
 
   @override
@@ -253,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {widget.onNavigateToForgotPassword();},
                     child: Text(
                       'Forgot password?',
                       style: TextStyle(

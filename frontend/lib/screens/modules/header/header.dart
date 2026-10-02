@@ -107,7 +107,11 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 primaryColor: widget.currentTheme.primaryColor,
                 shadowColor: widget.currentTheme.shadowColor,
                 backgroundColor: widget.currentTheme.backgroundColor,
-                onTap: () {},
+                destinationRoute: 'NotificationsScreen',
+                onNavigate: (route) {
+                  // Implement navigation logic here
+                  print('Navigating to $route');
+                },
               ),
               const SizedBox(width: 12),
               HoverIconButton(
@@ -119,7 +123,27 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 primaryColor: widget.currentTheme.primaryColor,
                 shadowColor: widget.currentTheme.shadowColor,
                 backgroundColor: widget.currentTheme.backgroundColor,
-                onTap: () {},
+                destinationRoute: 'ChatScreen',
+                onNavigate: (route) {
+                  // Implement navigation logic here
+                  print('Navigating to $route');
+                },
+              ),
+              const SizedBox(width: 12),
+              HoverIconButton(
+                icon: Icon(
+                  Icons.settings_outlined,
+                  color: widget.currentTheme.shadowColor,
+                  size: 20,
+                ),
+                primaryColor: widget.currentTheme.primaryColor,
+                shadowColor: widget.currentTheme.shadowColor,
+                backgroundColor: widget.currentTheme.backgroundColor,
+                destinationRoute: 'SettingsScreen',
+                onNavigate: (route) {
+                  // Implement navigation logic here
+                  print('Navigating to $route');
+                },
               ),
               const SizedBox(width: 16),
               Container(

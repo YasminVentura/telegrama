@@ -7,6 +7,8 @@ class HoverIconButton extends StatefulWidget {
   final Color shadowColor;
   final Color backgroundColor;
   final VoidCallback? onTap;
+  final String? destinationRoute;
+  final Function(String route)? onNavigate;
 
   const HoverIconButton({
     super.key,
@@ -16,6 +18,8 @@ class HoverIconButton extends StatefulWidget {
     required this.shadowColor,
     required this.backgroundColor,
     this.onTap,
+    this.destinationRoute,
+    this.onNavigate,
   });
 
   @override
@@ -31,7 +35,13 @@ class _HoverIconButtonState extends State<HoverIconButton> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: () {
+          if (widget.onTap != null) {
+            widget.onTap!();
+          } else if (widget.destinationRoute != null && widget.onNavigate != null) {
+            widget.onNavigate!(widget.destinationRoute!);
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 36,
