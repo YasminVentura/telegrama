@@ -4,6 +4,7 @@ import com.example.authetication.dto.PerfilRespostaDto;
 import com.example.authetication.dto.RegistroRequisicaoDto;
 import com.example.authetication.excecao.RegraNegocioException;
 import com.example.authetication.mapper.UsuarioMapper;
+import com.example.authetication.modelo.Seguidor;
 import com.example.authetication.modelo.Usuario;
 import com.example.authetication.repositorio.SeguidorRepository;
 import com.example.authetication.repositorio.UsuarioRepository;
@@ -68,5 +69,41 @@ public class UsuarioService {
         }
 
         usuarioRepository.delete(alvo);
+    }
+
+    @Transactional
+    public void seguirUsuario(String nodeIdAlvo, String nodeIdSolicitante) {
+        if (nodeIdAlvo.equals(nodeIdSolicitante)) {
+            throw new RegraNegocioException("Você não pode seguir a si mesmo.");
+        }
+
+        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
+        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
+
+        if (seguidorRepository.existsBySeguidorAndSeguido(solicitante, alvo)) {
+            throw new RegraNegocioException("Você já segue este usuário.");
+        }
+
+        Seguidor novoSeguidor = Seguidor.builder()
+                .seguidor(solicitante)
+                .seguido(alvo)
+                .build();
+        
+        seguidorRepository.save(novoSeguidor);
+    }
+
+    @Transactional
+    public void deixarDeSeguirUsuario(String nodeIdAlvo, String nodeIdSolicitante) {
+        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
+        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
+
+        Seguidor seguidor = seguidorRepository.findBySeguidorAndSeguido(solicitante, alvo)
+                .orElseThrow(() -> new RegraNegocioException("Você não segue este usuário."));
+
+        seguidorRepository.delete(seguidor);
     }
 }

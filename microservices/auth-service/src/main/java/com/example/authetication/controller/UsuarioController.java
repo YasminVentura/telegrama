@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,5 +32,19 @@ public class UsuarioController {
         // authentication.getName() retorna o Username definido no DetalhesUsuarioImpl (que é o nodeId)
         String nodeIdSolicitante = authentication.getName();
         usuarioService.excluirConta(nodeId, nodeIdSolicitante);
+    }
+
+    @PostMapping("/{nodeId}/seguir")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void seguirUsuario(@PathVariable String nodeId, Authentication authentication) {
+        String nodeIdSolicitante = authentication.getName();
+        usuarioService.seguirUsuario(nodeId, nodeIdSolicitante);
+    }
+
+    @DeleteMapping("/{nodeId}/seguir")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deixarDeSeguirUsuario(@PathVariable String nodeId, Authentication authentication) {
+        String nodeIdSolicitante = authentication.getName();
+        usuarioService.deixarDeSeguirUsuario(nodeId, nodeIdSolicitante);
     }
 }
