@@ -7,6 +7,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -50,6 +52,11 @@ public class Usuario {
 
     @Column(name = "termos_aceitos", nullable = false)
     private Boolean termosAceitos;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Role perfil = Role.USER;
 
     @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)

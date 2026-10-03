@@ -54,4 +54,19 @@ public class UsuarioService {
         
         return perfilDto;
     }
+
+    @Transactional
+    public void excluirConta(String nodeIdAlvo, String nodeIdSolicitante) {
+        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
+
+        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
+
+        if (!alvo.getId().equals(solicitante.getId()) && solicitante.getPerfil() != com.example.authetication.modelo.Role.ADMIN) {
+            throw new RegraNegocioException("Sem permissão para excluir esta conta. Apenas o proprietário ou um administrador podem realizar esta ação.");
+        }
+
+        usuarioRepository.delete(alvo);
+    }
 }

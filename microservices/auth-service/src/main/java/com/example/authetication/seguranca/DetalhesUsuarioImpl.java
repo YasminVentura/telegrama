@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 @AllArgsConstructor
 @Getter
 public class DetalhesUsuarioImpl implements UserDetails {
@@ -17,8 +19,7 @@ public class DetalhesUsuarioImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Não temos regras (Roles) complexas por enquanto
-        return Collections.emptyList(); 
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()));
     }
 
     @Override
