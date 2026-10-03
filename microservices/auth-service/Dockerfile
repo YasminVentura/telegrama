@@ -1,11 +1,8 @@
 FROM maven:3.9.4-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copia o pom pai
-COPY pom.xml .
-
-# Copia o código do serviço
-COPY auth-service ./auth-service
+# Copia todo o projeto (pai e filhos) para o container
+COPY . .
 
 # Compila apenas o serviço específico
 RUN mvn -pl auth-service -am clean package -DskipTests
