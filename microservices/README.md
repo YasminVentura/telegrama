@@ -31,30 +31,33 @@ Responsável pela **Segurança, Autenticação (JWT) e Gestão de Usuários**.
 
 ---
 
-## 🚀 Como rodar o projeto localmente
+## 🐳 Como rodar usando Docker (Recomendado)
 
-Para garantir que os serviços se enxerguem corretamente, é **extremamente importante respeitar a ordem de inicialização**.
+Todos os serviços foram containerizados! Isso significa que você não precisa iniciar serviço por serviço na IDE. O `docker-compose` fará todo o trabalho de orquestração (respeitando a ordem de subida e a conexão com o banco).
 
-### Passo 1: Infraestrutura (Bancos de Dados)
-Na raiz do projeto (uma pasta acima desta), existe um arquivo `docker-compose.yml`. Inicie os bancos de dados executando:
-```bash
-docker-compose up -d
-```
+1. Abra o terminal na **raiz do projeto** (`c:\Users\yasmi\workspace\telegrama`).
+2. Execute o comando para buildar e subir tudo em background:
+   ```bash
+   docker-compose up --build -d
+   ```
+3. Acompanhe os logs se quiser:
+   ```bash
+   docker-compose logs -f
+   ```
 
-### Passo 2: Service Discovery (Eureka)
-O Eureka deve ser o **primeiro** serviço Java a ser ligado.
-- Abra o projeto `service-discovery` na sua IDE.
-- Execute a classe principal `ServerApplication.java`.
-- Acesse `http://localhost:8761` no navegador para garantir que o painel do Eureka está no ar.
+Quando subir, você terá acesso:
+- **API Gateway**: `http://localhost:8080` (use essa para testar no Postman ou Front)
+- **Painel Eureka**: `http://localhost:8761`
 
-### Passo 3: Serviços de Negócio
-Com o Eureka rodando, você já pode ligar os serviços de negócio. 
-- Abra o projeto `auth-service` e execute a classe `AutheticationApplication.java`.
-- Olhando o painel do Eureka, você verá o `AUTH-SERVICE` registrado.
+> **Nota**: Sempre que você alterar o código-fonte de algum microsserviço (como o `auth-service`), você deve rodar o comando `docker-compose up --build -d` novamente. A flag `--build` forçará o Docker a recompilar os arquivos `.jar` e gerar a nova versão da imagem.
 
-### Passo 4: API Gateway
-Por fim, ligue o roteador.
-- Abra o projeto `api-gateway` e execute a classe `GatewayApplication.java`.
-- Ele também se registrará no painel do Eureka.
+---
 
-> **Teste Prático**: A partir desse momento, todas as requisições devem ser feitas para `http://localhost:8080`. Se você mandar um `POST http://localhost:8080/auth/registro`, o Gateway repassará a requisição automaticamente para o `auth-service`!
+## 🚀 Como rodar localmente via IDE (Sem Docker)
+
+Caso queira debugar código e rodar na IDE (VS Code, IntelliJ, etc.):
+1. Suba apenas o banco de dados via docker: `docker-compose up -d postgres`
+2. Inicie os serviços nas classes `main` nesta exata ordem:
+   - `ServerApplication` (Eureka)
+   - `AutheticationApplication` (Auth Service)
+   - `GatewayApplication` (API Gateway)
