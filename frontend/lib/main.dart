@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'screens/main-feed.dart';
-import 'screens/auth/login.dart';
-import 'screens/auth/sign-up.dart'; // Ajuste para register_screen.dart se for o caso
-import 'screens/auth/welcome.dart';
-import 'screens/auth/forget-password-screen.dart';
-import 'themes/app_themes.dart';
+import 'package:frontend/features/feed/main_feed_screen.dart';
+import 'package:frontend/features/auth/login_screen.dart';
+import 'package:frontend/features/auth/sign_up_screen.dart'; // Ajuste para register_screen.dart se for o caso
+import 'package:frontend/features/auth/welcome_screen.dart';
+import 'package:frontend/features/auth/forget_password_screen.dart';
+import 'package:frontend/core/themes/app_themes.dart';
 
 void main() {
   runApp(const MyApp());
