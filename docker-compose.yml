@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Banco de dados PostgreSQL para o auth-service (e possivelmente outros)
+  # Banco de dados PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: telegrama-postgres
@@ -15,8 +15,57 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - telegrama-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d telegrama_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Podemos adicionar outros bancos aqui no futuro (MongoDB para posts, Neo4j para feeds, Redis para cache)
+  # Service Discovery (Eureka)
+  service-discovery:
+    build:
+      context: ./microservices
+      dockerfile: service-discovery/Dockerfile
+    container_name: telegrama-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      - telegrama-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./microservices
+      dockerfile: auth-service/Dockerfile
+    container_name: telegrama-auth
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/telegrama_auth
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-discovery:
+        condition: service_started
+    networks:
+      - telegrama-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./microservices
+      dockerfile: api-gateway/Dockerfile
+    container_name: telegrama-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      service-discovery:
+        condition: service_started
+    networks:
+      - telegrama-network
 
 networks:
   telegrama-network:

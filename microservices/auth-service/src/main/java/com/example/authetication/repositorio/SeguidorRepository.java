@@ -15,4 +15,6 @@ public interface SeguidorRepository extends JpaRepository<Seguidor, UUID> {
     long countBySeguidor(Usuario seguidor);
 
     boolean existsBySeguidorAndSeguido(Usuario seguidor, Usuario seguido);
+
+    java.util.Optional<Seguidor> findBySeguidorAndSeguido(Usuario seguidor, Usuario seguido);
 }

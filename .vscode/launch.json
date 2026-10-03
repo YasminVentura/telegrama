@@ -5,6 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "GatewayApplication",
+            "request": "launch",
+            "mainClass": "com.example.gateway.GatewayApplication",
+            "projectName": "api-gateway"
+        },
+        {
+            "type": "java",
+            "name": "AutheticationApplication",
+            "request": "launch",
+            "mainClass": "com.example.authetication.AutheticationApplication",
+            "projectName": "auth-service"
+        },
+        {
+            "type": "java",
+            "name": "ServerApplication",
+            "request": "launch",
+            "mainClass": "com.example.server.ServerApplication",
+            "projectName": "service-discovery"
+        },
+        {
             "name": "frontend",
             "cwd": "frontend",
             "request": "launch",
