@@ -4,8 +4,13 @@ import 'components/hover-icon-button.dart';
 
 class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
   final AppTheme currentTheme;
+  final Function(String route)? onNavigate;
 
-  const HeaderWidget({super.key, required this.currentTheme});
+  const HeaderWidget({
+    super.key,
+    required this.currentTheme,
+    this.onNavigate,
+  });
 
   @override
   State<HeaderWidget> createState() => _HeaderWidgetState();
@@ -107,11 +112,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 primaryColor: widget.currentTheme.primaryColor,
                 shadowColor: widget.currentTheme.shadowColor,
                 backgroundColor: widget.currentTheme.backgroundColor,
-                destinationRoute: 'NotificationsScreen',
-                onNavigate: (route) {
-                  // Implement navigation logic here
-                  print('Navigating to $route');
-                },
+                destinationRoute: 'Notifications',
+                onNavigate: widget.onNavigate,
               ),
               const SizedBox(width: 12),
               HoverIconButton(
@@ -123,11 +125,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 primaryColor: widget.currentTheme.primaryColor,
                 shadowColor: widget.currentTheme.shadowColor,
                 backgroundColor: widget.currentTheme.backgroundColor,
-                destinationRoute: 'ChatScreen',
-                onNavigate: (route) {
-                  // Implement navigation logic here
-                  print('Navigating to $route');
-                },
+                destinationRoute: 'Wave Chats',
+                onNavigate: widget.onNavigate,
               ),
               const SizedBox(width: 12),
               HoverIconButton(
@@ -139,11 +138,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 primaryColor: widget.currentTheme.primaryColor,
                 shadowColor: widget.currentTheme.shadowColor,
                 backgroundColor: widget.currentTheme.backgroundColor,
-                destinationRoute: 'SettingsScreen',
-                onNavigate: (route) {
-                  // Implement navigation logic here
-                  print('Navigating to $route');
-                },
+                destinationRoute: 'Settings',
+                onNavigate: widget.onNavigate,
               ),
               const SizedBox(width: 16),
               Container(
