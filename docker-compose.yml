@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL para o auth-service (e possivelmente outros)
+  postgres:
+    image: postgres:15-alpine
+    container_name: telegrama-postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: telegrama_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - telegrama-network
+
+  # Podemos adicionar outros bancos aqui no futuro (MongoDB para posts, Neo4j para feeds, Redis para cache)
+
+networks:
+  telegrama-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

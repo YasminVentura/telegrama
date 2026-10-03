@@ -1,3 +1,32 @@
+server:
+  port: 8081
+
 spring:
   application:
-    name: authetication
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/telegrama_auth
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Configurações do JWT
+jwt:
+  # O ideal é usar variável de ambiente: ${JWT_SECRET}
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000 # 24 horas em milissegundos
