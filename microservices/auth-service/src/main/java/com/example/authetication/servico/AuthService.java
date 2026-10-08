@@ -4,6 +4,7 @@ import com.example.authetication.dto.LoginRequisicaoDto;
 import com.example.authetication.dto.TokenRespostaDto;
 import com.example.authetication.seguranca.DetalhesUsuarioServicoImpl;
 import com.example.authetication.seguranca.JwtUtils;
+import com.example.authetication.seguranca.UtilidadesCriptografia;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +19,7 @@ public class AuthService {
     private final DetalhesUsuarioServicoImpl detalhesUsuarioServico;
     private final JwtUtils jwtUtils;
 
-    public TokenRespostaDto autenticar(LoginRequisicaoDto request) {
+    public String autenticar(LoginRequisicaoDto request) {
         // Autentica as credenciais com o AuthenticationManager configurado
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -33,6 +34,7 @@ public class AuthService {
         // Gera o token
         String jwt = jwtUtils.gerarToken(userDetails);
         
-        return new TokenRespostaDto(jwt);
+        // Retorna o idSessao criptografado
+        return UtilidadesCriptografia.criptografar(jwt);
     }
 }

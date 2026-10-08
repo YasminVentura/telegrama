@@ -31,8 +31,8 @@ public class ConfiguracaoSeguranca {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Libera o acesso para registro e login
-                .requestMatchers("/auth/registro", "/auth/login").permitAll()
+                // Libera o acesso para registro, login e erros
+                .requestMatchers("/auth/registro", "/auth/login", "/error").permitAll()
                 // Libera acesso de leitura (GET) ao perfil e métricas de todos os usuários
                 .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
                 // Exige autenticação para o resto

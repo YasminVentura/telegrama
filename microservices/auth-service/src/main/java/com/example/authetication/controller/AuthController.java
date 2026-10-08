@@ -29,8 +29,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @ResponseStatus(HttpStatus.OK)
-    public TokenRespostaDto login(@RequestBody @Valid LoginRequisicaoDto request) {
-        return authService.autenticar(request);
+    public org.springframework.http.ResponseEntity<Void> login(@RequestBody @Valid LoginRequisicaoDto request) {
+        String idSessao = authService.autenticar(request);
+        
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("idSessao", idSessao)
+                .httpOnly(true)
+                .secure(false) // localhost
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                //.sameSite("Strict")
+                .build();
+                
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 }

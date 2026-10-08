@@ -5,17 +5,17 @@ import 'app_exceptions.dart';
 class ApiClient {
   final String baseUrl;
   final http.Client _client;
-  String? _authToken;
+  String? _idSessao;
 
   ApiClient({required this.baseUrl, http.Client? client})
       : _client = client ?? http.Client();
 
-  void setToken(String token) {
-    _authToken = token;
+  void definirIdSessao(String idSessao) {
+    _idSessao = idSessao;
   }
 
-  void clearToken() {
-    _authToken = null;
+  void limparIdSessao() {
+    _idSessao = null;
   }
 
   Map<String, String> _getHeaders() {
@@ -23,8 +23,8 @@ class ApiClient {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    if (_authToken != null) {
-      headers['Authorization'] = 'Bearer $_authToken';
+    if (_idSessao != null) {
+      headers['Cookie'] = 'idSessao=$_idSessao';
     }
     return headers;
   }
@@ -64,6 +64,15 @@ class ApiClient {
   }
 
   dynamic _processResponse(http.Response response) {
+    // Interceptar cookie de sessão, se houver
+    final setCookie = response.headers['set-cookie'];
+    if (setCookie != null && setCookie.contains('idSessao=')) {
+      final match = RegExp(r'idSessao=([^;]+)').firstMatch(setCookie);
+      if (match != null) {
+        definirIdSessao(match.group(1)!);
+      }
+    }
+
     switch (response.statusCode) {
       case 200:
       case 201:

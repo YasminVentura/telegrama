@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
 class RegisterScreen extends StatefulWidget {
   final AppTheme currentTheme;
@@ -24,6 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _acceptTerms = true;
   bool _isHoveredButton = false;
+  bool _isLoading = false;
+  final AuthRepository _authRepository = AuthRepository();
 
   @override
   void dispose() {
@@ -32,6 +35,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    if (_displayNameController.text.isEmpty ||
+        _nodeIdController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, preencha todos os campos.')),
+      );
+      return;
+    }
+
+    if (!_acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você deve aceitar os termos de uso.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _authRepository.registro(
+        _displayNameController.text,
+        _nodeIdController.text,
+        _emailController.text,
+        _passwordController.text,
+        _acceptTerms,
+      );
+      
+      // Se for bem sucedido, chamamos o callback de sucesso (que provavelmente redireciona)
+      // Note que o registro no backend também pode precisar que você faça o login em seguida,
+      // ou se o seu backend já retorna os cookies de login no registro, já estaria logado.
+      widget.onRegisterSuccess();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha no cadastro: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -301,7 +347,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onEnter: (_) => setState(() => _isHoveredButton = true),
                 onExit: (_) => setState(() => _isHoveredButton = false),
                 child: GestureDetector(
-                  onTap: widget.onRegisterSuccess,
+                  onTap: _isLoading ? null : _handleRegister,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),
                     width: double.infinity,
@@ -321,17 +367,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          'CREATE MY NODE',
-                          style: TextStyle(
-                            color: widget.currentTheme.backgroundColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.5,
-                            letterSpacing: 1.1,
+                        if (_isLoading)
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: widget.currentTheme.backgroundColor,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        else ...[
+                          Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'CREATE MY NODE',
+                            style: TextStyle(
+                              color: widget.currentTheme.backgroundColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.5,
+                              letterSpacing: 1.1,
+                            ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                   ),

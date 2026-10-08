@@ -21,9 +21,10 @@ Atua como o servidor do Netflix Eureka. Ele é a "lista telefônica" do projeto.
 Ponto de entrada único para o front-end. Ele expõe rotas (como `/auth/**` ou `/usuarios/**`) e usa o `service-discovery` para redirecionar o tráfego para os serviços de destino corretos.
 
 ### 3. `auth-service` (Porta `8081`)
-Responsável pela **Segurança, Autenticação (JWT) e Gestão de Usuários**.
+Responsável pela **Segurança, Autenticação e Gestão de Usuários**.
 - Banco de Dados: PostgreSQL
 - Domínios: Usuários, Perfis, Permissões (Roles: USER, ADMIN), Sistema de Seguidores.
+- **Autenticação (BFF Pattern)**: Em vez de retornar o JWT diretamente para o frontend, ele criptografa o JWT com AES-128 e retorna um código seguro (`idSessao`) como um cookie `HttpOnly`. O `api-gateway` intercepta as requisições subsequentes, decodifica esse cookie e repassa o JWT original para os microsserviços.
 
 ### Serviços Futuros (Em Planejamento)
 - **`post-service`**: Para gestão de publicações, mídias, salvamentos e curtidas.

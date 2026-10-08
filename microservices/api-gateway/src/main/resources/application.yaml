@@ -10,6 +10,16 @@ spring:
         locator:
           enabled: true # Habilita a criação automática de rotas com base nos serviços registrados no Eureka
           lower-case-service-id: true
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
       # Podemos definir rotas manuais aqui posteriormente se necessário
       routes:
         - id: auth-service-route

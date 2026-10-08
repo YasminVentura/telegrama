@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
   final AppTheme currentTheme;
@@ -24,12 +25,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _rememberMe = true;
   bool _isHoveredButton = false;
+  bool _isLoading = false;
+  final AuthRepository _authRepository = AuthRepository();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, preencha todos os campos.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await _authRepository.login(_emailController.text, _passwordController.text);
+      widget.onLoginSuccess();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Falha no login: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -273,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onEnter: (_) => setState(() => _isHoveredButton = true),
                 onExit: (_) => setState(() => _isHoveredButton = false),
                 child: GestureDetector(
-                  onTap: widget.onLoginSuccess,
+                  onTap: _isLoading ? null : _handleLogin,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),
                     width: double.infinity,
@@ -293,17 +319,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          'ENTER THE RETROVERSE',
-                          style: TextStyle(
-                            color: widget.currentTheme.backgroundColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            letterSpacing: 1.1,
+                        if (_isLoading)
+                          SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: widget.currentTheme.backgroundColor,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        else ...[
+                          Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'ENTER THE RETROVERSE',
+                            style: TextStyle(
+                              color: widget.currentTheme.backgroundColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 1.1,
+                            ),
                           ),
-                        ),
+                        ]
                       ],
                     ),
                   ),

@@ -91,18 +91,14 @@
         {
           "name": "4. Excluir Conta (Requer Token)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "http://localhost:8080/usuarios/@yasmin_v",
               "protocol": "http",
@@ -120,18 +116,14 @@
         {
           "name": "5. Seguir Usuário (Requer Token)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "http://localhost:8080/usuarios/@outro_usuario/seguir",
               "protocol": "http",
@@ -150,18 +142,14 @@
         {
           "name": "6. Deixar de Seguir (Requer Token)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{jwt_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "http://localhost:8080/usuarios/@outro_usuario/seguir",
               "protocol": "http",
@@ -182,8 +170,8 @@
   ],
   "variable": [
     {
-      "key": "jwt_token",
-      "value": "COLE_O_TOKEN_GERADO_NO_LOGIN_AQUI",
+      "key": "id_sessao",
+      "value": "COLE_O_ID_SESSAO_AQUI_SE_POSTMAN_NAO_SALVAR",
       "type": "string"
     }
   ]
