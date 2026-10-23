@@ -29,7 +29,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public org.springframework.http.ResponseEntity<Void> login(@RequestBody @Valid LoginRequisicaoDto request) {
+    public org.springframework.http.ResponseEntity<java.util.Map<String, String>> login(@RequestBody @Valid LoginRequisicaoDto request) {
         String idSessao = authService.autenticar(request);
         
         org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("idSessao", idSessao)
@@ -42,6 +42,6 @@ public class AuthController {
                 
         return org.springframework.http.ResponseEntity.ok()
                 .header(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString())
-                .build();
+                .body(java.util.Map.of("idSessao", idSessao, "token", idSessao));
     }
 }

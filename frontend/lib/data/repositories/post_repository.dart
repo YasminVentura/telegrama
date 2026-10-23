@@ -1,3 +1,5 @@
+import 'package:frontend/core/network/api_client.dart';
+
 abstract class PostRepository {
   Future<List<Map<String, dynamic>>> getFeedPosts({int page = 1, int limit = 10});
   Future<void> createPost(String content, String? imageUrl, String? frequencyTag);
@@ -8,91 +10,83 @@ abstract class PostRepository {
 }
 
 class PostRepositoryImpl implements PostRepository {
+  final ApiClient _apiClient;
+
+  PostRepositoryImpl({ApiClient? apiClient})
+      : _apiClient = apiClient ?? ApiClient(baseUrl: 'http://127.0.0.1:8080');
+
   @override
   Future<List<Map<String, dynamic>>> getFeedPosts({int page = 1, int limit = 10}) async {
-    // Stub: Simula busca paginada de posts
-    await Future.delayed(const Duration(milliseconds: 600));
-    return [
-      {
-        'id': 'post_1',
-        'authorName': 'Saskia Vance',
-        'authorHandle': '@sas_vance',
-        'timeAgo': '12m ago',
-        'frequencyTag': 'BAUHAUS_GRID_04',
-        'content': 'Spent the afternoon rendering custom vector grids in classic Bauhaus style. Really loving the warm aesthetic of burnt orange balanced against deep cool greens.',
-        'imageUrl': 'lib/assets/images/signal_artwork.png',
-        'likesCount': 342,
-        'commentsCount': 18,
-        'repostsCount': 47,
-      },
-      {
-        'id': 'post_2',
-        'authorName': 'Cyber Voyager',
-        'authorHandle': '@cyber_voyager',
-        'timeAgo': '45m ago',
-        'frequencyTag': 'RETRO_AUDIO_BBS',
-        'content': 'Who remembers the sound of a dial-up modem handshaking at 3 AM? That static hiss and beep sequence is basically the retro anthem of early cyberspace.',
-        'imageUrl': null,
-        'likesCount': 128,
-        'commentsCount': 54,
-        'repostsCount': 12,
+    try {
+      final response = await _apiClient.get('/posts?page=$page&limit=$limit');
+      if (response != null && response['data'] != null) {
+        final List data = response['data'];
+        return data.map((item) {
+          final map = Map<String, dynamic>.from(item);
+          return {
+            'id': map['id']?.toString() ?? '',
+            'authorName': map['authorName'] ?? map['author_name'] ?? 'Node Anônimo',
+            'authorHandle': map['authorHandle'] ?? map['author_id'] ?? '@node',
+            'timeAgo': map['created_at'] != null ? _formatarTempo(map['created_at']) : 'Agora',
+            'frequencyTag': map['frequencyTag'] ?? '',
+            'content': map['content'] ?? map['conteudo'] ?? '',
+            'imageUrl': map['author_avatar_url'],
+            'likesCount': (map['likesCount'] ?? map['likes'] ?? 0) as int,
+            'commentsCount': (map['commentsCount'] ?? map['comments'] ?? 0) as int,
+            'repostsCount': 0,
+            'curtidoPeloUsuario': map['curtidoPeloUsuario'] ?? false,
+          };
+        }).toList();
       }
-    ];
+    } catch (e) {
+      print('Erro ao carregar posts: $e');
+    }
+    return [];
   }
 
   @override
   Future<void> createPost(String content, String? imageUrl, String? frequencyTag) async {
-    // Stub: Simula criação de postagem
-    await Future.delayed(const Duration(milliseconds: 500));
+    await _apiClient.post('/posts', body: {'content': content});
   }
 
   @override
   Future<void> likePost(String postId) async {
-    // Stub: Simula o ato de curtir
-    await Future.delayed(const Duration(milliseconds: 200));
+    await _apiClient.post('/posts/$postId/curtir');
   }
 
   @override
   Future<void> repost(String postId) async {
-    // Stub: Simula o ato de repostar
-    await Future.delayed(const Duration(milliseconds: 200));
+    // Funcionalidade futura
   }
 
   @override
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId) async {
-    // Stub: Retorna os comentários/respostas de um post
-    await Future.delayed(const Duration(milliseconds: 400));
-    return [
-      {
-        'id': 'comment_1',
-        'authorName': 'Lumina Dreamer',
-        'authorHandle': '@lumina_dream',
-        'content': 'The color palette reminds me of the old 1970s Braun calculators. Exceptional work!',
-        'timeAgo': '8m ago',
-        'likesCount': 24,
-      },
-      {
-        'id': 'comment_2',
-        'authorName': 'Vector Grid Crew',
-        'authorHandle': '#vectorGrids',
-        'content': 'Can you share the exact hex codes? We need this frequency on our end.',
-        'timeAgo': '2m ago',
-        'likesCount': 5,
-      }
-    ];
+    // Funcionalidade futura de comentários
+    return [];
   }
 
   @override
   Future<Map<String, dynamic>> addCommentToPost(String postId, String content) async {
-    // Stub: Adiciona um comentário a um post
-    await Future.delayed(const Duration(milliseconds: 300));
     return {
       'id': 'comment_${DateTime.now().millisecondsSinceEpoch}',
-      'authorName': 'Current User', // Stub for current user
-      'authorHandle': '@current_user',
+      'authorName': 'Você',
+      'authorHandle': '@node',
       'content': content,
-      'timeAgo': 'Just now',
+      'timeAgo': 'Agora',
       'likesCount': 0,
     };
+  }
+
+  String _formatarTempo(String dataIso) {
+    try {
+      final data = DateTime.parse(dataIso);
+      final diferenca = DateTime.now().difference(data);
+      if (diferenca.inMinutes < 1) return 'Agora';
+      if (diferenca.inMinutes < 60) return '${diferenca.inMinutes}m';
+      if (diferenca.inHours < 24) return '${diferenca.inHours}h';
+      return '${diferenca.inDays}d';
+    } catch (_) {
+      return 'Agora';
+    }
   }
 }

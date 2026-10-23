@@ -67,9 +67,41 @@ services:
     networks:
       - telegrama-network
 
+  # Post Service
+  post-service:
+    build:
+      context: ./microservices
+      dockerfile: post-service/Dockerfile
+    container_name: telegrama-post
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/telegrama_posts
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      - mongodb
+      - service-discovery
+    networks:
+      - telegrama-network
+
+  # Banco de dados MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: telegrama-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=telegrama_posts
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - telegrama-network
+
 networks:
   telegrama-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  mongodb_data:

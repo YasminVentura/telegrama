@@ -31,8 +31,15 @@ public class AuthService {
         // Se passar, busca o UserDetails completo
         UserDetails userDetails = detalhesUsuarioServico.loadUserByUsername(request.getIdentificador());
         
+        java.util.Map<String, Object> claimsExtras = new java.util.HashMap<>();
+        if (userDetails instanceof com.example.authetication.seguranca.DetalhesUsuarioImpl detalhes) {
+            claimsExtras.put("nome", detalhes.getUsuario().getNome());
+            claimsExtras.put("id", detalhes.getUsuario().getId().toString());
+            claimsExtras.put("nodeId", detalhes.getUsuario().getNodeId());
+        }
+
         // Gera o token
-        String jwt = jwtUtils.gerarToken(userDetails);
+        String jwt = jwtUtils.gerarToken(claimsExtras, userDetails);
         
         // Retorna o idSessao criptografado
         return UtilidadesCriptografia.criptografar(jwt);

@@ -166,6 +166,141 @@
           }
         }
       ]
+    },
+    {
+      "name": "Postagens",
+      "item": [
+        {
+          "name": "7. Criar Postagem (Requer Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Primeira transmissão retroverse com MongoDB!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/posts",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "posts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8. Listar Postagens (Feed Paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/posts?page=1&limit=20",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "9. Buscar Postagem por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/posts/COLE_O_ID_AQUI",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "posts",
+                "COLE_O_ID_AQUI"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Curtir / Descurtir (Requer Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/posts/COLE_O_ID_AQUI/curtir",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "posts",
+                "COLE_O_ID_AQUI",
+                "curtir"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Excluir Postagem (Requer Token - Apenas Autor)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/posts/COLE_O_ID_AQUI",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "posts",
+                "COLE_O_ID_AQUI"
+              ]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [

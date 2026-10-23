@@ -26,9 +26,14 @@ Responsável pela **Segurança, Autenticação e Gestão de Usuários**.
 - Domínios: Usuários, Perfis, Permissões (Roles: USER, ADMIN), Sistema de Seguidores.
 - **Autenticação (BFF Pattern)**: Em vez de retornar o JWT diretamente para o frontend, ele criptografa o JWT com AES-128 e retorna um código seguro (`idSessao`) como um cookie `HttpOnly`. O `api-gateway` intercepta as requisições subsequentes, decodifica esse cookie e repassa o JWT original para os microsserviços.
 
+### 4. `post-service` (Porta `8082`)
+Responsável pela **Criação, Leitura e Interação com Postagens**.
+- Banco de Dados: MongoDB (`telegrama_posts`)
+- Domínios: Postagens de texto, Sistema de Curtidas (toggle curtir/descurtir), Contagem de comentários/reposts, Auditoria de datas.
+- **Segurança**: Validação de JWT injetado pelo API Gateway. Apenas usuários autenticados com token válido podem criar publicações, curtir ou excluir suas postagens.
+
 ### Serviços Futuros (Em Planejamento)
-- **`post-service`**: Para gestão de publicações, mídias, salvamentos e curtidas.
-- **`feed-service`**: Para orquestração da linha do tempo baseada em quem o usuário segue.
+- **`feed-service`**: Para orquestração da linha do tempo e cache em memória (Redis) baseada em quem o usuário segue.
 
 ---
 

@@ -16,13 +16,37 @@ public class FiltroAutenticacao implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         
-        // Obter o cookie idSessao
+        String idSessao = null;
+
+        // 1. Tentar obter pelo cookie parseado
         HttpCookie cookieSessao = request.getCookies().getFirst("idSessao");
-        
         if (cookieSessao != null) {
+            idSessao = cookieSessao.getValue();
+        }
+
+        // 2. Tentar obter pelo header X-Session-Id
+        if (idSessao == null || idSessao.isBlank()) {
+            idSessao = request.getHeaders().getFirst("X-Session-Id");
+        }
+
+        // 3. Tentar obter pelo header Cookie em formato de texto bruto
+        if (idSessao == null || idSessao.isBlank()) {
+            String cookieHeader = request.getHeaders().getFirst("Cookie");
+            if (cookieHeader != null && cookieHeader.contains("idSessao=")) {
+                for (String parte : cookieHeader.split(";")) {
+                    String limpa = parte.trim();
+                    if (limpa.startsWith("idSessao=")) {
+                        idSessao = limpa.substring("idSessao=".length());
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (idSessao != null && !idSessao.isBlank()) {
             try {
                 // Decodificar o JWT
-                String jwt = UtilidadesCriptografia.descriptografar(cookieSessao.getValue());
+                String jwt = UtilidadesCriptografia.descriptografar(idSessao);
                 
                 // Injetar o cabeçalho Authorization
                 request = request.mutate()

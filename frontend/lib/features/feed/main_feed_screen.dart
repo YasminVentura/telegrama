@@ -9,6 +9,8 @@ import 'package:frontend/features/chats/wave_chats_screen.dart';
 import 'package:frontend/features/settings/settings_screen.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
+import 'package:frontend/data/repositories/post_repository.dart';
+
 class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
 
@@ -30,6 +32,51 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   ];
 
   int _currentThemeIndex = 0;
+
+  final PostRepositoryImpl _postRepository = PostRepositoryImpl();
+  List<Map<String, dynamic>> _posts = [];
+  bool _isLoadingPosts = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPostagens();
+  }
+
+  Future<void> _carregarPostagens() async {
+    setState(() => _isLoadingPosts = true);
+    try {
+      final posts = await _postRepository.getFeedPosts();
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _isLoadingPosts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingPosts = false);
+      }
+    }
+  }
+
+  Future<void> _publicarPostagem(String conteudo) async {
+    try {
+      await _postRepository.createPost(conteudo, null, null);
+      await _carregarPostagens();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transmissão publicada com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao publicar post: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,38 +155,77 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                             children: [                                              const SizedBox(height: 24),
                                               SendPostWidget(
                                                 currentTheme: _currentTheme,
-                                                onPostSubmitted: (post) {},
+                                                onPostSubmitted: (post) => _publicarPostagem(post),
                                               ),
                                               const SizedBox(height: 24),
-                                              PostCard(
-                                                currentTheme: _currentTheme,
-                                                name: 'Alice Johnson',
-                                                handle: '@alicej',
-                                                timeAgo: '2h',
-                                                content: 'Explorando o mundo do Flutter! #FlutterDev',
-                                                imageUrl: null,
-                                                likesCount: 34,
-                                                commentsCount: 12,
-                                                repostsCount: 5,
-                                                onLikePressed: () {},
-                                                onCommentPressed: () {},
-                                                onRepostPressed: () {},
-                                              ),
-                                              const SizedBox(height: 16),
-                                              PostCard(
-                                                currentTheme: _currentTheme,
-                                                name: 'Alice Johnson',
-                                                handle: '@alicej',
-                                                timeAgo: '2h',
-                                                content: 'Explorando o mundo do Flutter! #FlutterDev',
-                                                imageUrl: 'https://cdn0.peritoanimal.com.br/pt/posts/2/4/2/pele_seca_22242_0_600.jpg',
-                                                likesCount: 34,
-                                                commentsCount: 12,
-                                                repostsCount: 5,
-                                                onLikePressed: () {},
-                                                onCommentPressed: () {},
-                                                onRepostPressed: () {},
-                                              ),
+                                              if (_isLoadingPosts)
+                                                Center(
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(40.0),
+                                                    child: CircularProgressIndicator(
+                                                      color: _currentTheme.primaryColor,
+                                                    ),
+                                                  ),
+                                                )
+                                              else if (_posts.isEmpty)
+                                                Container(
+                                                  width: double.infinity,
+                                                  padding: const EdgeInsets.all(32),
+                                                  decoration: BoxDecoration(
+                                                    color: _currentTheme.backgroundColor,
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    border: Border.all(color: _currentTheme.shadowColor, width: 2),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: _currentTheme.shadowColor,
+                                                        offset: const Offset(4, 4),
+                                                        blurRadius: 0,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(Icons.satellite_alt_outlined, size: 48, color: _currentTheme.primaryColor),
+                                                      const SizedBox(height: 12),
+                                                      Text(
+                                                        'Nenhuma transmissão no sinal ainda.',
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: _currentTheme.textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Text(
+                                                        'Seja o primeiro nó a transmitir uma mensagem no retroverse!',
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          color: _currentTheme.textColor.withOpacity(0.6),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                )
+                                              else
+                                                ..._posts.map((post) => PostCard(
+                                                  key: ValueKey(post['id'] ?? UniqueKey().toString()),
+                                                  currentTheme: _currentTheme,
+                                                  name: post['authorName'] ?? 'Node Anônimo',
+                                                  handle: post['authorHandle'] ?? '@node',
+                                                  timeAgo: post['timeAgo'] ?? 'Agora',
+                                                  content: post['content'] ?? '',
+                                                  imageUrl: post['imageUrl'],
+                                                  likesCount: (post['likesCount'] ?? 0) as int,
+                                                  commentsCount: (post['commentsCount'] ?? 0) as int,
+                                                  repostsCount: (post['repostsCount'] ?? 0) as int,
+                                                  onLikePressed: () async {
+                                                    if (post['id'] != null) {
+                                                      await _postRepository.likePost(post['id']);
+                                                    }
+                                                  },
+                                                  onCommentPressed: () {},
+                                                  onRepostPressed: () {},
+                                                )),
                                             ],
                                           ),
                                         ),
