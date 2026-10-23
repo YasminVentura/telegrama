@@ -6,12 +6,21 @@ class AuthRepository {
   AuthRepository({ApiClient? apiClient}) 
       : _apiClient = apiClient ?? ApiClient(baseUrl: 'http://127.0.0.1:8080');
 
-  Future<void> login(String identificador, String senha) async {
-    await _apiClient.post('/auth/login', body: {
+  Future<dynamic> login(String identificador, String senha) async {
+    final resposta = await _apiClient.post('/auth/login', body: {
       'identificador': identificador,
       'senha': senha,
     });
-    // O idSessao será interceptado automaticamente pelo ApiClient na resposta HTTP
+    // O idSessao será interceptado automaticamente pelo ApiClient via cookie ou header
+    return resposta;
+  }
+
+  Future<void> logout() async {
+    try {
+      await _apiClient.post('/auth/logout');
+    } finally {
+      _apiClient.limparIdSessao();
+    }
   }
 
   Future<void> registro(String nome, String nodeId, String email, String senha, bool termosAceitos) async {

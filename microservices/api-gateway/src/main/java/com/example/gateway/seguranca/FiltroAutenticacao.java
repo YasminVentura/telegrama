@@ -3,6 +3,7 @@ package com.example.gateway.seguranca;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,12 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class FiltroAutenticacao implements GlobalFilter, Ordered {
+
+    private final ReactiveStringRedisTemplate redisTemplate;
+
+    public FiltroAutenticacao(ReactiveStringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -44,20 +51,17 @@ public class FiltroAutenticacao implements GlobalFilter, Ordered {
         }
         
         if (idSessao != null && !idSessao.isBlank()) {
-            try {
-                // Decodificar o JWT
-                String jwt = UtilidadesCriptografia.descriptografar(idSessao);
-                
-                // Injetar o cabeçalho Authorization
-                request = request.mutate()
-                        .header("Authorization", "Bearer " + jwt)
-                        .build();
-                
-                return chain.filter(exchange.mutate().request(request).build());
-            } catch (Exception e) {
-                // Se a decodificação falhar, apenas segue o fluxo sem injetar
-                System.out.println("Falha ao decodificar idSessao: " + e.getMessage());
-            }
+            return redisTemplate.opsForValue().get("sessao:" + idSessao)
+                    .flatMap(jwt -> {
+                        if (jwt != null && !jwt.isBlank()) {
+                            ServerHttpRequest requestComToken = exchange.getRequest().mutate()
+                                    .header("Authorization", "Bearer " + jwt)
+                                    .build();
+                            return chain.filter(exchange.mutate().request(requestComToken).build());
+                        }
+                        return chain.filter(exchange);
+                    })
+                    .switchIfEmpty(Mono.defer(() -> chain.filter(exchange)));
         }
         
         return chain.filter(exchange);
@@ -68,3 +72,4 @@ public class FiltroAutenticacao implements GlobalFilter, Ordered {
         return -1; // Executar antes do roteamento padrão
     }
 }
+

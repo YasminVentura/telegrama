@@ -24,7 +24,7 @@ Ponto de entrada único para o front-end. Ele expõe rotas (como `/auth/**` ou `
 Responsável pela **Segurança, Autenticação e Gestão de Usuários**.
 - Banco de Dados: PostgreSQL
 - Domínios: Usuários, Perfis, Permissões (Roles: USER, ADMIN), Sistema de Seguidores.
-- **Autenticação (BFF Pattern)**: Em vez de retornar o JWT diretamente para o frontend, ele criptografa o JWT com AES-128 e retorna um código seguro (`idSessao`) como um cookie `HttpOnly`. O `api-gateway` intercepta as requisições subsequentes, decodifica esse cookie e repassa o JWT original para os microsserviços.
+- **Autenticação (BFF / Token Handler Pattern com Redis)**: O front-end recebe apenas um `idSessao` opaco (UUID) em cookie `HttpOnly` e no header `X-Session-Id`. A sessão fica armazenada em memória no **Redis** (TTL de 24h). O `api-gateway` intercepta as requisições, busca reativamente a sessão no Redis (< 1ms) e repassa o JWT interno no cabeçalho `Authorization: Bearer <jwt>` para os microsserviços. O cliente nunca toca no JWT e o logout é instantâneo (basta deletar a chave no Redis).
 
 ### 4. `post-service` (Porta `8082`)
 Responsável pela **Criação, Leitura e Interação com Postagens**.

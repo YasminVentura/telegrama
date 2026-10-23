@@ -42,10 +42,14 @@ services:
       - "8081:8081"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/telegrama_auth
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
       service-discovery:
         condition: service_started
     networks:
@@ -60,10 +64,12 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
     depends_on:
-      service-discovery:
-        condition: service_started
+      - redis
+      - service-discovery
     networks:
       - telegrama-network
 
@@ -98,6 +104,18 @@ services:
     networks:
       - telegrama-network
 
+  # Cache em Memória e Gerenciamento de Sessão (Redis)
+  redis:
+    image: redis:7-alpine
+    container_name: telegrama-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - telegrama-network
+
 networks:
   telegrama-network:
     driver: bridge
@@ -105,3 +123,4 @@ networks:
 volumes:
   postgres_data:
   mongodb_data:
+  redis_data:

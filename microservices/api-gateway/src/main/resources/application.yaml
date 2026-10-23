@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   cloud:
     gateway:
       discovery:
@@ -19,6 +23,9 @@ spring:
               - "*"
             allowedHeaders:
               - "*"
+            exposedHeaders:
+              - "Set-Cookie"
+              - "X-Session-Id"
             allowCredentials: true
       # Podemos definir rotas manuais aqui posteriormente se necessário
       routes:

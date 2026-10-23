@@ -62,6 +62,50 @@
                 "login"
               ]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const sessionHeader = pm.response.headers.get('X-Session-Id');",
+                  "if (sessionHeader) {",
+                  "    pm.collectionVariables.set('id_sessao', sessionHeader);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "idSessao={{id_sessao}}",
+                "type": "text"
+              },
+              {
+                "key": "X-Session-Id",
+                "value": "{{id_sessao}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/auth/logout",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
           }
         }
       ]

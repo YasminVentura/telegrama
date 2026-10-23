@@ -87,16 +87,7 @@ class ApiClient {
       case 200:
       case 201:
         if (response.body.isEmpty) return null;
-        final decoded = jsonDecode(response.body);
-        if (decoded is Map<String, dynamic>) {
-          // Interceptar idSessao retornado no corpo JSON (essencial para navegadores/Flutter Web)
-          if (decoded['idSessao'] != null) {
-            definirIdSessao(decoded['idSessao'].toString());
-          } else if (decoded['token'] != null) {
-            definirIdSessao(decoded['token'].toString());
-          }
-        }
-        return decoded;
+        return jsonDecode(response.body);
       case 400:
         throw BadRequestException(response.body);
       case 401:
