@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class AppearanceSettingsContent extends StatelessWidget {
   final AppTheme currentTheme;
@@ -11,6 +12,14 @@ class AppearanceSettingsContent extends StatelessWidget {
     required this.onThemeChanged,
   });
 
+  String _mapThemeToEnum(AppTheme theme) {
+    if (theme.name == AppTheme.cyberpunk.name) return 'CYBERPUNK_DARK';
+    if (theme.name == AppTheme.synthwave.name) return 'SUNSET_SYNTHWAVE';
+    if (theme.name == AppTheme.hacker.name) return 'MONOKAI_HACKER';
+    if (theme.name == AppTheme.espresso.name) return 'CREAM_ESPRESSO';
+    return 'RETRO_GREEN';
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<AppTheme> availableThemes = [
@@ -20,6 +29,8 @@ class AppearanceSettingsContent extends StatelessWidget {
       AppTheme.hacker,
       AppTheme.espresso,
     ];
+
+    final UserRepository userRepository = UserRepositoryImpl();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -52,7 +63,10 @@ class AppearanceSettingsContent extends StatelessWidget {
               return MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  onTap: () => onThemeChanged(theme),
+                  onTap: () {
+                    onThemeChanged(theme);
+                    userRepository.updatePreferences({'theme': _mapThemeToEnum(theme)});
+                  },
                   child: Container(
                     width: 200,
                     padding: const EdgeInsets.all(16),

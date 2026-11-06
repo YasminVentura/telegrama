@@ -15,18 +15,26 @@ spring:
           enabled: true # Habilita a criação automática de rotas com base nos serviços registrados no Eureka
           lower-case-service-id: true
       globalcors:
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
             allowedOriginPatterns:
-              - "*"
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
             allowedMethods:
-              - "*"
+              - "GET"
+              - "POST"
+              - "PUT"
+              - "DELETE"
+              - "OPTIONS"
             allowedHeaders:
               - "*"
             exposedHeaders:
               - "Set-Cookie"
               - "X-Session-Id"
             allowCredentials: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Expose-Headers Access-Control-Allow-Methods, RETAIN_FIRST
       # Podemos definir rotas manuais aqui posteriormente se necessário
       routes:
         - id: auth-service-route

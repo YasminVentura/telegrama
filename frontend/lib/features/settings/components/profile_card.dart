@@ -14,6 +14,7 @@ class ProfileCard extends StatelessWidget {
   final VoidCallback? onMessagePressed;
   final bool isFollowing;
   final bool isLoadingFollow;
+  final bool isOwner;
 
   const ProfileCard({
     super.key,
@@ -29,11 +30,12 @@ class ProfileCard extends StatelessWidget {
     this.onMessagePressed,
     this.isFollowing = false,
     this.isLoadingFollow = false,
+    this.isOwner = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String displayLocation = (location != null && location!.isNotEmpty) ? location! : 'around the world';
+    final String displayLocation = (location != null && location!.isNotEmpty) ? location! : 'Penedo, Brasil';
 
     return Container(
       decoration: BoxDecoration(
@@ -111,18 +113,19 @@ class ProfileCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            _buildActionButton(
-                              isFollowing ? 'FOLLOWING' : 'FOLLOW', 
-                              isPrimary: !isFollowing, 
-                              onTap: onFollowPressed,
-                              isLoading: isLoadingFollow,
-                            ),
-                            const SizedBox(width: 10),
-                            _buildActionButton('MESSAGE', isPrimary: false, onTap: onMessagePressed),
-                          ],
-                        ),
+                        if (!isOwner)
+                          Row(
+                            children: [
+                              _buildActionButton(
+                                isFollowing ? 'FOLLOWING' : 'FOLLOW', 
+                                isPrimary: !isFollowing, 
+                                onTap: onFollowPressed,
+                                isLoading: isLoadingFollow,
+                              ),
+                              const SizedBox(width: 10),
+                              _buildActionButton('MESSAGE', isPrimary: false, onTap: onMessagePressed),
+                            ],
+                          ),
                       ],
                     ),
                     const SizedBox(height: 16),

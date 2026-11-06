@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "PostApplication",
+            "request": "launch",
+            "mainClass": "com.example.post.PostApplication",
+            "projectName": "post-service"
+        },
+        {
+            "type": "java",
             "name": "GatewayApplication",
             "request": "launch",
             "mainClass": "com.example.gateway.GatewayApplication",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class NotificationsSettingsContent extends StatefulWidget {
   final AppTheme currentTheme;
@@ -11,12 +12,59 @@ class NotificationsSettingsContent extends StatefulWidget {
 }
 
 class _NotificationsSettingsContentState extends State<NotificationsSettingsContent> {
+  final UserRepository _userRepository = UserRepositoryImpl();
   bool _pushNotifications = true;
   bool _soundEchos = true;
   bool _zoneAlerts = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    try {
+      final prefs = await _userRepository.getPreferences();
+      if (mounted) {
+        setState(() {
+          _pushNotifications = prefs.pushTransmissions;
+          _soundEchos = prefs.acousticEchos;
+          _zoneAlerts = prefs.zoneBroadcastAlerts;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _savePreference(String key, bool value) async {
+    try {
+      await _userRepository.updatePreferences({key: value});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar preferência: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -45,21 +93,30 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
             title: 'Push transmissions',
             subtitle: 'Receive system alerts when new waves hit your radar.',
             value: _pushNotifications,
-            onChanged: (val) => setState(() => _pushNotifications = val),
+            onChanged: (val) {
+              setState(() => _pushNotifications = val);
+              _savePreference('pushTransmissions', val);
+            },
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
             title: 'Acoustic echos (Sound)',
             subtitle: 'Play vintage terminal sound feedback on interactions.',
             value: _soundEchos,
-            onChanged: (val) => setState(() => _soundEchos = val),
+            onChanged: (val) {
+              setState(() => _soundEchos = val);
+              _savePreference('acousticEchos', val);
+            },
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
             title: 'Zone broadcast alerts',
             subtitle: 'Notify when high-priority nodes go live inside joined zones.',
             value: _zoneAlerts,
-            onChanged: (val) => setState(() => _zoneAlerts = val),
+            onChanged: (val) {
+              setState(() => _zoneAlerts = val);
+              _savePreference('zoneBroadcastAlerts', val);
+            },
           ),
         ],
       ),
@@ -92,6 +149,7 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
               ],
             ),
           ),
+          const SizedBox(width: 16),
           Switch(
             value: value,
             onChanged: onChanged,

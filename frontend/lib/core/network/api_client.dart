@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'app_exceptions.dart';
 
@@ -7,11 +8,22 @@ class ApiClient {
   final http.Client _client;
   static String? _sessaoCompartilhada;
 
+  static String get defaultBaseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8080';
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8080';
+    }
+    return 'http://localhost:8080';
+  }
+
   String? get _idSessao => _sessaoCompartilhada;
   set _idSessao(String? valor) => _sessaoCompartilhada = valor;
 
-  ApiClient({required this.baseUrl, http.Client? client})
-      : _client = client ?? http.Client();
+  ApiClient({String? baseUrl, http.Client? client})
+      : baseUrl = baseUrl ?? defaultBaseUrl,
+        _client = client ?? http.Client();
 
   void definirIdSessao(String idSessao) {
     _sessaoCompartilhada = idSessao;

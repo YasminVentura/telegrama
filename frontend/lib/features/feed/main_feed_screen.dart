@@ -10,6 +10,7 @@ import 'package:frontend/features/settings/settings_screen.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
 import 'package:frontend/data/repositories/post_repository.dart';
+import 'package:frontend/features/feed/models/post_model.dart';
 
 class MainFeedScreen extends StatefulWidget {
   const MainFeedScreen({super.key});
@@ -34,7 +35,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   int _currentThemeIndex = 0;
 
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
-  List<Map<String, dynamic>> _posts = [];
+  List<PostModel> _posts = [];
   bool _isLoadingPosts = true;
 
   @override

@@ -1,52 +1,122 @@
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/data/models/user_preferences.dart';
+
+/// DTO que mapeia a resposta do endpoint GET /usuarios/{nodeId} e GET /usuarios/me
+class PerfilRespostaDto {
+  final String id;
+  final String nome;
+  final String email;
+  final String nodeId;
+  final String? bio;
+  final String? localizacao;
+  final String? avatarUrl;
+  final int seguidoresCount;
+  final int seguindoCount;
+  final bool isMe;
+  final UserPreferences? preferencias;
+
+  PerfilRespostaDto({
+    required this.id,
+    required this.nome,
+    required this.email,
+    required this.nodeId,
+    this.bio,
+    this.localizacao,
+    this.avatarUrl,
+    this.seguidoresCount = 0,
+    this.seguindoCount = 0,
+    this.isMe = false,
+    this.preferencias,
+  });
+
+  factory PerfilRespostaDto.fromJson(Map<String, dynamic> json) {
+    return PerfilRespostaDto(
+      id: json['id']?.toString() ?? '',
+      nome: json['nome'] ?? '',
+      email: json['email'] ?? '',
+      nodeId: json['nodeId'] ?? '',
+      bio: json['bio'],
+      localizacao: json['localizacao'] ?? json['location'],
+      avatarUrl: json['avatarUrl'],
+      seguidoresCount: (json['quantidadeSeguidores'] ?? json['seguidoresCount'] ?? 0) as int,
+      seguindoCount: (json['quantidadeSeguindo'] ?? json['seguindoCount'] ?? 0) as int,
+      isMe: json['isMe'] == true,
+      preferencias: json['preferencias'] != null 
+          ? UserPreferences.fromJson(Map<String, dynamic>.from(json['preferencias']))
+          : null,
+    );
+  }
+}
 
 abstract class UserRepository {
-  Future<Map<String, dynamic>> getUserProfile(String userId);
-  Future<void> updateProfile(Map<String, dynamic> data);
+  Future<PerfilRespostaDto> getMyProfile();
+  Future<PerfilRespostaDto> getUserProfile(String nodeId);
+  Future<PerfilRespostaDto> updateProfile(Map<String, dynamic> data);
+  Future<UserPreferences> getPreferences();
+  Future<UserPreferences> updatePreferences(Map<String, dynamic> prefs);
   Future<String> uploadAvatar(XFile image);
-  Future<void> followUser(String userId);
-  Future<void> unfollowUser(String userId);
+  Future<void> followUser(String nodeId);
+  Future<void> unfollowUser(String nodeId);
 }
 
 class UserRepositoryImpl implements UserRepository {
+  final ApiClient _apiClient;
+
+  UserRepositoryImpl({ApiClient? apiClient})
+      : _apiClient = apiClient ??
+            ApiClient(
+              baseUrl: kIsWeb
+                  ? 'http://localhost:8080'
+                  : (defaultTargetPlatform == TargetPlatform.android
+                      ? 'http://10.0.2.2:8080'
+                      : 'http://localhost:8080'),
+            );
+
   @override
-  Future<Map<String, dynamic>> getUserProfile(String userId) async {
-    // Stub: Simula latência de rede
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {
-      'id': userId,
-      'name': 'Saskia Vance',
-      'handle': '@sas_vance',
-      'bio': 'Exploring high-contrast textures, vintage print design, and modern geometry. Based in Berlin.',
-      'location': 'Berlin, Germany',
-      'followingCount': 1200,
-      'followersCount': 45900,
-      'artifactsCount': 184,
-    };
+  Future<PerfilRespostaDto> getMyProfile() async {
+    final response = await _apiClient.get('/usuarios/me');
+    return PerfilRespostaDto.fromJson(response);
   }
 
   @override
-  Future<void> updateProfile(Map<String, dynamic> data) async {
-    // Stub: Simula update via API
-    await Future.delayed(const Duration(milliseconds: 600));
+  Future<PerfilRespostaDto> getUserProfile(String nodeId) async {
+    final response = await _apiClient.get('/usuarios/$nodeId');
+    return PerfilRespostaDto.fromJson(response);
+  }
+
+  @override
+  Future<PerfilRespostaDto> updateProfile(Map<String, dynamic> data) async {
+    final response = await _apiClient.put('/usuarios/me', body: data);
+    return PerfilRespostaDto.fromJson(response);
+  }
+
+  @override
+  Future<UserPreferences> getPreferences() async {
+    final response = await _apiClient.get('/usuarios/me/preferences');
+    return UserPreferences.fromJson(Map<String, dynamic>.from(response));
+  }
+
+  @override
+  Future<UserPreferences> updatePreferences(Map<String, dynamic> prefs) async {
+    final response = await _apiClient.put('/usuarios/me/preferences', body: prefs);
+    return UserPreferences.fromJson(Map<String, dynamic>.from(response));
+  }
+
+  @override
+  Future<void> followUser(String nodeId) async {
+    await _apiClient.post('/usuarios/$nodeId/seguir');
+  }
+
+  @override
+  Future<void> unfollowUser(String nodeId) async {
+    await _apiClient.delete('/usuarios/$nodeId/seguir');
   }
 
   @override
   Future<String> uploadAvatar(XFile image) async {
-    // Stub: Simula upload de arquivo para bucket e retorna a URL
     await Future.delayed(const Duration(milliseconds: 1500));
-    return 'https://exemplo.com/avatar_mock.jpg'; 
-  }
-
-  @override
-  Future<void> followUser(String userId) async {
-    // Stub: Simula registro de follow
-    await Future.delayed(const Duration(milliseconds: 300));
-  }
-
-  @override
-  Future<void> unfollowUser(String userId) async {
-    // Stub: Simula deleção de follow
-    await Future.delayed(const Duration(milliseconds: 300));
+    return 'https://exemplo.com/avatar_mock.jpg';
   }
 }

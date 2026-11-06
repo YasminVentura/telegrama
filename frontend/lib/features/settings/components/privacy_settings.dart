@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class PrivacySettingsContent extends StatefulWidget {
   final AppTheme currentTheme;
@@ -11,12 +12,59 @@ class PrivacySettingsContent extends StatefulWidget {
 }
 
 class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
+  final UserRepository _userRepository = UserRepositoryImpl();
   bool _privateFrequency = false;
   bool _allowDirectTransmissions = true;
   bool _showNodeActivity = true;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    try {
+      final prefs = await _userRepository.getPreferences();
+      if (mounted) {
+        setState(() {
+          _privateFrequency = prefs.privateFrequencyMode;
+          _allowDirectTransmissions = prefs.directTransmissions;
+          _showNodeActivity = prefs.broadcastNodeActivity;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _savePreference(String key, bool value) async {
+    try {
+      await _userRepository.updatePreferences({key: value});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar preferência: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -45,21 +93,30 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
             title: 'Private frequency mode',
             subtitle: 'Only approved nodes can tune into your broadcasted waves.',
             value: _privateFrequency,
-            onChanged: (val) => setState(() => _privateFrequency = val),
+            onChanged: (val) {
+              setState(() => _privateFrequency = val);
+              _savePreference('privateFrequencyMode', val);
+            },
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
             title: 'Direct transmissions (DMs)',
             subtitle: 'Allow other nodes to send direct private signals to your terminal.',
             value: _allowDirectTransmissions,
-            onChanged: (val) => setState(() => _allowDirectTransmissions = val),
+            onChanged: (val) {
+              setState(() => _allowDirectTransmissions = val);
+              _savePreference('directTransmissions', val);
+            },
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
             title: 'Broadcast node activity',
             subtitle: 'Display your online status and active zones in the retroverse.',
             value: _showNodeActivity,
-            onChanged: (val) => setState(() => _showNodeActivity = val),
+            onChanged: (val) {
+              setState(() => _showNodeActivity = val);
+              _savePreference('broadcastNodeActivity', val);
+            },
           ),
         ],
       ),

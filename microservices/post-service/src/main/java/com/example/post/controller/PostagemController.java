@@ -12,15 +12,24 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@CrossOrigin(
+    originPatterns = {"http://localhost:*", "http://127.0.0.1:*"},
+    allowedHeaders = "*",
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
+    exposedHeaders = {"Set-Cookie", "X-Session-Id"},
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping(path = {"/posts", "/api/posts"})
 @RequiredArgsConstructor
@@ -48,6 +57,17 @@ public class PostagemController {
     ) {
         UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
         List<PostagemRespostaDto> postagens = postagemService.listarPostagens(page, limit, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
+    @GetMapping("/usuario/{nodeId}")
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> listarPostagensPorUsuario(
+            @PathVariable String nodeId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.listarPostagensPorUsuario(nodeId, usuarioLogado);
         return new RespostaEnvelopeDto<>(postagens);
     }
 
@@ -87,12 +107,24 @@ public class PostagemController {
         if (authentication != null && authentication.getPrincipal() instanceof UsuarioAutenticado usuario) {
             return usuario;
         }
+        if (authentication != null && authentication.getName() != null) {
+            return UsuarioAutenticado.builder()
+                    .nodeId(authentication.getName())
+                    .nome(authentication.getName())
+                    .build();
+        }
         throw new IllegalStateException("Usuário não autenticado.");
     }
 
     private UsuarioAutenticado extrairUsuarioOpcional(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof UsuarioAutenticado usuario) {
             return usuario;
+        }
+        if (authentication != null && authentication.getName() != null) {
+            return UsuarioAutenticado.builder()
+                    .nodeId(authentication.getName())
+                    .nome(authentication.getName())
+                    .build();
         }
         return null;
     }

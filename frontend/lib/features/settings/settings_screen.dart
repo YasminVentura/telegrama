@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/settings/components/settings_menu.dart';
 import 'package:frontend/features/settings/components/profile_settings.dart';
 import 'package:frontend/features/settings/components/appearance_settings.dart';
@@ -11,12 +12,14 @@ class SettingsScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final Function(AppTheme) onThemeChanged;
   final VoidCallback onBack;
+  final VoidCallback? onProfileUpdated;
 
   const SettingsScreen({
     super.key,
     required this.currentTheme,
     required this.onThemeChanged,
     required this.onBack,
+    this.onProfileUpdated,
   });
 
   @override
@@ -25,6 +28,30 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _activeSettingsRoute = 'Profile & Account';
+  final UserRepository _userRepository = UserRepositoryImpl();
+  String _userNodeId = 'CARREGANDO...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserNodeId();
+  }
+
+  void _loadUserNodeId() {
+    _userRepository.getMyProfile().then((profile) {
+      if (mounted) {
+        setState(() {
+          _userNodeId = profile.nodeId.toUpperCase();
+        });
+      }
+    }).catchError((_) {
+      if (mounted) {
+        setState(() {
+          _userNodeId = 'DESCONHECIDO';
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,11 +105,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   Text(
-                    'NODE ID • SAS_VANCE',
+                    'NODE ID • $_userNodeId', // Exibição dinâmica do nodeId do usuário
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: widget.currentTheme.textColor.withOpacity(0.5),
+                      color: widget.currentTheme.textColor.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -92,7 +119,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Edit your identity, node coordinates and account frequency.',
                 style: TextStyle(
                   fontSize: 13.5,
-                  color: widget.currentTheme.textColor.withOpacity(0.7),
+                  color: widget.currentTheme.textColor.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 24),
@@ -160,14 +187,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               Text(
                 'For signal troubleshooting and frequency calibration support, contact terminal command at support@telegrama.zone.',
-                style: TextStyle(fontSize: 13, color: widget.currentTheme.textColor.withOpacity(0.7)),
+                style: TextStyle(fontSize: 13, color: widget.currentTheme.textColor.withValues(alpha: 0.7)),
               ),
             ],
           ),
         );
       case 'Profile & Account':
       default:
-        return ProfileSettingsContent(currentTheme: widget.currentTheme);
+        return ProfileSettingsContent(
+          currentTheme: widget.currentTheme,
+          onProfileUpdated: () {
+            _loadUserNodeId(); // Recarrega o nodeId no topo caso o usuário o altere
+            widget.onProfileUpdated?.call();
+          },
+        );
     }
   }
 }

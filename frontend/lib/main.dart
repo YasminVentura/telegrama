@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/feed/main_feed_screen.dart';
 import 'package:frontend/features/auth/login_screen.dart';
-import 'package:frontend/features/auth/sign_up_screen.dart'; // Ajuste para register_screen.dart se for o caso
+import 'package:frontend/features/auth/sign_up_screen.dart';
 import 'package:frontend/features/auth/welcome_screen.dart';
 import 'package:frontend/features/auth/forget_password_screen.dart';
 import 'package:frontend/core/themes/app_themes.dart';

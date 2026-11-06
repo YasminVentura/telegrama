@@ -1,10 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:frontend/core/network/api_client.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
 
   AuthRepository({ApiClient? apiClient}) 
-      : _apiClient = apiClient ?? ApiClient(baseUrl: 'http://127.0.0.1:8080');
+      : _apiClient = apiClient ??
+            ApiClient(
+              baseUrl: kIsWeb
+                  ? 'http://localhost:8080'
+                  : (defaultTargetPlatform == TargetPlatform.android
+                      ? 'http://10.0.2.2:8080'
+                      : 'http://localhost:8080'),
+            );
 
   Future<dynamic> login(String identificador, String senha) async {
     final resposta = await _apiClient.post('/auth/login', body: {

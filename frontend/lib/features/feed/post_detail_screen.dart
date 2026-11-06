@@ -4,6 +4,7 @@ import 'package:frontend/data/repositories/post_repository.dart';
 import 'package:frontend/features/feed/components/post_detail_card.dart';
 import 'package:frontend/features/feed/components/comment_item_component.dart';
 import 'package:frontend/features/feed/components/reply_input_widget.dart';
+import 'package:frontend/features/feed/models/post_model.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final AppTheme currentTheme;
@@ -25,8 +26,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
   
   bool _isLoading = true;
-  Map<String, dynamic>? _postData;
-  List<Map<String, dynamic>> _comments = [];
+  PostModel? _postData;
+  List<dynamic> _comments = [];
 
   @override
   void initState() {
@@ -37,10 +38,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Future<void> _fetchPostDetails() async {
     setState(() => _isLoading = true);
     
-    // In a real app we would have a getPostById method.
-    // For this prototype, we'll fetch feed posts and match, or just use a mock object.
     final posts = await _postRepository.getFeedPosts();
-    final post = posts.firstWhere((p) => p['id'] == widget.postId, orElse: () => posts.first);
+    final post = posts.firstWhere((p) => p.id == widget.postId, orElse: () => posts.first);
     
     final comments = await _postRepository.getCommentsForPost(widget.postId);
 
@@ -55,10 +54,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Future<void> _addComment(String text) async {
     final newComment = await _postRepository.addCommentToPost(widget.postId, text);
-    if (mounted) {
+    if (mounted && _postData != null) {
       setState(() {
         _comments.insert(0, newComment);
-        _postData!['commentsCount'] = (_postData!['commentsCount'] as int) + 1;
+        // Atualiza a quantidade de comentários usando copyWith
+        _postData = _postData!.copyWith(comments: _postData!.comments + 1);
       });
     }
   }
@@ -127,15 +127,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     children: [
                       PostDetailCard(
                         currentTheme: widget.currentTheme,
-                        name: _postData!['authorName'],
-                        handle: _postData!['authorHandle'],
-                        content: _postData!['content'],
-                        imageUrl: _postData!['imageUrl'],
-                        frequencyTag: _postData!['frequencyTag'],
+                        name: _postData!.authorName,
+                        handle: _postData!.authorHandle,
+                        content: _postData!.content,
+                        imageUrl: _postData!.imageUrl,
+                        frequencyTag: _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
                         exactTime: '8:45 PM · Oct 24, 2026 · Telegrama Desktop',
-                        likesCount: _postData!['likesCount'],
-                        commentsCount: _postData!['commentsCount'],
-                        repostsCount: _postData!['repostsCount'],
+                        likesCount: _postData!.likesCount,
+                        commentsCount: _postData!.commentsCount,
+                        repostsCount: _postData!.repostsCount,
                       ),
                       
                       // Comments Section
@@ -163,18 +163,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 24),
                               child: CommentItemComponent(
                                 currentTheme: widget.currentTheme,
-                                name: comment['authorName'],
-                                handle: comment['authorHandle'],
-                                content: comment['content'],
-                                timeAgo: comment['timeAgo'],
-                                likesCount: comment['likesCount'],
+                                name: comment['authorName'] ?? 'Node Anônimo',
+                                handle: comment['authorHandle'] ?? '@node',
+                                content: comment['content'] ?? '',
+                                timeAgo: comment['timeAgo'] ?? 'Agora',
+                                likesCount: (comment['likesCount'] ?? 0) as int,
                                 isLast: isLast,
                               ),
                             );
                           },
                         ),
                         
-                      const SizedBox(height: 60), // padding before bottom input
+                      const SizedBox(height: 60),
                     ],
                   ),
                 ),

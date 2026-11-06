@@ -1,11 +1,14 @@
 package com.example.authetication.modelo;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -53,6 +56,9 @@ public class Usuario {
     @Column(name = "termos_aceitos", nullable = false)
     private Boolean termosAceitos;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
@@ -65,4 +71,7 @@ public class Usuario {
     @LastModifiedDate
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
+
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UsuarioPreferencias preferencias;
 }

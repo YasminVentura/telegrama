@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class SecuritySettingsContent extends StatefulWidget {
   final AppTheme currentTheme;
@@ -11,10 +12,55 @@ class SecuritySettingsContent extends StatefulWidget {
 }
 
 class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
-  bool _twoFactorAuth = true;
+  final UserRepository _userRepository = UserRepositoryImpl();
+  bool _twoFactorAuth = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    try {
+      final prefs = await _userRepository.getPreferences();
+      if (mounted) {
+        setState(() {
+          _twoFactorAuth = prefs.twoFactorAuth;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _savePreference(String key, bool value) async {
+    try {
+      await _userRepository.updatePreferences({key: value});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao salvar preferência de segurança: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -43,7 +89,10 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
             title: 'Two-Factor Authentication (2FA)',
             subtitle: 'Require security key verification on new terminal log-ins.',
             value: _twoFactorAuth,
-            onChanged: (val) => setState(() => _twoFactorAuth = val),
+            onChanged: (val) {
+              setState(() => _twoFactorAuth = val);
+              _savePreference('twoFactorAuth', val);
+            },
           ),
           const SizedBox(height: 16),
 
@@ -95,6 +144,7 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
               ],
             ),
           ),
+          const SizedBox(width: 16),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -125,34 +175,63 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: widget.currentTheme.textColor.withOpacity(0.7)),
-          const SizedBox(width: 14),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDestructive ? const Color(0xFFFF4D4D).withOpacity(0.15) : widget.currentTheme.primaryColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.primaryColor, 
+                width: 1.5
+              ),
+            ),
+            child: Icon(
+              icon, 
+              size: 20, 
+              color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.primaryColor
+            ),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
+                Text(
+                  title, 
+                  style: TextStyle(
+                    fontSize: 14, 
+                    fontWeight: FontWeight.w900, 
+                    color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.textColor
+                  )
+                ),
                 const SizedBox(height: 2),
                 Text(subtitle, style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.6))),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           GestureDetector(
             onTap: onTap,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isDestructive ? Colors.redAccent.withOpacity(0.15) : widget.currentTheme.backgroundColor,
+                color: widget.currentTheme.backgroundColor,
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: isDestructive ? Colors.redAccent : widget.currentTheme.shadowColor, width: 1.5),
+                border: Border.all(
+                  color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.shadowColor, 
+                  width: 1.5
+                ),
+                boxShadow: [
+                  BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                ],
               ),
               child: Text(
                 actionText,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: isDestructive ? Colors.redAccent : widget.currentTheme.textColor,
+                  letterSpacing: 0.5,
+                  color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.textColor,
                 ),
               ),
             ),

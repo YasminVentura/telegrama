@@ -9,14 +9,21 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -29,8 +36,11 @@ public class ConfiguracaoSeguranca {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // Libera requisições preflight (OPTIONS)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Libera o acesso para registro, login e erros
                 .requestMatchers("/auth/registro", "/auth/login", "/error").permitAll()
                 // Libera acesso de leitura (GET) ao perfil e métricas de todos os usuários
@@ -43,6 +53,36 @@ public class ConfiguracaoSeguranca {
             .addFilterBefore(jwtFiltroAutenticacao, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Origens de desenvolvimento permitidas
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*"
+        ));
+        
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // Cabeçalhos permitidos na requisição (Content-Type, X-Session-Id, Authorization, etc.)
+        configuration.setAllowedHeaders(List.of("*"));
+        
+        // Cabeçalhos expostos na resposta para o cliente (Flutter Web)
+        configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id"));
+        
+        // Permite envio de credenciais (cookies e autorizações)
+        configuration.setAllowCredentials(true);
+        
+        // Cache preflight por 1 hora
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
