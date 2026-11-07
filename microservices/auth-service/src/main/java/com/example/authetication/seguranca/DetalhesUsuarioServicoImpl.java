@@ -8,6 +8,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class DetalhesUsuarioServicoImpl implements UserDetailsService {
@@ -16,10 +18,21 @@ public class DetalhesUsuarioServicoImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String identificador) throws UsernameNotFoundException {
-        // Busca tanto por email quanto por node_id, como solicitado
-        Usuario usuario = usuarioRepository.findByEmailOrNodeId(identificador, identificador)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + identificador));
+        if (identificador == null || identificador.isBlank()) {
+            throw new UsernameNotFoundException("Identificador inválido.");
+        }
+        String limpo = identificador.trim();
 
-        return new DetalhesUsuarioImpl(usuario);
+        // 1. Tenta exatamente como veio (por email ou nodeId)
+        Optional<Usuario> usuario = usuarioRepository.findByEmailOrNodeId(limpo, limpo);
+
+        // 2. Se não encontrou, tenta alternando o prefixo '@' no nodeId
+        if (usuario.isEmpty()) {
+            String alternativo = limpo.startsWith("@") ? limpo.substring(1) : "@" + limpo;
+            usuario = usuarioRepository.findByNodeId(alternativo);
+        }
+
+        return usuario.map(DetalhesUsuarioImpl::new)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + identificador));
     }
 }

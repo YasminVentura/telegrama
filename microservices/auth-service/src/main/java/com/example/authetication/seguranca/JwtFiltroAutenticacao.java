@@ -39,21 +39,26 @@ public class JwtFiltroAutenticacao extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        identificador = jwtUtils.extrairIdentificador(jwt);
+        try {
+            identificador = jwtUtils.extrairIdentificador(jwt);
 
-        if (identificador != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.detalhesUsuarioServico.loadUserByUsername(identificador);
-            if (jwtUtils.isTokenValido(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            if (identificador != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.detalhesUsuarioServico.loadUserByUsername(identificador);
+                if (jwtUtils.isTokenValido(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Se o token for inválido, expirado ou de um usuário que não existe mais no banco,
+            // prossegue sem autenticar para não quebrar rotas públicas (GET /usuarios/**)
         }
         filterChain.doFilter(request, response);
     }

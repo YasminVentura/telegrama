@@ -51,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _profileFuture.then((profile) {
       if (mounted) {
         setState(() {
+          _isFollowing = profile.isFollowing;
           _followersCount = profile.seguidoresCount;
           _followingCount = profile.seguindoCount;
           _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
@@ -137,6 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         final profile = snapshot.data!;
         final bool isOwner = profile.isMe || (widget.nodeId == null || widget.nodeId!.isEmpty);
+        final String formattedHandle = profile.nodeId.startsWith('@')
+            ? profile.nodeId
+            : '@${profile.nodeId}';
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -149,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ProfileCard(
                     currentTheme: widget.currentTheme,
                     name: profile.nome,
-                    handle: '@${profile.nodeId}',
+                    handle: formattedHandle,
                     bio: profile.bio ?? 'Sem biografia disponível.',
                     location: (profile.localizacao != null && profile.localizacao!.isNotEmpty)
                         ? profile.localizacao!

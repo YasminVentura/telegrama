@@ -25,6 +25,7 @@ public interface UsuarioMapper {
     @Mapping(target = "quantidadeSeguindo", ignore = true)
     @Mapping(target = "isMe", ignore = true)
     @Mapping(target = "seguindo", ignore = true)
+    @Mapping(target = "preferencias", ignore = true)
     PerfilRespostaDto paraPerfilDto(Usuario usuario);
 
     UsuarioPreferenciasDto paraPreferenciasDto(UsuarioPreferencias preferencias);

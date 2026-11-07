@@ -15,6 +15,7 @@ class PerfilRespostaDto {
   final int seguidoresCount;
   final int seguindoCount;
   final bool isMe;
+  final bool isFollowing;
   final UserPreferences? preferencias;
 
   PerfilRespostaDto({
@@ -28,6 +29,7 @@ class PerfilRespostaDto {
     this.seguidoresCount = 0,
     this.seguindoCount = 0,
     this.isMe = false,
+    this.isFollowing = false,
     this.preferencias,
   });
 
@@ -42,7 +44,8 @@ class PerfilRespostaDto {
       avatarUrl: json['avatarUrl'],
       seguidoresCount: (json['quantidadeSeguidores'] ?? json['seguidoresCount'] ?? 0) as int,
       seguindoCount: (json['quantidadeSeguindo'] ?? json['seguindoCount'] ?? 0) as int,
-      isMe: json['isMe'] == true,
+      isMe: json['isMe'] == true || json['me'] == true,
+      isFollowing: json['isFollowing'] == true || json['seguindo'] == true,
       preferencias: json['preferencias'] != null 
           ? UserPreferences.fromJson(Map<String, dynamic>.from(json['preferencias']))
           : null,
