@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/feed/components/post_attachment_button.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class SendPostWidget extends StatefulWidget {
   final AppTheme currentTheme;
   final Function(String) onPostSubmitted;
+  final String? avatarUrl;
+  final String? userName;
 
   const SendPostWidget({
     super.key,
     required this.currentTheme,
     required this.onPostSubmitted,
+    this.avatarUrl,
+    this.userName,
   });
 
   @override
@@ -87,20 +93,25 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: widget.currentTheme.secondaryColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
-                ),
-                child: Center(
-                  child: CircleAvatar(
-                    radius: 12,
-                    backgroundColor: widget.currentTheme.secondaryColor.withOpacity(0.8),
-                  ),
-                ),
+              ValueListenableBuilder<String>(
+                valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                builder: (context, currentAvatar, _) {
+                  final effectiveAvatar = (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
+                      ? widget.avatarUrl!
+                      : currentAvatar;
+                  final effectiveName = (widget.userName != null && widget.userName!.isNotEmpty)
+                      ? widget.userName!
+                      : UserRepositoryImpl.currentUserNameNotifier.value;
+
+                  return UserAvatar(
+                    imageUrl: effectiveAvatar,
+                    name: effectiveName,
+                    radius: 20,
+                    borderColor: widget.currentTheme.shadowColor,
+                    borderWidth: 2,
+                    backgroundColor: widget.currentTheme.secondaryColor,
+                  );
+                },
               ),
               const SizedBox(width: 16),
               Expanded(

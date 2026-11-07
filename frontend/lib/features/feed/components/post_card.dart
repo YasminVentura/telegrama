@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class PostCard extends StatefulWidget {
   final AppTheme currentTheme;
@@ -7,7 +9,8 @@ class PostCard extends StatefulWidget {
   final String handle;
   final String timeAgo;
   final String content;
-  final String? imageUrl; 
+  final String? authorAvatarUrl;
+  final String? imageUrl;
   final String? frequencyTag;
   final int likesCount;
   final int commentsCount;
@@ -23,6 +26,7 @@ class PostCard extends StatefulWidget {
     required this.handle,
     required this.timeAgo,
     required this.content,
+    this.authorAvatarUrl,
     this.imageUrl,
     this.frequencyTag,
     required this.likesCount,
@@ -42,16 +46,6 @@ class _PostCardState extends State<PostCard> {
   bool _isReposted = false;
   bool _isSaved = false;
 
-  String _getInitials(String text) {
-    List<String> words = text.trim().split(' ');
-    if (words.length >= 2) {
-      return '${words[0][0]}${words[1][0]}'.toUpperCase();
-    } else if (words.isNotEmpty && words[0].isNotEmpty) {
-      return words[0][0].toUpperCase();
-    }
-    return 'SV';
-  }
-
   @override
   Widget build(BuildContext context) {
     int currentLikes = widget.likesCount + (_isLiked ? 1 : 0);
@@ -67,7 +61,7 @@ class _PostCardState extends State<PostCard> {
         boxShadow: [
           BoxShadow(
             color: widget.currentTheme.shadowColor,
-            offset: const Offset(4, 4), 
+            offset: const Offset(4, 4),
             blurRadius: 0,
           ),
         ],
@@ -80,20 +74,30 @@ class _PostCardState extends State<PostCard> {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
-                    ),
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: widget.currentTheme.primaryColor,
-                      child: Text(
-                        _getInitials(widget.name),
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: widget.currentTheme.backgroundColor),
-                      ),
-                    ),
+                  ValueListenableBuilder<String>(
+                    valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                    builder: (context, currentMyAvatar, _) {
+                      final bool isMyPost = UserRepositoryImpl.isCurrentUser(
+                        widget.handle,
+                        authorName: widget.name,
+                      );
+                      final String effectiveAvatar = isMyPost
+                          ? currentMyAvatar
+                          : ((widget.authorAvatarUrl != null &&
+                                  widget.authorAvatarUrl!.isNotEmpty &&
+                                  widget.authorAvatarUrl != UserAvatar.defaultAvatar)
+                              ? widget.authorAvatarUrl!
+                              : currentMyAvatar);
+
+                      return UserAvatar(
+                        imageUrl: effectiveAvatar,
+                        name: widget.name,
+                        radius: 18,
+                        borderColor: widget.currentTheme.shadowColor,
+                        borderWidth: 2,
+                        backgroundColor: widget.currentTheme.primaryColor,
+                      );
+                    },
                   ),
                   const SizedBox(width: 12),
                   Column(
@@ -131,7 +135,7 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ],
               ),
-              
+
               if (widget.frequencyTag != null && widget.frequencyTag!.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -288,7 +292,7 @@ class _PostInteractionButtonState extends State<_PostInteractionButton> {
     final Color currentBorderColor = widget.isActive
         ? widget.activeColor
         : (_isHovered ? widget.primaryColor : widget.shadowColor.withOpacity(0.4));
-    
+
     final Color currentFgColor = widget.isActive
         ? widget.activeColor
         : (_isHovered ? widget.primaryColor : widget.textColor.withOpacity(0.8));

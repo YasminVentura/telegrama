@@ -25,3 +25,9 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/images/signal_artwork.png
+    - lib/assets/images/avatars/avatar_1.webp
+    - lib/assets/images/avatars/avatar_2.webp
+    - lib/assets/images/avatars/avatar_3.jpg
+    - lib/assets/images/avatars/avatar_4.jpg
+    - lib/assets/images/avatars/avatar_5.jpg
+    - lib/assets/images/avatars/avatar_6.jpg

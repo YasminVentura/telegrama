@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/models/user_preferences.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class ProfileCard extends StatelessWidget {
   final AppTheme currentTheme;
@@ -7,11 +10,13 @@ class ProfileCard extends StatelessWidget {
   final String handle;
   final String bio;
   final String? location;
+  final String? avatarUrl;
   final String followingCount;
   final String followersCount;
   final String artifactsCount;
   final VoidCallback? onFollowPressed;
   final VoidCallback? onMessagePressed;
+  final ValueChanged<String>? onAvatarSelected;
   final bool isFollowing;
   final bool isLoadingFollow;
   final bool isOwner;
@@ -23,15 +28,146 @@ class ProfileCard extends StatelessWidget {
     required this.handle,
     required this.bio,
     this.location,
+    this.avatarUrl,
     required this.followingCount,
     required this.followersCount,
     required this.artifactsCount,
     this.onFollowPressed,
     this.onMessagePressed,
+    this.onAvatarSelected,
     this.isFollowing = false,
     this.isLoadingFollow = false,
     this.isOwner = false,
   });
+
+  void _showAvatarPickerModal(BuildContext context, String currentAvatar) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 440,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: currentTheme.backgroundColor,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: currentTheme.shadowColor, width: 2.5),
+              boxShadow: [
+                BoxShadow(
+                  color: currentTheme.shadowColor,
+                  offset: const Offset(6, 6),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ESCOLHER FOTO DO PERFIL',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: currentTheme.textColor,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(dialogContext).pop(),
+                      child: Icon(Icons.close, color: currentTheme.textColor),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Selecione uma das 6 imagens fixas disponíveis para o seu perfil:',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: currentTheme.textColor.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  alignment: WrapAlignment.center,
+                  children: UserPreferences.fixedAvatars.map((preset) {
+                    final bool isSelected =
+                        (UserAvatar.resolvePresetAsset(currentAvatar) ?? currentAvatar) == preset;
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.of(dialogContext).pop();
+                        onAvatarSelected?.call(preset);
+                      },
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Stack(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isSelected
+                                    ? currentTheme.primaryColor
+                                    : currentTheme.backgroundColor,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? currentTheme.primaryColor
+                                      : currentTheme.shadowColor,
+                                  width: isSelected ? 3 : 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: currentTheme.shadowColor,
+                                    offset: const Offset(2, 2),
+                                    blurRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: UserAvatar(
+                                imageUrl: preset,
+                                name: name,
+                                radius: 40,
+                                showShadow: false,
+                                borderWidth: 1.5,
+                                borderColor: currentTheme.shadowColor,
+                              ),
+                            ),
+                            if (isSelected)
+                              Positioned(
+                                right: 2,
+                                bottom: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: currentTheme.primaryColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: currentTheme.shadowColor, width: 1.5),
+                                  ),
+                                  child: Icon(
+                                    Icons.check,
+                                    size: 14,
+                                    color: currentTheme.backgroundColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +197,7 @@ class ProfileCard extends StatelessWidget {
               ),
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.all(24),
             child: Stack(
@@ -70,24 +206,62 @@ class ProfileCard extends StatelessWidget {
                 Positioned(
                   top: -65,
                   left: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: currentTheme.backgroundColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: currentTheme.shadowColor, width: 2),
-                      boxShadow: [
-                        BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: currentTheme.primaryColor,
-                      child: Text(
-                        'SV',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: currentTheme.backgroundColor),
-                      ),
-                    ),
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                    builder: (context, myCurrentAvatar, _) {
+                      final String effectiveAvatar = isOwner
+                          ? myCurrentAvatar
+                          : (avatarUrl ?? UserPreferences.defaultAvatar);
+
+                      return GestureDetector(
+                        onTap: isOwner ? () => _showAvatarPickerModal(context, effectiveAvatar) : null,
+                        child: MouseRegion(
+                          cursor: isOwner ? SystemMouseCursors.click : SystemMouseCursors.basic,
+                          child: Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: currentTheme.backgroundColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                                  ],
+                                ),
+                                child: UserAvatar(
+                                  imageUrl: effectiveAvatar,
+                                  name: name,
+                                  radius: 40,
+                                  borderColor: currentTheme.shadowColor,
+                                  borderWidth: 2,
+                                  showShadow: false,
+                                  backgroundColor: currentTheme.primaryColor,
+                                ),
+                              ),
+                              if (isOwner)
+                                Positioned(
+                                  bottom: 2,
+                                  right: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: currentTheme.primaryColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 14,
+                                      color: currentTheme.backgroundColor,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -95,7 +269,7 @@ class ProfileCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 24),
-                    
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -117,8 +291,8 @@ class ProfileCard extends StatelessWidget {
                           Row(
                             children: [
                               _buildActionButton(
-                                isFollowing ? 'FOLLOWING' : 'FOLLOW', 
-                                isPrimary: !isFollowing, 
+                                isFollowing ? 'FOLLOWING' : 'FOLLOW',
+                                isPrimary: !isFollowing,
                                 onTap: onFollowPressed,
                                 isLoading: isLoadingFollow,
                               ),
@@ -180,13 +354,13 @@ class ProfileCard extends StatelessWidget {
             BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
           ],
         ),
-        child: isLoading 
+        child: isLoading
             ? SizedBox(
-                width: 14, 
-                height: 14, 
+                width: 14,
+                height: 14,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2, 
-                  color: isPrimary ? currentTheme.backgroundColor : currentTheme.primaryColor
+                  strokeWidth: 2,
+                  color: isPrimary ? currentTheme.backgroundColor : currentTheme.primaryColor,
                 ),
               )
             : Text(

@@ -76,5 +76,10 @@ public class UsuarioPreferencias {
     @Column(name = "theme", nullable = false)
     @Builder.Default
     private TemaVisual theme = TemaVisual.RETRO_GREEN;
+
+    // Profile Photo Preference (6 imagens fixas)
+    @Column(name = "avatar_url")
+    @Builder.Default
+    private String avatarUrl = "lib/assets/images/avatars/avatar_1.webp";
 }
 

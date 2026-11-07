@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/shared/components/hover_icon_button.dart';
 import 'package:frontend/shared/components/global_search_modal.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 import 'package:frontend/shared/repositories/notification_repository.dart';
 
 class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
   final AppTheme currentTheme;
   final Function(String route)? onNavigate;
+  final String? avatarUrl;
+  final String? userName;
 
   const HeaderWidget({
     super.key,
     required this.currentTheme,
     this.onNavigate,
+    this.avatarUrl,
+    this.userName,
   });
 
   @override
@@ -23,12 +29,21 @@ class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
 
 class _HeaderWidgetState extends State<HeaderWidget> {
   final NotificationRepository _notificationRepository = NotificationRepository();
+  final UserRepository _userRepository = UserRepositoryImpl();
   int _unreadNotificationsCount = 0;
 
   @override
   void initState() {
     super.initState();
     _unreadNotificationsCount = _notificationRepository.unreadCount;
+    if (UserRepositoryImpl.currentUserNodeId == null) {
+      _userRepository.getMyProfile().catchError((_) => PerfilRespostaDto(
+            id: '',
+            nome: 'User',
+            email: '',
+            nodeId: '',
+          ));
+    }
   }
 
   @override
@@ -162,27 +177,31 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 onNavigate: widget.onNavigate,
               ),
               const SizedBox(width: 16),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: widget.currentTheme.secondaryColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.currentTheme.shadowColor,
-                      offset: const Offset(2, 2),
-                      blurRadius: 0,
+              ValueListenableBuilder<String>(
+                valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                builder: (context, currentAvatar, _) {
+                  final effectiveAvatar = (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
+                      ? widget.avatarUrl!
+                      : currentAvatar;
+                  final effectiveName = (widget.userName != null && widget.userName!.isNotEmpty)
+                      ? widget.userName!
+                      : UserRepositoryImpl.currentUserNameNotifier.value;
+
+                  return GestureDetector(
+                    onTap: () => widget.onNavigate?.call('My Profile'),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: UserAvatar(
+                        imageUrl: effectiveAvatar,
+                        name: effectiveName,
+                        radius: 20,
+                        borderColor: widget.currentTheme.shadowColor,
+                        borderWidth: 2,
+                        backgroundColor: widget.currentTheme.secondaryColor,
+                      ),
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: CircleAvatar(
-                    radius: 12,
-                    backgroundColor: widget.currentTheme.secondaryColor.withOpacity(0.8),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),

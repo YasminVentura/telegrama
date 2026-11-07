@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ProfileSettingsContent extends StatefulWidget {
   final AppTheme currentTheme;
-  final VoidCallback? onProfileUpdated; // Callback adicionado para notificar o pai
+  final VoidCallback? onProfileUpdated;
 
   const ProfileSettingsContent({
     super.key,
@@ -19,8 +19,7 @@ class ProfileSettingsContent extends StatefulWidget {
 }
 
 class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
-  String? _localImagePath;
-  final ImagePicker _picker = ImagePicker();
+  String _selectedAvatarUrl = UserPreferences.defaultAvatar;
   final UserRepository _userRepository = UserRepositoryImpl();
 
   late Future<PerfilRespostaDto> _profileFuture;
@@ -42,12 +41,17 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     _profileFuture = _userRepository.getMyProfile();
     _profileFuture.then((profile) {
       if (mounted) {
+        final resolvedAvatar = UserRepositoryImpl.selectedAvatarOrDefault;
+
         setState(() {
           _nameController.text = profile.nome;
-          _nodeIdController.text = '@${profile.nodeId}';
+          _nodeIdController.text = profile.nodeId.startsWith('@')
+              ? profile.nodeId
+              : '@${profile.nodeId}';
           _bioController.text = profile.bio ?? '';
           _locationController.text = profile.localizacao ?? '';
           _userEmail = profile.email;
+          _selectedAvatarUrl = resolvedAvatar;
         });
       }
     }).catchError((_) {});
@@ -62,18 +66,21 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _selectFixedAvatar(String avatarAssetPath) async {
+    setState(() {
+      _selectedAvatarUrl = avatarAssetPath;
+    });
+    UserRepositoryImpl.setExplicitAvatarChoice(avatarAssetPath);
+
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          _localImagePath = image.path;
-        });
-        await _userRepository.uploadAvatar(image);
-        widget.onProfileUpdated?.call();
-      }
+      await _userRepository.updatePreferences({'avatarUrl': avatarAssetPath});
+      await _userRepository.updateProfile({
+        'avatarUrl': avatarAssetPath,
+        'preferencias': {'avatarUrl': avatarAssetPath},
+      });
+      widget.onProfileUpdated?.call();
     } catch (e) {
-      debugPrint("Error picking image: $e");
+      debugPrint('Erro ao atualizar foto do perfil nas preferências: $e');
     }
   }
 
@@ -86,16 +93,20 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
         'nome': _nameController.text,
         'bio': _bioController.text,
         'localizacao': _locationController.text,
+        'avatarUrl': _selectedAvatarUrl,
+        'preferencias': {
+          'avatarUrl': _selectedAvatarUrl,
+        },
       };
 
+      await _userRepository.updatePreferences({'avatarUrl': _selectedAvatarUrl});
       await _userRepository.updateProfile(updateData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+          const SnackBar(content: Text('Perfil e foto atualizados com sucesso!')),
         );
 
-        // Dispara o callback para atualizar o feed sem depender de Navigator.pop()
         widget.onProfileUpdated?.call();
       }
     } catch (e) {
@@ -173,56 +184,117 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                       style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withValues(alpha: 0.6)),
                     ),
                     const SizedBox(height: 20),
-                    
-                    // Seção de Transmissão de Perfil (Avatar + Botão)
+
+                    // Seção de Transmissão de Perfil (Avatar Atual + 6 Imagens Fixas)
                     Row(
                       children: [
                         UserAvatar(
                           name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
-                          radius: 28,
-                          localImagePath: _localImagePath,
+                          radius: 32,
+                          imageUrl: _selectedAvatarUrl,
+                          borderColor: widget.currentTheme.shadowColor,
                         ),
                         const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Profile transmission',
-                              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
-                            ),
-                            Text(
-                              'JPG or PNG • max 4MB • square signal',
-                              style: TextStyle(fontSize: 10.5, color: widget.currentTheme.textColor.withValues(alpha: 0.5)),
-                            ),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: _pickImage,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: widget.currentTheme.backgroundColor,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.upload, size: 14, color: widget.currentTheme.textColor),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'CHANGE IMAGE',
-                                        style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: widget.currentTheme.textColor),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Profile transmission (6 fixed avatars)',
+                                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                'Escolha uma das 6 imagens abaixo para sincronizar nos posts, perfil e barra superior.',
+                                style: TextStyle(fontSize: 10.5, color: widget.currentTheme.textColor.withValues(alpha: 0.6)),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Grade com as 6 fotos de perfil fixas
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: widget.currentTheme.backgroundColor,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
+                      ),
+                      child: Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        alignment: WrapAlignment.spaceEvenly,
+                        children: UserPreferences.fixedAvatars.map((avatarPath) {
+                          final bool isSelected =
+                              (UserAvatar.resolvePresetAsset(_selectedAvatarUrl) ?? _selectedAvatarUrl) == avatarPath;
+
+                          return GestureDetector(
+                            onTap: () => _selectFixedAvatar(avatarPath),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Stack(
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 150),
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelected
+                                          ? widget.currentTheme.primaryColor
+                                          : widget.currentTheme.backgroundColor,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? widget.currentTheme.primaryColor
+                                            : widget.currentTheme.shadowColor,
+                                        width: isSelected ? 3 : 1.5,
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: widget.currentTheme.shadowColor,
+                                                offset: const Offset(2, 2),
+                                                blurRadius: 0,
+                                              ),
+                                            ]
+                                          : [],
+                                    ),
+                                    child: UserAvatar(
+                                      imageUrl: avatarPath,
+                                      name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
+                                      radius: 26,
+                                      showShadow: false,
+                                      borderWidth: 1.5,
+                                      borderColor: widget.currentTheme.shadowColor,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          color: widget.currentTheme.primaryColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
+                                        ),
+                                        child: Icon(
+                                          Icons.check,
+                                          size: 11,
+                                          color: widget.currentTheme.backgroundColor,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -267,7 +339,7 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                           style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withValues(alpha: 0.6)),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         _buildReadOnlyField('EMAIL', _userEmail.isNotEmpty ? _userEmail : 'N/A', Icons.mail_outline),
                         const SizedBox(height: 12),
                         _buildNavigationItem('Password', 'Last changed 54 days ago', Icons.lock_reset),
@@ -279,7 +351,7 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Sincronização e Botão Salvar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

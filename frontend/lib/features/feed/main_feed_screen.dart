@@ -3,13 +3,14 @@ import 'package:frontend/shared/widgets/header.dart';
 import 'package:frontend/shared/widgets/side_menu.dart';
 import 'package:frontend/features/feed/components/send_post_widget.dart';
 import 'package:frontend/features/feed/components/post_card.dart';
-import 'package:frontend/features/settings/profile_screen.dart'; 
+import 'package:frontend/features/settings/profile_screen.dart';
 import 'package:frontend/features/zones/explore_zones_screen.dart';
 import 'package:frontend/features/chats/wave_chats_screen.dart';
 import 'package:frontend/features/settings/settings_screen.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
 import 'package:frontend/data/repositories/post_repository.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 
 class MainFeedScreen extends StatefulWidget {
@@ -21,27 +22,40 @@ class MainFeedScreen extends StatefulWidget {
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
   AppTheme _currentTheme = AppTheme.retroGreen;
-  
   String _currentRoute = 'Home Feed';
 
-  final List<AppTheme> _themes = [
-    AppTheme.retroGreen,
-    AppTheme.cyberpunk,
-    AppTheme.synthwave,
-    AppTheme.hacker,
-    AppTheme.espresso,
-  ];
-
-  int _currentThemeIndex = 0;
-
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
+  final UserRepository _userRepository = UserRepositoryImpl();
   List<PostModel> _posts = [];
   bool _isLoadingPosts = true;
 
   @override
   void initState() {
     super.initState();
+    _carregarPerfilUsuario();
     _carregarPostagens();
+  }
+
+  Future<void> _carregarPerfilUsuario() async {
+    try {
+      final profile = await _userRepository.getMyProfile();
+      if (mounted && profile.preferencias != null) {
+        final themeEnum = profile.preferencias!.theme;
+        setState(() {
+          if (themeEnum == 'CYBERPUNK_DARK') {
+            _currentTheme = AppTheme.cyberpunk;
+          } else if (themeEnum == 'SUNSET_SYNTHWAVE') {
+            _currentTheme = AppTheme.synthwave;
+          } else if (themeEnum == 'MONOKAI_HACKER') {
+            _currentTheme = AppTheme.hacker;
+          } else if (themeEnum == 'CREAM_ESPRESSO') {
+            _currentTheme = AppTheme.espresso;
+          } else {
+            _currentTheme = AppTheme.retroGreen;
+          }
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _carregarPostagens() async {
@@ -93,12 +107,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
               });
             },
           ),
-          
+
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // O menu lateral só aparece se a rota atual NÃO for 'Settings'
                 if (_currentRoute != 'Settings')
                   SizedBox(
                     width: 260,
@@ -112,8 +125,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                       },
                     ),
                   ),
-                
-                // Área de conteúdo principal expandida
+
                 Expanded(
                   child: _currentRoute == 'My Profile'
                       ? ProfileScreen(
@@ -134,7 +146,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                           : _currentRoute == 'Wave Chats'
                               ? WaveChatsScreen(
                                   currentTheme: _currentTheme,
-                                  )
+                                )
                               : _currentRoute == 'Settings'
                                   ? SettingsScreen(
                                       currentTheme: _currentTheme,
@@ -147,9 +159,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                         setState(() {
                                           _currentRoute = 'Home Feed';
                                         });
+                                        _carregarPerfilUsuario();
                                         _carregarPostagens();
                                       },
                                       onProfileUpdated: () {
+                                        _carregarPerfilUsuario();
                                         _carregarPostagens();
                                       },
                                     )
@@ -160,7 +174,8 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                           constraints: const BoxConstraints(maxWidth: 900),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [                                              const SizedBox(height: 24),
+                                            children: [
+                                              const SizedBox(height: 24),
                                               SendPostWidget(
                                                 currentTheme: _currentTheme,
                                                 onPostSubmitted: (post) => _publicarPostagem(post),
@@ -222,6 +237,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                   handle: post['authorHandle'] ?? '@node',
                                                   timeAgo: post['timeAgo'] ?? 'Agora',
                                                   content: post['content'] ?? '',
+                                                  authorAvatarUrl: post['authorAvatarUrl'],
                                                   imageUrl: post['imageUrl'],
                                                   likesCount: (post['likesCount'] ?? 0) as int,
                                                   commentsCount: (post['commentsCount'] ?? 0) as int,

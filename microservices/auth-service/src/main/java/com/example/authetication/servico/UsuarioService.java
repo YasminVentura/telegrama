@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UsuarioService {
 
+    public static final String AVATAR_PADRAO = "lib/assets/images/avatars/avatar_1.webp";
+
     private final UsuarioRepository usuarioRepository;
     private final SeguidorRepository seguidorRepository;
     private final UsuarioPreferenciasRepository usuarioPreferenciasRepository;
@@ -48,6 +50,9 @@ public class UsuarioService {
 
         Usuario usuario = usuarioMapper.paraEntidade(dto);
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
+        if (usuario.getAvatarUrl() == null || usuario.getAvatarUrl().isBlank()) {
+            usuario.setAvatarUrl(AVATAR_PADRAO);
+        }
         
         UsuarioPreferencias preferenciasPadrao = UsuarioPreferencias.builder()
                 .usuario(usuario)
@@ -59,6 +64,7 @@ public class UsuarioService {
                 .zoneBroadcastAlerts(false)
                 .twoFactorAuth(false)
                 .theme(TemaVisual.RETRO_GREEN)
+                .avatarUrl(usuario.getAvatarUrl())
                 .build();
         usuario.setPreferencias(preferenciasPadrao);
 
@@ -75,7 +81,21 @@ public class UsuarioService {
         Usuario usuario = encontrarUsuarioPorNodeIdOuId(nodeIdAlvo)
                 .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado: " + nodeIdAlvo));
 
+        UsuarioPreferencias preferencias = usuario.getPreferencias();
+        if (preferencias == null) {
+            preferencias = obterOuCriarPreferencias(usuario);
+        }
+
+        String avatarEfetivo = resolverAvatar(usuario, preferencias);
+        if (preferencias.getAvatarUrl() == null || preferencias.getAvatarUrl().isBlank()) {
+            preferencias.setAvatarUrl(avatarEfetivo);
+        }
+        if (usuario.getAvatarUrl() == null || usuario.getAvatarUrl().isBlank()) {
+            usuario.setAvatarUrl(avatarEfetivo);
+        }
+
         PerfilRespostaDto perfilDto = usuarioMapper.paraPerfilDto(usuario);
+        perfilDto.setAvatarUrl(avatarEfetivo);
         
         long seguidores = seguidorRepository.countBySeguido(usuario);
         long seguindo = seguidorRepository.countBySeguidor(usuario);
@@ -101,11 +121,11 @@ public class UsuarioService {
         }
 
         if (isMe) {
-            UsuarioPreferencias preferencias = usuario.getPreferencias();
-            if (preferencias == null) {
-                preferencias = obterOuCriarPreferencias(usuario);
+            UsuarioPreferenciasDto prefsDto = usuarioMapper.paraPreferenciasDto(preferencias);
+            if (prefsDto != null) {
+                prefsDto.setAvatarUrl(avatarEfetivo);
             }
-            perfilDto.setPreferencias(usuarioMapper.paraPreferenciasDto(preferencias));
+            perfilDto.setPreferencias(prefsDto);
         }
         
         return perfilDto;
@@ -120,8 +140,16 @@ public class UsuarioService {
         if (preferencias == null) {
             preferencias = obterOuCriarPreferencias(usuario);
         }
+        String avatarEfetivo = resolverAvatar(usuario, preferencias);
+        if (preferencias.getAvatarUrl() == null || preferencias.getAvatarUrl().isBlank()) {
+            preferencias.setAvatarUrl(avatarEfetivo);
+        }
 
-        return usuarioMapper.paraPreferenciasDto(preferencias);
+        UsuarioPreferenciasDto prefsDto = usuarioMapper.paraPreferenciasDto(preferencias);
+        if (prefsDto != null) {
+            prefsDto.setAvatarUrl(avatarEfetivo);
+        }
+        return prefsDto;
     }
 
     @Transactional
@@ -139,17 +167,30 @@ public class UsuarioService {
             usuario.setLocalizacao(dto.getLocalizacao().trim());
         }
 
-        if (dto.getPreferencias() != null) {
-            UsuarioPreferencias prefs = usuario.getPreferencias();
-            if (prefs == null) {
-                prefs = obterOuCriarPreferencias(usuario);
-            }
-            atualizarCamposPreferencias(prefs, dto.getPreferencias());
-            usuario.setPreferencias(prefs);
+        UsuarioPreferencias prefs = usuario.getPreferencias();
+        if (prefs == null) {
+            prefs = obterOuCriarPreferencias(usuario);
         }
 
+        if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
+            String novoAvatar = dto.getAvatarUrl().trim();
+            usuario.setAvatarUrl(novoAvatar);
+            prefs.setAvatarUrl(novoAvatar);
+        }
+
+        if (dto.getPreferencias() != null) {
+            atualizarCamposPreferencias(prefs, dto.getPreferencias());
+            if (dto.getPreferencias().getAvatarUrl() != null && !dto.getPreferencias().getAvatarUrl().isBlank()) {
+                usuario.setAvatarUrl(dto.getPreferencias().getAvatarUrl().trim());
+            }
+        }
+        usuarioPreferenciasRepository.save(prefs);
+        usuario.setPreferencias(prefs);
+
         Usuario salvo = usuarioRepository.save(usuario);
+        String avatarEfetivo = resolverAvatar(salvo, salvo.getPreferencias());
         PerfilRespostaDto resposta = usuarioMapper.paraPerfilDto(salvo);
+        resposta.setAvatarUrl(avatarEfetivo);
         
         long seguidores = seguidorRepository.countBySeguido(salvo);
         long seguindo = seguidorRepository.countBySeguidor(salvo);
@@ -157,7 +198,11 @@ public class UsuarioService {
         resposta.setQuantidadeSeguindo(seguindo);
         resposta.setMe(true);
         if (salvo.getPreferencias() != null) {
-            resposta.setPreferencias(usuarioMapper.paraPreferenciasDto(salvo.getPreferencias()));
+            UsuarioPreferenciasDto prefsDto = usuarioMapper.paraPreferenciasDto(salvo.getPreferencias());
+            if (prefsDto != null) {
+                prefsDto.setAvatarUrl(avatarEfetivo);
+            }
+            resposta.setPreferencias(prefsDto);
         }
 
         return resposta;
@@ -174,8 +219,18 @@ public class UsuarioService {
         }
 
         atualizarCamposPreferencias(prefs, dto);
+        if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
+            String novoAvatar = dto.getAvatarUrl().trim();
+            prefs.setAvatarUrl(novoAvatar);
+            usuario.setAvatarUrl(novoAvatar);
+            usuarioRepository.save(usuario);
+        }
         UsuarioPreferencias salva = usuarioPreferenciasRepository.save(prefs);
-        return usuarioMapper.paraPreferenciasDto(salva);
+        UsuarioPreferenciasDto respostaDto = usuarioMapper.paraPreferenciasDto(salva);
+        if (respostaDto != null) {
+            respostaDto.setAvatarUrl(resolverAvatar(usuario, salva));
+        }
+        return respostaDto;
     }
 
     private void atualizarCamposPreferencias(UsuarioPreferencias prefs, UsuarioPreferenciasDto dto) {
@@ -203,11 +258,27 @@ public class UsuarioService {
         if (dto.getTheme() != null) {
             prefs.setTheme(dto.getTheme());
         }
+        if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
+            prefs.setAvatarUrl(dto.getAvatarUrl().trim());
+        }
+    }
+
+    private String resolverAvatar(Usuario usuario, UsuarioPreferencias prefs) {
+        if (prefs != null && prefs.getAvatarUrl() != null && !prefs.getAvatarUrl().isBlank()) {
+            return prefs.getAvatarUrl();
+        }
+        if (usuario.getAvatarUrl() != null && !usuario.getAvatarUrl().isBlank()) {
+            return usuario.getAvatarUrl();
+        }
+        return AVATAR_PADRAO;
     }
 
     private UsuarioPreferencias obterOuCriarPreferencias(Usuario usuario) {
         return usuarioPreferenciasRepository.findByUsuario(usuario)
                 .orElseGet(() -> {
+                    String avatarInicial = (usuario.getAvatarUrl() != null && !usuario.getAvatarUrl().isBlank())
+                            ? usuario.getAvatarUrl()
+                            : AVATAR_PADRAO;
                     UsuarioPreferencias nova = UsuarioPreferencias.builder()
                             .usuario(usuario)
                             .privateFrequencyMode(false)
@@ -218,6 +289,7 @@ public class UsuarioService {
                             .zoneBroadcastAlerts(false)
                             .twoFactorAuth(false)
                             .theme(TemaVisual.RETRO_GREEN)
+                            .avatarUrl(avatarInicial)
                             .build();
                     return usuarioPreferenciasRepository.save(nova);
                 });
@@ -314,7 +386,7 @@ public class UsuarioService {
                         u.getId().toString(),
                         u.getNome(),
                         u.getNodeId(),
-                        u.getAvatarUrl()
+                        resolverAvatar(u, u.getPreferencias())
                 ))
                 .toList();
     }
@@ -341,7 +413,7 @@ public class UsuarioService {
                         u.getId().toString(),
                         u.getNome(),
                         u.getNodeId(),
-                        u.getAvatarUrl()
+                        resolverAvatar(u, u.getPreferencias())
                 ))
                 .toList();
     }

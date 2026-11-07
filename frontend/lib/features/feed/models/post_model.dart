@@ -1,8 +1,11 @@
+import 'package:frontend/shared/components/user_avatar.dart';
+
 class PostModel {
   final String id;
   final String authorName;
   final String authorId;
   final String? authorAvatarUrl;
+  final String? postImageUrl;
   final String content;
   final DateTime createdAt;
   final String timeAgo;
@@ -17,6 +20,7 @@ class PostModel {
     required this.authorName,
     required this.authorId,
     this.authorAvatarUrl,
+    this.postImageUrl,
     required this.content,
     required this.createdAt,
     this.timeAgo = 'Agora',
@@ -31,7 +35,7 @@ class PostModel {
   int get commentsCount => comments;
   int get repostsCount => reposts;
   String get authorHandle => authorId.startsWith('@') ? authorId : '@$authorId';
-  String? get imageUrl => authorAvatarUrl;
+  String? get imageUrl => postImageUrl;
 
   /// Método copyWith para criar cópias modificadas imutáveis
   PostModel copyWith({
@@ -39,6 +43,7 @@ class PostModel {
     String? authorName,
     String? authorId,
     String? authorAvatarUrl,
+    String? postImageUrl,
     String? content,
     DateTime? createdAt,
     String? timeAgo,
@@ -53,6 +58,7 @@ class PostModel {
       authorName: authorName ?? this.authorName,
       authorId: authorId ?? this.authorId,
       authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
+      postImageUrl: postImageUrl ?? this.postImageUrl,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       timeAgo: timeAgo ?? this.timeAgo,
@@ -72,11 +78,16 @@ class PostModel {
       data = DateTime.tryParse(json['createdAt']) ?? DateTime.now();
     }
 
+    final rawAvatar = json['authorAvatarUrl'] ??
+        json['author_avatar_url'] ??
+        json['autorAvatarUrl'];
+
     return PostModel(
       id: json['id']?.toString() ?? '',
       authorName: json['authorName'] ?? json['author_name'] ?? json['autorNome'] ?? 'Node Anônimo',
       authorId: json['authorId'] ?? json['author_id'] ?? json['autorNodeId'] ?? 'node',
-      authorAvatarUrl: json['authorAvatarUrl'] ?? json['author_avatar_url'] ?? json['autorAvatarUrl'],
+      authorAvatarUrl: UserAvatar.resolvePresetAsset(rawAvatar?.toString()) ?? rawAvatar?.toString(),
+      postImageUrl: json['postImageUrl'] ?? json['post_image_url'] ?? json['imageUrl'],
       content: json['content'] ?? json['conteudo'] ?? '',
       createdAt: data,
       timeAgo: json['timeAgo'] ?? _calcularTempoAtras(data),
@@ -105,6 +116,7 @@ class PostModel {
       'author_id': authorId,
       'authorAvatarUrl': authorAvatarUrl,
       'author_avatar_url': authorAvatarUrl,
+      'postImageUrl': postImageUrl,
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'timeAgo': timeAgo,
@@ -129,6 +141,9 @@ class PostModel {
       case 'authorHandle':
       case 'author_id':
         return authorHandle;
+      case 'authorAvatarUrl':
+      case 'author_avatar_url':
+        return authorAvatarUrl;
       case 'timeAgo':
         return timeAgo;
       case 'frequencyTag':
@@ -137,7 +152,7 @@ class PostModel {
       case 'conteudo':
         return content;
       case 'imageUrl':
-      case 'author_avatar_url':
+      case 'postImageUrl':
         return imageUrl;
       case 'likesCount':
       case 'likes':

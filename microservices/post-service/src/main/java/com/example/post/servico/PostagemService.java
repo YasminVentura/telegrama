@@ -45,7 +45,9 @@ public class PostagemService {
                 .build();
 
         Postagem salva = postagemRepository.save(postagem);
-        return mapearParaRespostaDto(salva, autor, null);
+        List<String> identificadores = extrairIdentificadores(List.of(salva));
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+        return mapearParaRespostaDto(salva, autor, obterPerfilDoMap(salva, perfisMap));
     }
 
     public List<PostagemRespostaDto> listarPostagens(int pagina, int limite, UsuarioAutenticado usuarioLogado) {

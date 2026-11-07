@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class PostDetailCard extends StatelessWidget {
   final AppTheme currentTheme;
   final String name;
   final String handle;
   final String content;
+  final String? authorAvatarUrl;
   final String? imageUrl;
   final String frequencyTag;
   final String exactTime;
@@ -19,6 +22,7 @@ class PostDetailCard extends StatelessWidget {
     required this.name,
     required this.handle,
     required this.content,
+    this.authorAvatarUrl,
     this.imageUrl,
     required this.frequencyTag,
     required this.exactTime,
@@ -41,25 +45,30 @@ class PostDetailCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  color: currentTheme.backgroundColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: currentTheme.shadowColor, width: 2),
-                ),
-                child: CircleAvatar(
-                  radius: 26,
-                  backgroundColor: currentTheme.primaryColor,
-                  child: Text(
-                    name.substring(0, 2).toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: currentTheme.backgroundColor,
-                    ),
-                  ),
-                ),
+              ValueListenableBuilder<String>(
+                valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                builder: (context, currentMyAvatar, _) {
+                  final bool isMyPost = UserRepositoryImpl.isCurrentUser(
+                    handle,
+                    authorName: name,
+                  );
+                  final String effectiveAvatar = isMyPost
+                      ? currentMyAvatar
+                      : ((authorAvatarUrl != null &&
+                              authorAvatarUrl!.isNotEmpty &&
+                              authorAvatarUrl != UserAvatar.defaultAvatar)
+                          ? authorAvatarUrl!
+                          : currentMyAvatar);
+
+                  return UserAvatar(
+                    imageUrl: effectiveAvatar,
+                    name: name,
+                    radius: 26,
+                    borderColor: currentTheme.shadowColor,
+                    borderWidth: 2,
+                    backgroundColor: currentTheme.primaryColor,
+                  );
+                },
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -103,7 +112,7 @@ class PostDetailCard extends StatelessWidget {
             content,
             style: TextStyle(fontSize: 22, height: 1.4, fontWeight: FontWeight.w500, color: currentTheme.textColor),
           ),
-          if (imageUrl != null) ...[
+          if (imageUrl != null && imageUrl!.isNotEmpty) ...[
             const SizedBox(height: 24),
             Container(
               height: 300,
@@ -114,7 +123,9 @@ class PostDetailCard extends StatelessWidget {
                   BoxShadow(color: currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
                 ],
                 image: DecorationImage(
-                  image: AssetImage(imageUrl!),
+                  image: imageUrl!.startsWith('http')
+                      ? NetworkImage(imageUrl!) as ImageProvider
+                      : AssetImage(imageUrl!),
                   fit: BoxFit.cover,
                 ),
               ),

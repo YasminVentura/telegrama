@@ -130,6 +130,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         name: _postData!.authorName,
                         handle: _postData!.authorHandle,
                         content: _postData!.content,
+                        authorAvatarUrl: _postData!.authorAvatarUrl,
                         imageUrl: _postData!.imageUrl,
                         frequencyTag: _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
                         exactTime: '8:45 PM · Oct 24, 2026 · Telegrama Desktop',

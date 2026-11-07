@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/features/settings/components/profile_card.dart';
-import 'package:frontend/features/feed/components/post_card.dart'; 
+import 'package:frontend/features/feed/components/post_card.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
@@ -26,13 +26,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedTab = 0;
   final UserRepository _userRepository = UserRepositoryImpl();
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
-  
+
   late Future<PerfilRespostaDto> _profileFuture;
   Future<List<PostModel>>? _userPostsFuture;
   bool _isFollowing = false;
   int _followersCount = 0;
   int _followingCount = 0;
   bool _isLoadingFollow = false;
+  String? _selectedAvatarUrl;
 
   @override
   void initState() {
@@ -41,7 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _fetchProfileData() {
-    // Se nodeId foi informado, busca aquele usuário específico; caso contrário, busca /usuarios/me
     if (widget.nodeId != null && widget.nodeId!.isNotEmpty) {
       _profileFuture = _userRepository.getUserProfile(widget.nodeId!);
     } else {
@@ -54,25 +54,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isFollowing = profile.isFollowing;
           _followersCount = profile.seguidoresCount;
           _followingCount = profile.seguindoCount;
+          _selectedAvatarUrl = profile.preferencias?.avatarUrl ?? profile.avatarUrl;
           _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
         });
       }
     }).catchError((_) {});
   }
 
+  Future<void> _updateAvatarPreference(String newAvatarUrl) async {
+    setState(() {
+      _selectedAvatarUrl = newAvatarUrl;
+    });
+    UserRepositoryImpl.setExplicitAvatarChoice(newAvatarUrl);
+
+    try {
+      await _userRepository.updatePreferences({'avatarUrl': newAvatarUrl});
+      await _userRepository.updateProfile({
+        'avatarUrl': newAvatarUrl,
+        'preferencias': {'avatarUrl': newAvatarUrl},
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto de perfil atualizada com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao atualizar foto de perfil: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _toggleFollow() async {
     final targetNodeId = widget.nodeId;
     if (_isLoadingFollow || targetNodeId == null) return;
-    
+
     setState(() => _isLoadingFollow = true);
-    
+
     try {
       if (_isFollowing) {
         await _userRepository.unfollowUser(targetNodeId);
       } else {
         await _userRepository.followUser(targetNodeId);
       }
-      
+
       if (mounted) {
         setState(() {
           _isFollowing = !_isFollowing;
@@ -141,6 +168,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final String formattedHandle = profile.nodeId.startsWith('@')
             ? profile.nodeId
             : '@${profile.nodeId}';
+        final String effectiveAvatar = _selectedAvatarUrl ??
+            profile.preferencias?.avatarUrl ??
+            profile.avatarUrl ??
+            UserRepositoryImpl.currentAvatarNotifier.value;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -158,6 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     location: (profile.localizacao != null && profile.localizacao!.isNotEmpty)
                         ? profile.localizacao!
                         : 'Penedo, Brasil',
+                    avatarUrl: effectiveAvatar,
                     followingCount: _formatCount(_followingCount),
                     followersCount: _formatCount(_followersCount),
                     artifactsCount: '0',
@@ -166,6 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     isOwner: isOwner,
                     onFollowPressed: _toggleFollow,
                     onMessagePressed: () {},
+                    onAvatarSelected: isOwner ? _updateAvatarPreference : null,
                   ),
                   const SizedBox(height: 24),
 
@@ -230,6 +263,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               timeAgo: post.timeAgo,
                               frequencyTag: post.frequencyTag,
                               content: post.content,
+                              authorAvatarUrl: isOwner
+                                  ? effectiveAvatar
+                                  : (post.authorAvatarUrl ?? effectiveAvatar),
                               imageUrl: post.imageUrl,
                               likesCount: post.likesCount,
                               commentsCount: post.commentsCount,
