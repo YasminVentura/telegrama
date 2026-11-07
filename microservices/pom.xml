@@ -22,6 +22,7 @@
     <modules>
         <module>api-gateway</module>
         <module>auth-service</module>
+        <module>user-profile-service</module>
         <module>post-service</module>
         <module>feed-service</module>
         <module>service-discovery</module> <!-- Opcional: Eureka Server, igual ao seu projeto antigo -->

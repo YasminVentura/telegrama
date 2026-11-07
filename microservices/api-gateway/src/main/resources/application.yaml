@@ -40,7 +40,12 @@ spring:
         - id: auth-service-route
           uri: lb://auth-service
           predicates:
-            - Path=/auth/**, /usuarios/**
+            - Path=/auth/**
+
+        - id: user-profile-service-route
+          uri: lb://user-profile-service
+          predicates:
+            - Path=/usuarios/**
             
         - id: post-service-route
           uri: lb://post-service

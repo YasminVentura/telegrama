@@ -16,10 +16,12 @@ class ProfileCard extends StatelessWidget {
   final String artifactsCount;
   final VoidCallback? onFollowPressed;
   final VoidCallback? onMessagePressed;
+  final VoidCallback? onDeleteUserPressed;
   final ValueChanged<String>? onAvatarSelected;
   final bool isFollowing;
   final bool isLoadingFollow;
   final bool isOwner;
+  final bool canDeleteUser;
 
   const ProfileCard({
     super.key,
@@ -34,10 +36,12 @@ class ProfileCard extends StatelessWidget {
     required this.artifactsCount,
     this.onFollowPressed,
     this.onMessagePressed,
+    this.onDeleteUserPressed,
     this.onAvatarSelected,
     this.isFollowing = false,
     this.isLoadingFollow = false,
     this.isOwner = false,
+    this.canDeleteUser = false,
   });
 
   void _showAvatarPickerModal(BuildContext context, String currentAvatar) {
@@ -298,6 +302,37 @@ class ProfileCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 10),
                               _buildActionButton('MESSAGE', isPrimary: false, onTap: onMessagePressed),
+                              if (canDeleteUser && onDeleteUserPressed != null) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: onDeleteUserPressed,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF4D4D).withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF4D4D), width: 2),
+                                      boxShadow: [
+                                        BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.person_remove_outlined, size: 16, color: Color(0xFFFF4D4D)),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'DELETE NODE',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFFF4D4D),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                       ],

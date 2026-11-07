@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "auth-service")
+@FeignClient(name = "user-profile-service")
 public interface AuthClient {
 
     @PostMapping("/usuarios/batch")

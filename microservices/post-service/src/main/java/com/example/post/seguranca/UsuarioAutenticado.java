@@ -20,10 +20,20 @@ public class UsuarioAutenticado implements UserDetails {
     private String id;
     private String nodeId;
     private String nome;
+    @Builder.Default
+    private String role = "USER";
+
+    public boolean isAdmin() {
+        return "ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role);
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        String r = (role != null && !role.isBlank()) ? role.toUpperCase() : "USER";
+        if (!r.startsWith("ROLE_")) {
+            r = "ROLE_" + r;
+        }
+        return Collections.singletonList(new SimpleGrantedAuthority(r));
     }
 
     @Override

@@ -34,6 +34,8 @@ public class ConfiguracaoSeguranca {
                 .authorizeHttpRequests(auth -> auth
                         // Libera requisições preflight (OPTIONS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Libera exclusão em cascata inter-serviços
+                        .requestMatchers("/posts/interno/**", "/api/posts/interno/**").permitAll()
                         // Leitura pública de posts (Feed / busca)
                         .requestMatchers(HttpMethod.GET, "/posts/**", "/api/posts/**").permitAll()
                         // Apenas usuários autenticados com token válido podem criar post, curtir ou excluir

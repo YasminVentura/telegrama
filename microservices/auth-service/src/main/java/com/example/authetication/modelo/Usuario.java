@@ -1,23 +1,18 @@
 package com.example.authetication.modelo;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -50,16 +45,8 @@ public class Usuario {
     @Column(nullable = false)
     private String senha;
 
-    @Column(length = 500)
-    private String bio;
-
-    private String localizacao;
-
     @Column(name = "termos_aceitos", nullable = false)
     private Boolean termosAceitos;
-
-    @Column(name = "avatar_url")
-    private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -73,9 +60,4 @@ public class Usuario {
     @LastModifiedDate
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm;
-
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private UsuarioPreferencias preferencias;
 }

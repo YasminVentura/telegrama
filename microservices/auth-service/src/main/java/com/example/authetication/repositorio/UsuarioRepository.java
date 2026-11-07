@@ -20,6 +20,4 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
     boolean existsByEmail(String email);
 
     boolean existsByNodeId(String nodeId);
-
-    java.util.List<Usuario> findByNomeContainingIgnoreCaseOrNodeIdContainingIgnoreCase(String nome, String nodeId);
 }

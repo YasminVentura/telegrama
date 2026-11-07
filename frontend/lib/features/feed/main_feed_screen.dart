@@ -93,6 +93,24 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     }
   }
 
+  Future<void> _excluirPostagem(String postId) async {
+    try {
+      await _postRepository.deletePost(postId);
+      await _carregarPostagens();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transmissão excluída com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao excluir post: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -230,26 +248,35 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                   ),
                                                 )
                                               else
-                                                ..._posts.map((post) => PostCard(
-                                                  key: ValueKey(post['id'] ?? UniqueKey().toString()),
-                                                  currentTheme: _currentTheme,
-                                                  name: post['authorName'] ?? 'Node Anônimo',
-                                                  handle: post['authorHandle'] ?? '@node',
-                                                  timeAgo: post['timeAgo'] ?? 'Agora',
-                                                  content: post['content'] ?? '',
-                                                  authorAvatarUrl: post['authorAvatarUrl'],
-                                                  imageUrl: post['imageUrl'],
-                                                  likesCount: (post['likesCount'] ?? 0) as int,
-                                                  commentsCount: (post['commentsCount'] ?? 0) as int,
-                                                  repostsCount: (post['repostsCount'] ?? 0) as int,
-                                                  onLikePressed: () async {
-                                                    if (post['id'] != null) {
-                                                      await _postRepository.likePost(post['id']);
-                                                    }
-                                                  },
-                                                  onCommentPressed: () {},
-                                                  onRepostPressed: () {},
-                                                )),
+                                                ..._posts.map((post) {
+                                                  final bool canDeletePost = UserRepositoryImpl.isCurrentUserAdmin ||
+                                                      UserRepositoryImpl.isCurrentUser(
+                                                        post.authorHandle,
+                                                        authorName: post.authorName,
+                                                      );
+                                                  return PostCard(
+                                                    key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
+                                                    currentTheme: _currentTheme,
+                                                    name: post.authorName,
+                                                    handle: post.authorHandle,
+                                                    timeAgo: post.timeAgo,
+                                                    content: post.content,
+                                                    authorAvatarUrl: post.authorAvatarUrl,
+                                                    imageUrl: post.imageUrl,
+                                                    likesCount: post.likesCount,
+                                                    commentsCount: post.commentsCount,
+                                                    repostsCount: post.repostsCount,
+                                                    canDelete: canDeletePost && post.id.isNotEmpty,
+                                                    onDeletePressed: () => _excluirPostagem(post.id),
+                                                    onLikePressed: () async {
+                                                      if (post.id.isNotEmpty) {
+                                                        await _postRepository.likePost(post.id);
+                                                      }
+                                                    },
+                                                    onCommentPressed: () {},
+                                                    onRepostPressed: () {},
+                                                  );
+                                                }),
                                             ],
                                           ),
                                         ),

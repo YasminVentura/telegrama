@@ -18,6 +18,8 @@ class PostCard extends StatefulWidget {
   final VoidCallback? onLikePressed;
   final VoidCallback? onCommentPressed;
   final VoidCallback? onRepostPressed;
+  final VoidCallback? onDeletePressed;
+  final bool canDelete;
 
   const PostCard({
     super.key,
@@ -35,6 +37,8 @@ class PostCard extends StatefulWidget {
     this.onLikePressed,
     this.onCommentPressed,
     this.onRepostPressed,
+    this.onDeletePressed,
+    this.canDelete = false,
   });
 
   @override
@@ -136,19 +140,45 @@ class _PostCardState extends State<PostCard> {
                 ],
               ),
 
-              if (widget.frequencyTag != null && widget.frequencyTag!.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: widget.currentTheme.secondaryColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-                  ),
-                  child: Text(
-                    widget.frequencyTag!,
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.currentTheme.shadowColor),
-                  ),
-                ),
+              Row(
+                children: [
+                  if (widget.frequencyTag != null && widget.frequencyTag!.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: widget.currentTheme.secondaryColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
+                      ),
+                      child: Text(
+                        widget.frequencyTag!,
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.currentTheme.shadowColor),
+                      ),
+                    ),
+                  if (widget.canDelete && widget.onDeletePressed != null) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: widget.onDeletePressed,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF4D4D).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFFF4D4D), width: 1.5),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                            color: Color(0xFFFF4D4D),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),

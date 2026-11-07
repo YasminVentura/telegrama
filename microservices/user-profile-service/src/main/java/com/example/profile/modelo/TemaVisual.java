@@ -1,4 +1,4 @@
-package com.example.authetication.modelo;
+package com.example.profile.modelo;
 
 public enum TemaVisual {
     RETRO_GREEN,

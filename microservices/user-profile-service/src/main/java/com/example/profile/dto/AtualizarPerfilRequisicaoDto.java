@@ -1,4 +1,4 @@
-package com.example.authetication.dto;
+package com.example.profile.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;

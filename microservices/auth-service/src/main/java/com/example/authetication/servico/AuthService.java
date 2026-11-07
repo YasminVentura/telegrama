@@ -1,6 +1,8 @@
 package com.example.authetication.servico;
 
+import com.example.authetication.cliente.UserProfileClient;
 import com.example.authetication.dto.AutenticacaoResultado;
+import com.example.authetication.dto.CriarPerfilInternoRequisicaoDto;
 import com.example.authetication.dto.LoginRequisicaoDto;
 import com.example.authetication.dto.UsuarioRespostaDto;
 import com.example.authetication.modelo.Usuario;
@@ -8,6 +10,7 @@ import com.example.authetication.seguranca.DetalhesUsuarioImpl;
 import com.example.authetication.seguranca.DetalhesUsuarioServicoImpl;
 import com.example.authetication.seguranca.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -27,9 +31,9 @@ public class AuthService {
     private final DetalhesUsuarioServicoImpl detalhesUsuarioServico;
     private final JwtUtils jwtUtils;
     private final StringRedisTemplate redisTemplate;
+    private final UserProfileClient userProfileClient;
 
     public AutenticacaoResultado autenticar(LoginRequisicaoDto request) {
-        // Autentica as credenciais com o AuthenticationManager configurado
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getIdentificador(),
@@ -37,9 +41,8 @@ public class AuthService {
                 )
         );
 
-        // Se passar, busca o UserDetails completo
         UserDetails userDetails = detalhesUsuarioServico.loadUserByUsername(request.getIdentificador());
-        
+
         Map<String, Object> claimsExtras = new HashMap<>();
         Usuario usuario = null;
         if (userDetails instanceof DetalhesUsuarioImpl detalhes) {
@@ -47,15 +50,27 @@ public class AuthService {
             claimsExtras.put("nome", usuario.getNome());
             claimsExtras.put("id", usuario.getId().toString());
             claimsExtras.put("nodeId", usuario.getNodeId());
+            claimsExtras.put("email", usuario.getEmail());
+            claimsExtras.put("role", usuario.getPerfil() != null ? usuario.getPerfil().name() : "USER");
+
+            try {
+                userProfileClient.criarOuSincronizarPerfil(
+                        CriarPerfilInternoRequisicaoDto.builder()
+                                .id(usuario.getId())
+                                .nome(usuario.getNome())
+                                .nodeId(usuario.getNodeId())
+                                .email(usuario.getEmail())
+                                .avatarUrl(UsuarioService.AVATAR_PADRAO)
+                                .perfil(usuario.getPerfil())
+                                .build()
+                );
+            } catch (Exception e) {
+                log.warn("Aviso ao sincronizar perfil no login com user-profile-service: {}", e.getMessage());
+            }
         }
 
-        // Gera o token JWT interno com os dados do usuário
         String jwt = jwtUtils.gerarToken(claimsExtras, userDetails);
-        
-        // Gera um identificador de sessão opaco e aleatório (UUID v4)
         String idSessao = UUID.randomUUID().toString();
-        
-        // Salva a sessão no Redis em memória com TTL de 24 horas
         redisTemplate.opsForValue().set("sessao:" + idSessao, jwt, Duration.ofHours(24));
 
         UsuarioRespostaDto usuarioDto = null;
@@ -65,8 +80,7 @@ public class AuthService {
                     .nome(usuario.getNome())
                     .nodeId(usuario.getNodeId())
                     .email(usuario.getEmail())
-                    .bio(usuario.getBio())
-                    .localizacao(usuario.getLocalizacao())
+                    .perfil(usuario.getPerfil())
                     .build();
         }
 

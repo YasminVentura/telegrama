@@ -14,6 +14,8 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,6 +43,12 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public void registrar(@RequestBody @Valid RegistroRequisicaoDto request) {
         usuarioService.registrar(request);
+    }
+
+    @DeleteMapping("/interno/usuarios/{identificador}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirCredencialInterna(@PathVariable String identificador) {
+        usuarioService.excluirCredencialInterna(identificador);
     }
 
     @PostMapping("/login")

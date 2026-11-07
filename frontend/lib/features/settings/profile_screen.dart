@@ -126,6 +126,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return count.toString();
   }
 
+  Future<void> _deleteUserAccount(String targetNodeId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: widget.currentTheme.backgroundColor,
+        title: Text(
+          'Excluir Usuário',
+          style: TextStyle(color: widget.currentTheme.textColor, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Tem certeza que deseja excluir permanentemente o nó $targetNodeId e todas as suas transmissões?',
+          style: TextStyle(color: widget.currentTheme.textColor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('CANCELAR', style: TextStyle(color: widget.currentTheme.textColor)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('EXCLUIR', style: TextStyle(color: Color(0xFFFF4D4D), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await _userRepository.deleteUser(targetNodeId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Usuário $targetNodeId excluído com sucesso!')),
+        );
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        } else if (widget.onNavigate != null) {
+          widget.onNavigate!('Home Feed');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao excluir usuário: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deletePost(String postId, String ownerNodeId) async {
+    try {
+      await _postRepository.deletePost(postId);
+      if (mounted) {
+        setState(() {
+          _userPostsFuture = _postRepository.getUserPosts(ownerNodeId);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Transmissão excluída com sucesso!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao excluir transmissão: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<PerfilRespostaDto>(
@@ -196,6 +265,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     isFollowing: _isFollowing,
                     isLoadingFollow: _isLoadingFollow,
                     isOwner: isOwner,
+                    canDeleteUser: !isOwner && UserRepositoryImpl.isCurrentUserAdmin,
+                    onDeleteUserPressed: () => _deleteUserAccount(profile.nodeId),
                     onFollowPressed: _toggleFollow,
                     onMessagePressed: () {},
                     onAvatarSelected: isOwner ? _updateAvatarPreference : null,
@@ -253,37 +324,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         }
 
                         return Column(
-                          children: posts.map((post) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: PostCard(
-                              key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
-                              currentTheme: widget.currentTheme,
-                              name: post.authorName,
-                              handle: post.authorHandle,
-                              timeAgo: post.timeAgo,
-                              frequencyTag: post.frequencyTag,
-                              content: post.content,
-                              authorAvatarUrl: isOwner
-                                  ? effectiveAvatar
-                                  : (post.authorAvatarUrl ?? effectiveAvatar),
-                              imageUrl: post.imageUrl,
-                              likesCount: post.likesCount,
-                              commentsCount: post.commentsCount,
-                              repostsCount: post.repostsCount,
-                              onLikePressed: () async {
-                                if (post.id.isNotEmpty) {
-                                  await _postRepository.likePost(post.id);
-                                  if (mounted) {
-                                    setState(() {
-                                      _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
-                                    });
+                          children: posts.map((post) {
+                            final bool canDeletePost = isOwner ||
+                                UserRepositoryImpl.isCurrentUserAdmin ||
+                                UserRepositoryImpl.isCurrentUser(
+                                  post.authorHandle,
+                                  authorName: post.authorName,
+                                );
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: PostCard(
+                                key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
+                                currentTheme: widget.currentTheme,
+                                name: post.authorName,
+                                handle: post.authorHandle,
+                                timeAgo: post.timeAgo,
+                                frequencyTag: post.frequencyTag,
+                                content: post.content,
+                                authorAvatarUrl: isOwner
+                                    ? effectiveAvatar
+                                    : (post.authorAvatarUrl ?? effectiveAvatar),
+                                imageUrl: post.imageUrl,
+                                likesCount: post.likesCount,
+                                commentsCount: post.commentsCount,
+                                repostsCount: post.repostsCount,
+                                canDelete: canDeletePost && post.id.isNotEmpty,
+                                onDeletePressed: () => _deletePost(post.id, profile.nodeId),
+                                onLikePressed: () async {
+                                  if (post.id.isNotEmpty) {
+                                    await _postRepository.likePost(post.id);
+                                    if (mounted) {
+                                      setState(() {
+                                        _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
+                                      });
+                                    }
                                   }
-                                }
-                              },
-                              onCommentPressed: () {},
-                              onRepostPressed: () {},
-                            ),
-                          )).toList(),
+                                },
+                                onCommentPressed: () {},
+                                onRepostPressed: () {},
+                              ),
+                            );
+                          }).toList(),
                         );
                       },
                     ),

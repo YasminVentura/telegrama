@@ -13,6 +13,7 @@ class PerfilRespostaDto {
   final String? bio;
   final String? localizacao;
   final String? avatarUrl;
+  final String perfil;
   final int seguidoresCount;
   final int seguindoCount;
   final bool isMe;
@@ -27,6 +28,7 @@ class PerfilRespostaDto {
     this.bio,
     this.localizacao,
     this.avatarUrl,
+    this.perfil = 'USER',
     this.seguidoresCount = 0,
     this.seguindoCount = 0,
     this.isMe = false,
@@ -66,6 +68,7 @@ class PerfilRespostaDto {
       bio: json['bio'],
       localizacao: json['localizacao'] ?? json['location'],
       avatarUrl: resolvedAvatar,
+      perfil: (json['perfil'] ?? json['role'] ?? 'USER').toString().toUpperCase(),
       seguidoresCount: (json['quantidadeSeguidores'] ?? json['seguidoresCount'] ?? 0) as int,
       seguindoCount: (json['quantidadeSeguindo'] ?? json['seguindoCount'] ?? 0) as int,
       isMe: json['isMe'] == true || json['me'] == true,
@@ -118,6 +121,7 @@ abstract class UserRepository {
   Future<String> uploadAvatar(XFile image);
   Future<void> followUser(String nodeId);
   Future<void> unfollowUser(String nodeId);
+  Future<void> deleteUser(String nodeId);
   Future<List<PerfilResumidoDto>> searchUsers(String query);
 }
 
@@ -127,10 +131,15 @@ class UserRepositoryImpl implements UserRepository {
       ValueNotifier<String>(UserPreferences.defaultAvatar);
   static final ValueNotifier<String> currentUserNameNotifier =
       ValueNotifier<String>('User');
+  static final ValueNotifier<String> currentUserRoleNotifier =
+      ValueNotifier<String>('USER');
 
   static String? currentUserNodeId;
   static String? currentUserEmail;
   static String? currentUserId;
+
+  static bool get isCurrentUserAdmin =>
+      currentUserRoleNotifier.value.toUpperCase() == 'ADMIN';
 
   /// Guarda a foto escolhida pelo usuário para não perder mesmo se o container ainda não tiver reiniciado
   static String? _userExplicitlyChosenAvatar;
@@ -157,6 +166,7 @@ class UserRepositoryImpl implements UserRepository {
     String? nodeId,
     String? email,
     String? id,
+    String? role,
     bool fromExplicitUserSelection = false,
   }) {
     if (nodeId != null && nodeId.trim().isNotEmpty) {
@@ -167,6 +177,12 @@ class UserRepositoryImpl implements UserRepository {
     }
     if (id != null && id.trim().isNotEmpty) {
       currentUserId = id.trim();
+    }
+    if (role != null && role.trim().isNotEmpty) {
+      final normalizedRole = role.trim().toUpperCase();
+      if (currentUserRoleNotifier.value != normalizedRole) {
+        currentUserRoleNotifier.value = normalizedRole;
+      }
     }
     if (nome != null && nome.trim().isNotEmpty) {
       if (currentUserNameNotifier.value != nome.trim()) {
@@ -264,6 +280,7 @@ class UserRepositoryImpl implements UserRepository {
       nodeId: dto.nodeId,
       email: dto.email,
       id: dto.id,
+      role: dto.perfil,
     );
     return dto;
   }
@@ -288,6 +305,7 @@ class UserRepositoryImpl implements UserRepository {
         nodeId: dto.nodeId,
         email: dto.email,
         id: dto.id,
+        role: dto.perfil,
       );
     }
     return dto;
@@ -320,6 +338,7 @@ class UserRepositoryImpl implements UserRepository {
       nodeId: dto.nodeId,
       email: dto.email,
       id: dto.id,
+      role: dto.perfil,
     );
     return dto;
   }
@@ -364,6 +383,11 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<void> unfollowUser(String nodeId) async {
     await _apiClient.delete('/usuarios/$nodeId/seguir');
+  }
+
+  @override
+  Future<void> deleteUser(String nodeId) async {
+    await _apiClient.delete('/usuarios/$nodeId');
   }
 
   @override

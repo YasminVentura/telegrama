@@ -141,14 +141,30 @@ public class PostagemService {
         Postagem postagem = postagemRepository.findById(id)
                 .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + id));
 
-        boolean ehAutor = (postagem.getAutorNodeId() != null && postagem.getAutorNodeId().equals(usuarioLogado.getNodeId()))
+        boolean ehAutor = (postagem.getAutorNodeId() != null && postagem.getAutorNodeId().replaceAll("@", "").equalsIgnoreCase(usuarioLogado.getNodeId().replaceAll("@", "")))
                 || (postagem.getAutorId() != null && postagem.getAutorId().equals(usuarioLogado.getId()));
+        boolean ehAdmin = usuarioLogado.isAdmin();
 
-        if (!ehAutor) {
+        if (!ehAutor && !ehAdmin) {
             throw new AcessoNegadoException("Você não tem permissão para excluir esta publicação.");
         }
 
         postagemRepository.delete(postagem);
+    }
+
+    public void excluirPostagensPorAutorInterno(String autorNodeId) {
+        if (autorNodeId == null || autorNodeId.isBlank()) {
+            return;
+        }
+        String limpo = autorNodeId.trim();
+        List<String> nodeIds = new ArrayList<>();
+        nodeIds.add(limpo);
+        if (limpo.startsWith("@")) {
+            nodeIds.add(limpo.substring(1));
+        } else {
+            nodeIds.add("@" + limpo);
+        }
+        postagemRepository.deleteByAutorNodeIdIn(nodeIds);
     }
 
     // --- Métodos Auxiliares ---

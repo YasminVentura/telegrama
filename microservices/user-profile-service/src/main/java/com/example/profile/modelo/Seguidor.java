@@ -1,4 +1,4 @@
-package com.example.authetication.modelo;
+package com.example.profile.modelo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,17 +32,16 @@ public class Seguidor {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    // A pessoa que está seguindo
     @ManyToOne
     @JoinColumn(name = "seguidor_id", nullable = false)
-    private Usuario seguidor;
+    private PerfilUsuario seguidor;
 
-    // A pessoa que está sendo seguida
     @ManyToOne
     @JoinColumn(name = "seguido_id", nullable = false)
-    private Usuario seguido;
+    private PerfilUsuario seguido;
 
     @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 }
+

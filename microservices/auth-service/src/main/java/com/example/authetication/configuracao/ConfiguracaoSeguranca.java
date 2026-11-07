@@ -41,13 +41,9 @@ public class ConfiguracaoSeguranca {
             .authorizeHttpRequests(auth -> auth
                 // Libera requisições preflight (OPTIONS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Libera o acesso para registro, login e erros
-                .requestMatchers("/auth/registro", "/auth/login", "/error").permitAll()
-                // Libera chamada em lote inter-serviços (Feign do post-service)
-                .requestMatchers("/usuarios/batch").permitAll()
-                // Libera busca e acesso de leitura (GET) ao perfil e métricas de todos os usuários
-                .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
-                // Exige autenticação para o resto
+                // Libera o acesso para registro, login, endpoints internos de cascata e erros
+                .requestMatchers("/auth/registro", "/auth/login", "/auth/interno/**", "/error").permitAll()
+                // Exige autenticação para o resto (ex: logout)
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

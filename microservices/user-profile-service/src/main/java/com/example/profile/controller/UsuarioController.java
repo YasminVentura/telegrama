@@ -1,12 +1,14 @@
-package com.example.authetication.controller;
+package com.example.profile.controller;
 
-import com.example.authetication.dto.AtualizarPerfilRequisicaoDto;
-import com.example.authetication.dto.PerfilRespostaDto;
-import com.example.authetication.dto.PerfilResumidoDto;
-import com.example.authetication.dto.RespostaEnvelopeDto; // Importação adicionada
-import com.example.authetication.dto.UsuarioPreferenciasDto;
-import com.example.authetication.excecao.RegraNegocioException;
-import com.example.authetication.servico.UsuarioService;
+import com.example.profile.dto.AtualizarPerfilRequisicaoDto;
+import com.example.profile.dto.CriarPerfilInternoRequisicaoDto;
+import com.example.profile.dto.PerfilRespostaDto;
+import com.example.profile.dto.PerfilResumidoDto;
+import com.example.profile.dto.RespostaEnvelopeDto;
+import com.example.profile.dto.UsuarioPreferenciasDto;
+import com.example.profile.excecao.RegraNegocioException;
+import com.example.profile.seguranca.UsuarioAutenticado;
+import com.example.profile.servico.PerfilUsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,16 +40,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final PerfilUsuarioService perfilUsuarioService;
+
+    @PostMapping("/interno/perfil")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PerfilRespostaDto criarOuSincronizarPerfilInterno(
+            @RequestBody CriarPerfilInternoRequisicaoDto requisicao
+    ) {
+        return perfilUsuarioService.criarOuSincronizarPerfilInterno(requisicao);
+    }
 
     @GetMapping("/me")
     @ResponseStatus(HttpStatus.OK)
     public PerfilRespostaDto buscarMeuPerfil(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            throw new RegraNegocioException("Usuário não autenticado.");
-        }
-        String nodeIdSolicitante = authentication.getName();
-        return usuarioService.buscarPerfil(nodeIdSolicitante, nodeIdSolicitante);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        return perfilUsuarioService.buscarMeuPerfil(usuario);
     }
 
     @PutMapping("/me")
@@ -56,21 +63,15 @@ public class UsuarioController {
             @Valid @RequestBody AtualizarPerfilRequisicaoDto requisicao,
             Authentication authentication
     ) {
-        if (authentication == null || authentication.getName() == null) {
-            throw new RegraNegocioException("Usuário não autenticado.");
-        }
-        String nodeIdSolicitante = authentication.getName();
-        return usuarioService.atualizarPerfil(nodeIdSolicitante, requisicao);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        return perfilUsuarioService.atualizarPerfil(usuario, requisicao);
     }
 
     @GetMapping("/me/preferences")
     @ResponseStatus(HttpStatus.OK)
     public UsuarioPreferenciasDto buscarMinhasPreferencias(Authentication authentication) {
-        if (authentication == null || authentication.getName() == null) {
-            throw new RegraNegocioException("Usuário não autenticado.");
-        }
-        String nodeIdSolicitante = authentication.getName();
-        return usuarioService.buscarPreferencias(nodeIdSolicitante);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        return perfilUsuarioService.buscarPreferencias(usuario);
     }
 
     @PutMapping("/me/preferences")
@@ -79,11 +80,8 @@ public class UsuarioController {
             @RequestBody UsuarioPreferenciasDto dto,
             Authentication authentication
     ) {
-        if (authentication == null || authentication.getName() == null) {
-            throw new RegraNegocioException("Usuário não autenticado.");
-        }
-        String nodeIdSolicitante = authentication.getName();
-        return usuarioService.atualizarPreferencias(nodeIdSolicitante, dto);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        return perfilUsuarioService.atualizarPreferencias(usuario, dto);
     }
 
     @GetMapping(path = {"/busca", "/search"})
@@ -91,7 +89,7 @@ public class UsuarioController {
     public RespostaEnvelopeDto<List<PerfilResumidoDto>> buscarUsuarios(
             @RequestParam(name = "q", defaultValue = "") String query
     ) {
-        List<PerfilResumidoDto> resultado = usuarioService.buscarUsuariosPorTermo(query);
+        List<PerfilResumidoDto> resultado = perfilUsuarioService.buscarUsuariosPorTermo(query);
         return new RespostaEnvelopeDto<>(resultado);
     }
 
@@ -99,28 +97,28 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.OK)
     public PerfilRespostaDto buscarPerfil(@PathVariable String nodeId, Authentication authentication) {
         String nodeIdSolicitante = authentication != null ? authentication.getName() : null;
-        return usuarioService.buscarPerfil(nodeId, nodeIdSolicitante);
+        return perfilUsuarioService.buscarPerfil(nodeId, nodeIdSolicitante);
     }
 
     @DeleteMapping("/{nodeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluirConta(@PathVariable String nodeId, Authentication authentication) {
-        String nodeIdSolicitante = authentication.getName();
-        usuarioService.excluirConta(nodeId, nodeIdSolicitante);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        perfilUsuarioService.excluirConta(nodeId, usuario);
     }
 
     @PostMapping("/{nodeId}/seguir")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void seguirUsuario(@PathVariable String nodeId, Authentication authentication) {
-        String nodeIdSolicitante = authentication.getName();
-        usuarioService.seguirUsuario(nodeId, nodeIdSolicitante);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        perfilUsuarioService.seguirUsuario(nodeId, usuario);
     }
 
     @DeleteMapping("/{nodeId}/seguir")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deixarDeSeguirUsuario(@PathVariable String nodeId, Authentication authentication) {
-        String nodeIdSolicitante = authentication.getName();
-        usuarioService.deixarDeSeguirUsuario(nodeId, nodeIdSolicitante);
+        UsuarioAutenticado usuario = extrairUsuarioAutenticado(authentication);
+        perfilUsuarioService.deixarDeSeguirUsuario(nodeId, usuario);
     }
 
     @PostMapping("/batch")
@@ -128,7 +126,24 @@ public class UsuarioController {
     public RespostaEnvelopeDto<List<PerfilResumidoDto>> buscarPerfisEmLote(
             @RequestBody List<String> ids
     ) {
-        List<PerfilResumidoDto> perfis = usuarioService.buscarPerfisPorIds(ids);
+        List<PerfilResumidoDto> perfis = perfilUsuarioService.buscarPerfisPorIds(ids);
         return new RespostaEnvelopeDto<>(perfis);
     }
+
+    private UsuarioAutenticado extrairUsuarioAutenticado(Authentication authentication) {
+        if (authentication == null) {
+            throw new RegraNegocioException("Usuário não autenticado.");
+        }
+        if (authentication.getPrincipal() instanceof UsuarioAutenticado usuario) {
+            return usuario;
+        }
+        if (authentication.getName() != null) {
+            return UsuarioAutenticado.builder()
+                    .nodeId(authentication.getName())
+                    .nome(authentication.getName())
+                    .build();
+        }
+        throw new RegraNegocioException("Usuário não autenticado.");
+    }
 }
+

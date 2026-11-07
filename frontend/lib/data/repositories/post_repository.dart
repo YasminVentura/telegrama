@@ -7,6 +7,7 @@ abstract class PostRepository {
   Future<List<PostModel>> getUserPosts(String nodeId);
   Future<void> createPost(String content, String? imageUrl, String? frequencyTag);
   Future<void> likePost(String postId);
+  Future<void> deletePost(String postId);
   Future<void> repost(String postId);
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId);
   Future<Map<String, dynamic>> addCommentToPost(String postId, String content);
@@ -70,6 +71,11 @@ class PostRepositoryImpl implements PostRepository {
   @override
   Future<void> likePost(String postId) async {
     await _apiClient.post('/posts/$postId/curtir');
+  }
+
+  @override
+  Future<void> deletePost(String postId) async {
+    await _apiClient.delete('/posts/$postId');
   }
 
   @override

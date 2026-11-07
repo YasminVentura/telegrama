@@ -1,5 +1,6 @@
-package com.example.authetication.dto;
+package com.example.profile.dto;
 
+import com.example.profile.modelo.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class PerfilRespostaDto {
     private String bio;
     private String localizacao;
     private String avatarUrl;
+    private Role perfil;
     private long quantidadeSeguidores;
     private long quantidadeSeguindo;
 
@@ -31,3 +33,4 @@ public class PerfilRespostaDto {
 
     private UsuarioPreferenciasDto preferencias;
 }
+

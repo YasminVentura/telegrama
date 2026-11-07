@@ -55,15 +55,20 @@ public class JwtUtils {
         String nodeId = claims.getSubject();
         String nome = (String) claims.get("nome");
         String id = (String) claims.get("id");
+        String role = (String) claims.get("role");
 
         if (nome == null || nome.isBlank()) {
             nome = nodeId;
+        }
+        if (role == null || role.isBlank()) {
+            role = "USER";
         }
 
         return UsuarioAutenticado.builder()
                 .id(id)
                 .nodeId(nodeId)
                 .nome(nome)
+                .role(role)
                 .build();
     }
 }

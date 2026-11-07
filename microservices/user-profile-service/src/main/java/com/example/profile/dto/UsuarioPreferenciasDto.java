@@ -1,6 +1,6 @@
-package com.example.authetication.dto;
+package com.example.profile.dto;
 
-import com.example.authetication.modelo.TemaVisual;
+import com.example.profile.modelo.TemaVisual;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

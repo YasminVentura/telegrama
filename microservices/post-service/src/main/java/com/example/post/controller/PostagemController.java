@@ -114,6 +114,12 @@ public class PostagemController {
         postagemService.excluirPostagem(id, usuarioLogado);
     }
 
+    @DeleteMapping("/interno/autor/{nodeId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirPostagensPorAutorInterno(@PathVariable String nodeId) {
+        postagemService.excluirPostagensPorAutorInterno(nodeId);
+    }
+
     private UsuarioAutenticado extrairUsuario(Authentication authentication) {
         if (authentication != null && authentication.getPrincipal() instanceof UsuarioAutenticado usuario) {
             return usuario;

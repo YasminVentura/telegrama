@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 
 class AuthRepository {
   final ApiClient _apiClient;
@@ -19,7 +20,15 @@ class AuthRepository {
       'identificador': identificador,
       'senha': senha,
     });
-    // O idSessao será interceptado automaticamente pelo ApiClient via cookie ou header
+    if (resposta is Map) {
+      UserRepositoryImpl.syncUserSession(
+        id: resposta['id']?.toString(),
+        nome: resposta['nome']?.toString(),
+        nodeId: resposta['nodeId']?.toString(),
+        email: resposta['email']?.toString(),
+        role: (resposta['perfil'] ?? resposta['role'])?.toString(),
+      );
+    }
     return resposta;
   }
 
@@ -27,6 +36,7 @@ class AuthRepository {
     try {
       await _apiClient.post('/auth/logout');
     } finally {
+      UserRepositoryImpl.currentUserRoleNotifier.value = 'USER';
       _apiClient.limparIdSessao();
     }
   }

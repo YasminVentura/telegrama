@@ -18,4 +18,6 @@ public interface PostagemRepository extends MongoRepository<Postagem, String> {
     List<Postagem> findByAutorNodeIdInOrderByCriadoEmDesc(List<String> autorNodeIds);
 
     List<Postagem> findByConteudoContainingIgnoreCaseOrderByCriadoEmDesc(String conteudo);
+
+    void deleteByAutorNodeIdIn(List<String> autorNodeIds);
 }

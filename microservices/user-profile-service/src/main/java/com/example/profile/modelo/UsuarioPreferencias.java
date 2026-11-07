@@ -1,4 +1,4 @@
-package com.example.authetication.modelo;
+package com.example.profile.modelo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
@@ -38,9 +38,8 @@ public class UsuarioPreferencias {
     @JsonIgnore
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Usuario usuario;
+    private PerfilUsuario usuario;
 
-    // Privacy & Frequencies
     @Column(name = "private_frequency_mode", nullable = false)
     @Builder.Default
     private boolean privateFrequencyMode = false;
@@ -53,7 +52,6 @@ public class UsuarioPreferencias {
     @Builder.Default
     private boolean broadcastNodeActivity = true;
 
-    // Transmission Alerts
     @Column(name = "push_transmissions", nullable = false)
     @Builder.Default
     private boolean pushTransmissions = true;
@@ -66,18 +64,15 @@ public class UsuarioPreferencias {
     @Builder.Default
     private boolean zoneBroadcastAlerts = false;
 
-    // Security
     @Column(name = "two_factor_auth", nullable = false)
     @Builder.Default
     private boolean twoFactorAuth = false;
 
-    // Appearance & Frequencies (Tema visual)
     @Enumerated(EnumType.STRING)
     @Column(name = "theme", nullable = false)
     @Builder.Default
     private TemaVisual theme = TemaVisual.RETRO_GREEN;
 
-    // Profile Photo Preference (6 imagens fixas)
     @Column(name = "avatar_url")
     @Builder.Default
     private String avatarUrl = "lib/assets/images/avatars/avatar_1.webp";
