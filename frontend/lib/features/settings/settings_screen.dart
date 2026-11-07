@@ -197,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return ProfileSettingsContent(
           currentTheme: widget.currentTheme,
           onProfileUpdated: () {
-            _loadUserNodeId(); // Recarrega o nodeId no topo caso o usuário o altere
+            _loadUserNodeId();
             widget.onProfileUpdated?.call();
           },
         );

@@ -122,6 +122,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                             setState(() {
                               _currentRoute = route;
                             });
+                            if (route == 'Home Feed') {
+                              _carregarPostagens();
+                            }
                           },
                         )
                       : _currentRoute == 'Explore Zones'
@@ -131,7 +134,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                           : _currentRoute == 'Wave Chats'
                               ? WaveChatsScreen(
                                   currentTheme: _currentTheme,
-                                )
+                                  )
                               : _currentRoute == 'Settings'
                                   ? SettingsScreen(
                                       currentTheme: _currentTheme,
@@ -144,6 +147,10 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                         setState(() {
                                           _currentRoute = 'Home Feed';
                                         });
+                                        _carregarPostagens();
+                                      },
+                                      onProfileUpdated: () {
+                                        _carregarPostagens();
                                       },
                                     )
                                   : SingleChildScrollView(

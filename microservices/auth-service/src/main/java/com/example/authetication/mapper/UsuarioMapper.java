@@ -20,11 +20,11 @@ public interface UsuarioMapper {
     @Mapping(target = "preferencias", ignore = true)
     Usuario paraEntidade(RegistroRequisicaoDto dto);
 
-    // As quantidades de seguidores e isMe serão preenchidas no service após o mapeamento básico
+    // As quantidades de seguidores, isMe e seguindo serão preenchidas no service após o mapeamento básico
     @Mapping(target = "quantidadeSeguidores", ignore = true)
     @Mapping(target = "quantidadeSeguindo", ignore = true)
     @Mapping(target = "isMe", ignore = true)
-    @Mapping(target = "avatarUrl", ignore = true)
+    @Mapping(target = "seguindo", ignore = true)
     PerfilRespostaDto paraPerfilDto(Usuario usuario);
 
     UsuarioPreferenciasDto paraPreferenciasDto(UsuarioPreferencias preferencias);

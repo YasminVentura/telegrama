@@ -71,6 +71,17 @@ public class PostagemController {
         return new RespostaEnvelopeDto<>(postagens);
     }
 
+    @GetMapping(path = {"/busca", "/search"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> buscarPostagens(
+            @RequestParam(name = "q", defaultValue = "") String query,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.buscarPostagens(query, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public RespostaEnvelopeDto<PostagemRespostaDto> buscarPorId(

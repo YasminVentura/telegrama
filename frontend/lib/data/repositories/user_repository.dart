@@ -50,6 +50,39 @@ class PerfilRespostaDto {
   }
 }
 
+/// DTO resumido para buscas e listagens em lote de usuários
+class PerfilResumidoDto {
+  final String id;
+  final String nome;
+  final String nodeId;
+  final String? avatarUrl;
+
+  PerfilResumidoDto({
+    required this.id,
+    required this.nome,
+    required this.nodeId,
+    this.avatarUrl,
+  });
+
+  factory PerfilResumidoDto.fromJson(Map<String, dynamic> json) {
+    return PerfilResumidoDto(
+      id: json['id']?.toString() ?? '',
+      nome: json['nome'] ?? '',
+      nodeId: json['nodeId'] ?? '',
+      avatarUrl: json['avatarUrl'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nome': nome,
+      'nodeId': nodeId,
+      'avatarUrl': avatarUrl,
+    };
+  }
+}
+
 abstract class UserRepository {
   Future<PerfilRespostaDto> getMyProfile();
   Future<PerfilRespostaDto> getUserProfile(String nodeId);
@@ -59,6 +92,7 @@ abstract class UserRepository {
   Future<String> uploadAvatar(XFile image);
   Future<void> followUser(String nodeId);
   Future<void> unfollowUser(String nodeId);
+  Future<List<PerfilResumidoDto>> searchUsers(String query);
 }
 
 class UserRepositoryImpl implements UserRepository {
@@ -118,5 +152,22 @@ class UserRepositoryImpl implements UserRepository {
   Future<String> uploadAvatar(XFile image) async {
     await Future.delayed(const Duration(milliseconds: 1500));
     return 'https://exemplo.com/avatar_mock.jpg';
+  }
+
+  @override
+  Future<List<PerfilResumidoDto>> searchUsers(String query) async {
+    try {
+      final response = await _apiClient.get('/usuarios/busca?q=${Uri.encodeComponent(query)}');
+      List<dynamic> list = [];
+      if (response is List) {
+        list = response;
+      } else if (response is Map && response['data'] is List) {
+        list = response['data'];
+      }
+      return list.map((item) => PerfilResumidoDto.fromJson(Map<String, dynamic>.from(item))).toList();
+    } catch (e) {
+      debugPrint('Erro ao buscar usuários: $e');
+      return [];
+    }
   }
 }

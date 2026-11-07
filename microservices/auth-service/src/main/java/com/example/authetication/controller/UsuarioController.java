@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -83,6 +84,15 @@ public class UsuarioController {
         }
         String nodeIdSolicitante = authentication.getName();
         return usuarioService.atualizarPreferencias(nodeIdSolicitante, dto);
+    }
+
+    @GetMapping(path = {"/busca", "/search"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PerfilResumidoDto>> buscarUsuarios(
+            @RequestParam(name = "q", defaultValue = "") String query
+    ) {
+        List<PerfilResumidoDto> resultado = usuarioService.buscarUsuariosPorTermo(query);
+        return new RespostaEnvelopeDto<>(resultado);
     }
 
     @GetMapping("/{nodeId}")

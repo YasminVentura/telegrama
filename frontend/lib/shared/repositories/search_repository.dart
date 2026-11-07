@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/data/repositories/post_repository.dart';
 
 enum SearchCategory { all, posts, zones, users }
 
@@ -8,6 +10,7 @@ class SearchResult {
   final String subtitle;
   final SearchCategory category;
   final String? avatarOrImageUrl;
+  final dynamic originalData;
 
   SearchResult({
     required this.id,
@@ -15,32 +18,84 @@ class SearchResult {
     required this.subtitle,
     required this.category,
     this.avatarOrImageUrl,
+    this.originalData,
   });
 }
 
 class SearchRepository {
+  final UserRepository _userRepository;
+  final PostRepository _postRepository;
+
+  SearchRepository({
+    UserRepository? userRepository,
+    PostRepository? postRepository,
+  })  : _userRepository = userRepository ?? UserRepositoryImpl(),
+        _postRepository = postRepository ?? PostRepositoryImpl();
+
   Future<List<SearchResult>> searchGlobal(String query, {SearchCategory filter = SearchCategory.all}) async {
-    await Future.delayed(const Duration(milliseconds: 600)); // Simula latência de rede
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return [];
 
-    if (query.isEmpty) return [];
+    final results = <SearchResult>[];
 
-    final q = query.toLowerCase();
+    final shouldSearchUsers = filter == SearchCategory.all || filter == SearchCategory.users;
+    final shouldSearchPosts = filter == SearchCategory.all || filter == SearchCategory.posts;
+    final shouldSearchZones = filter == SearchCategory.all || filter == SearchCategory.zones;
 
-    final List<SearchResult> allMocks = [
-      SearchResult(id: 'p1', title: 'The color grid is transmitting perfectly', subtitle: '@lumina_dream', category: SearchCategory.posts),
-      SearchResult(id: 'p2', title: 'New grid study: warm modules moving', subtitle: '@lumina_dream', category: SearchCategory.posts),
-      SearchResult(id: 'z1', title: 'BAUHAUS_GRID_04', subtitle: 'Public Zone • 14k members', category: SearchCategory.zones),
-      SearchResult(id: 'z2', title: 'RETRO_AUDIO_BBS', subtitle: 'Public Zone • 3k members', category: SearchCategory.zones),
-      SearchResult(id: 'u1', title: 'Saskia Vance', subtitle: '@sas_vance', category: SearchCategory.users),
-      SearchResult(id: 'u2', title: 'Lumina Dreamer', subtitle: '@lumina_dream', category: SearchCategory.users),
-      SearchResult(id: 'u3', title: 'Cyber Voyager', subtitle: '@cyber_voyager', category: SearchCategory.users),
-    ];
+    try {
+      final futures = <Future>[];
 
-    final filtered = allMocks.where((item) {
-      if (filter != SearchCategory.all && item.category != filter) return false;
-      return item.title.toLowerCase().contains(q) || item.subtitle.toLowerCase().contains(q);
-    }).toList();
+      if (shouldSearchUsers) {
+        futures.add(
+          _userRepository.searchUsers(cleanQuery).then((users) {
+            for (var u in users) {
+              results.add(SearchResult(
+                id: u.nodeId,
+                title: u.nome.isNotEmpty ? u.nome : u.nodeId,
+                subtitle: '@${u.nodeId.replaceAll('@', '')}',
+                category: SearchCategory.users,
+                avatarOrImageUrl: u.avatarUrl,
+                originalData: u,
+              ));
+            }
+          }).catchError((_) {}),
+        );
+      }
 
-    return filtered;
+      if (shouldSearchPosts) {
+        futures.add(
+          _postRepository.searchPosts(cleanQuery).then((posts) {
+            for (var p in posts) {
+              results.add(SearchResult(
+                id: p.id,
+                title: p.content,
+                subtitle: '${p.authorName} (${p.authorHandle})',
+                category: SearchCategory.posts,
+                avatarOrImageUrl: p.authorAvatarUrl,
+                originalData: p,
+              ));
+            }
+          }).catchError((_) {}),
+        );
+      }
+
+      if (shouldSearchZones) {
+        final mockZones = [
+          SearchResult(id: 'z1', title: 'BAUHAUS_GRID_04', subtitle: 'Public Zone • 14k members', category: SearchCategory.zones),
+          SearchResult(id: 'z2', title: 'RETRO_AUDIO_BBS', subtitle: 'Public Zone • 3k members', category: SearchCategory.zones),
+          SearchResult(id: 'z3', title: 'CYBERPUNK_LOUNGE', subtitle: 'Public Zone • 8.5k members', category: SearchCategory.zones),
+        ];
+        final q = cleanQuery.toLowerCase();
+        for (var z in mockZones) {
+          if (z.title.toLowerCase().contains(q) || z.subtitle.toLowerCase().contains(q)) {
+            results.add(z);
+          }
+        }
+      }
+
+      await Future.wait(futures);
+    } catch (_) {}
+
+    return results;
   }
 }

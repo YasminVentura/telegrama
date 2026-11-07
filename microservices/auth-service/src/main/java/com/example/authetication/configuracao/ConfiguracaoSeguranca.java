@@ -43,7 +43,9 @@ public class ConfiguracaoSeguranca {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Libera o acesso para registro, login e erros
                 .requestMatchers("/auth/registro", "/auth/login", "/error").permitAll()
-                // Libera acesso de leitura (GET) ao perfil e métricas de todos os usuários
+                // Libera chamada em lote inter-serviços (Feign do post-service)
+                .requestMatchers("/usuarios/batch").permitAll()
+                // Libera busca e acesso de leitura (GET) ao perfil e métricas de todos os usuários
                 .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
                 // Exige autenticação para o resto
                 .anyRequest().authenticated()

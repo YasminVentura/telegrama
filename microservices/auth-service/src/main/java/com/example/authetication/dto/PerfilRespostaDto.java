@@ -26,5 +26,8 @@ public class PerfilRespostaDto {
     @JsonProperty("isMe")
     private boolean isMe;
 
+    @JsonProperty("isFollowing")
+    private boolean seguindo;
+
     private UsuarioPreferenciasDto preferencias;
 }

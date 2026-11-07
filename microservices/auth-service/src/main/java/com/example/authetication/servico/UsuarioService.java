@@ -2,6 +2,7 @@ package com.example.authetication.servico;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import com.example.authetication.dto.AtualizarPerfilRequisicaoDto;
 import com.example.authetication.dto.PerfilRespostaDto;
@@ -71,8 +72,8 @@ public class UsuarioService {
 
     @Transactional
     public PerfilRespostaDto buscarPerfil(String nodeIdAlvo, String nodeIdSolicitante) {
-        Usuario usuario = usuarioRepository.findByNodeId(nodeIdAlvo)
-                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+        Usuario usuario = encontrarUsuarioPorNodeIdOuId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado: " + nodeIdAlvo));
 
         PerfilRespostaDto perfilDto = usuarioMapper.paraPerfilDto(usuario);
         
@@ -82,8 +83,22 @@ public class UsuarioService {
         perfilDto.setQuantidadeSeguidores(seguidores);
         perfilDto.setQuantidadeSeguindo(seguindo);
 
-        boolean isMe = nodeIdSolicitante != null && nodeIdSolicitante.equals(usuario.getNodeId());
+        boolean isMe = false;
+        if (nodeIdSolicitante != null) {
+            String cleanSolicitante = nodeIdSolicitante.replaceAll("@", "");
+            String cleanAlvo = usuario.getNodeId().replaceAll("@", "");
+            isMe = cleanSolicitante.equalsIgnoreCase(cleanAlvo) 
+                    || nodeIdSolicitante.equalsIgnoreCase(usuario.getEmail())
+                    || nodeIdSolicitante.equals(usuario.getId().toString());
+        }
         perfilDto.setMe(isMe);
+
+        if (!isMe && nodeIdSolicitante != null) {
+            encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante).ifPresent(solicitante -> {
+                boolean segue = seguidorRepository.existsBySeguidorAndSeguido(solicitante, usuario);
+                perfilDto.setSeguindo(segue);
+            });
+        }
 
         if (isMe) {
             UsuarioPreferencias preferencias = usuario.getPreferencias();
@@ -98,8 +113,8 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioPreferenciasDto buscarPreferencias(String nodeId) {
-        Usuario usuario = usuarioRepository.findByNodeId(nodeId)
-                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+        Usuario usuario = encontrarUsuarioPorNodeIdOuId(nodeId)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado: " + nodeId));
 
         UsuarioPreferencias preferencias = usuario.getPreferencias();
         if (preferencias == null) {
@@ -111,8 +126,8 @@ public class UsuarioService {
 
     @Transactional
     public PerfilRespostaDto atualizarPerfil(String nodeIdSolicitante, AtualizarPerfilRequisicaoDto dto) {
-        Usuario usuario = usuarioRepository.findByNodeId(nodeIdSolicitante)
-                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+        Usuario usuario = encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado: " + nodeIdSolicitante));
 
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             usuario.setNome(dto.getNome().trim());
@@ -150,8 +165,8 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioPreferenciasDto atualizarPreferencias(String nodeIdSolicitante, UsuarioPreferenciasDto dto) {
-        Usuario usuario = usuarioRepository.findByNodeId(nodeIdSolicitante)
-                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+        Usuario usuario = encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado: " + nodeIdSolicitante));
 
         UsuarioPreferencias prefs = usuario.getPreferencias();
         if (prefs == null) {
@@ -210,11 +225,11 @@ public class UsuarioService {
 
     @Transactional
     public void excluirConta(String nodeIdAlvo, String nodeIdSolicitante) {
-        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
-                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
+        Usuario alvo = encontrarUsuarioPorNodeIdOuId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado: " + nodeIdAlvo));
 
-        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
-                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
+        Usuario solicitante = encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado: " + nodeIdSolicitante));
 
         if (!alvo.getId().equals(solicitante.getId()) && solicitante.getPerfil() != com.example.authetication.modelo.Role.ADMIN) {
             throw new RegraNegocioException("Sem permissão para excluir esta conta. Apenas o proprietário ou um administrador podem realizar esta ação.");
@@ -225,14 +240,14 @@ public class UsuarioService {
 
     @Transactional
     public void seguirUsuario(String nodeIdAlvo, String nodeIdSolicitante) {
-        if (nodeIdAlvo.equals(nodeIdSolicitante)) {
+        Usuario alvo = encontrarUsuarioPorNodeIdOuId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado: " + nodeIdAlvo));
+        Usuario solicitante = encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado: " + nodeIdSolicitante));
+
+        if (alvo.getId().equals(solicitante.getId())) {
             throw new RegraNegocioException("Você não pode seguir a si mesmo.");
         }
-
-        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
-                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
-        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
-                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
 
         if (seguidorRepository.existsBySeguidorAndSeguido(solicitante, alvo)) {
             throw new RegraNegocioException("Você já segue este usuário.");
@@ -248,10 +263,10 @@ public class UsuarioService {
 
     @Transactional
     public void deixarDeSeguirUsuario(String nodeIdAlvo, String nodeIdSolicitante) {
-        Usuario alvo = usuarioRepository.findByNodeId(nodeIdAlvo)
-                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado."));
-        Usuario solicitante = usuarioRepository.findByNodeId(nodeIdSolicitante)
-                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado."));
+        Usuario alvo = encontrarUsuarioPorNodeIdOuId(nodeIdAlvo)
+                .orElseThrow(() -> new RegraNegocioException("Usuário alvo não encontrado: " + nodeIdAlvo));
+        Usuario solicitante = encontrarUsuarioPorNodeIdOuId(nodeIdSolicitante)
+                .orElseThrow(() -> new RegraNegocioException("Usuário solicitante não encontrado: " + nodeIdSolicitante));
 
         Seguidor seguidor = seguidorRepository.findBySeguidorAndSeguido(solicitante, alvo)
                 .orElseThrow(() -> new RegraNegocioException("Você não segue este usuário."));
@@ -270,10 +285,14 @@ public class UsuarioService {
 
         for (String str : ids) {
             if (str == null || str.isBlank()) continue;
+            String limpo = str.trim();
             try {
-                uuids.add(UUID.fromString(str));
+                uuids.add(UUID.fromString(limpo));
             } catch (IllegalArgumentException e) {
-                nodeIds.add(str);
+                nodeIds.add(limpo);
+                if (limpo.startsWith("@")) {
+                    nodeIds.add(limpo.substring(1));
+                }
             }
         }
 
@@ -298,5 +317,68 @@ public class UsuarioService {
                         u.getAvatarUrl()
                 ))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PerfilResumidoDto> buscarUsuariosPorTermo(String termo) {
+        if (termo == null || termo.isBlank()) {
+            return List.of();
+        }
+        String busca = termo.trim();
+        if (busca.startsWith("telegrama.zone/")) {
+            busca = busca.replace("telegrama.zone/", "");
+        }
+        if (busca.startsWith("@")) {
+            busca = busca.substring(1);
+        }
+        if (busca.isBlank()) {
+            return List.of();
+        }
+
+        List<Usuario> usuarios = usuarioRepository.findByNomeContainingIgnoreCaseOrNodeIdContainingIgnoreCase(busca, busca);
+        return usuarios.stream()
+                .map(u -> new PerfilResumidoDto(
+                        u.getId().toString(),
+                        u.getNome(),
+                        u.getNodeId(),
+                        u.getAvatarUrl()
+                ))
+                .toList();
+    }
+
+    public Optional<Usuario> encontrarUsuarioPorNodeIdOuId(String identificador) {
+        if (identificador == null || identificador.isBlank()) {
+            return Optional.empty();
+        }
+        String limpo = identificador.trim();
+
+        // 1. Tenta buscar por UUID se for formato UUID válido
+        try {
+            UUID uuid = UUID.fromString(limpo);
+            Optional<Usuario> porUuid = usuarioRepository.findById(uuid);
+            if (porUuid.isPresent()) {
+                return porUuid;
+            }
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        // 2. Tenta exatamente como veio (ex: "yasmin_v" ou "@yasmin_v")
+        Optional<Usuario> usuario = usuarioRepository.findByNodeId(limpo);
+        if (usuario.isPresent()) {
+            return usuario;
+        }
+
+        // 3. Tenta alternando o prefixo '@'
+        if (limpo.startsWith("@")) {
+            usuario = usuarioRepository.findByNodeId(limpo.substring(1));
+        } else {
+            usuario = usuarioRepository.findByNodeId("@" + limpo);
+        }
+        if (usuario.isPresent()) {
+            return usuario;
+        }
+
+        // 4. Fallback por e-mail
+        return usuarioRepository.findByEmail(limpo);
     }
 }

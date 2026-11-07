@@ -30,7 +30,7 @@ class PostModel {
   int get likesCount => likes;
   int get commentsCount => comments;
   int get repostsCount => reposts;
-  String get authorHandle => authorId.startsWith('@') ? authorId : '@\$authorId';
+  String get authorHandle => authorId.startsWith('@') ? authorId : '@$authorId';
   String? get imageUrl => authorAvatarUrl;
 
   /// Método copyWith para criar cópias modificadas imutáveis
@@ -74,15 +74,15 @@ class PostModel {
 
     return PostModel(
       id: json['id']?.toString() ?? '',
-      authorName: json['authorName'] ?? json['author_name'] ?? 'Node Anônimo',
-      authorId: json['authorId'] ?? json['author_id'] ?? 'node',
-      authorAvatarUrl: json['authorAvatarUrl'] ?? json['author_avatar_url'],
+      authorName: json['authorName'] ?? json['author_name'] ?? json['autorNome'] ?? 'Node Anônimo',
+      authorId: json['authorId'] ?? json['author_id'] ?? json['autorNodeId'] ?? 'node',
+      authorAvatarUrl: json['authorAvatarUrl'] ?? json['author_avatar_url'] ?? json['autorAvatarUrl'],
       content: json['content'] ?? json['conteudo'] ?? '',
       createdAt: data,
       timeAgo: json['timeAgo'] ?? _calcularTempoAtras(data),
       frequencyTag: json['frequencyTag'] ?? 'GENERAL_SIGNAL',
-      likes: (json['likesCount'] ?? json['likes'] ?? 0) as int,
-      comments: (json['commentsCount'] ?? json['comments'] ?? 0) as int,
+      likes: (json['likesCount'] ?? json['likes'] ?? json['quantidadeCurtidas'] ?? 0) as int,
+      comments: (json['commentsCount'] ?? json['comments'] ?? json['quantidadeComentarios'] ?? 0) as int,
       reposts: (json['repostsCount'] ?? json['reposts'] ?? 0) as int,
       curtidoPeloUsuario: json['curtidoPeloUsuario'] == true,
     );

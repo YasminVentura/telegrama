@@ -10,6 +10,7 @@ abstract class PostRepository {
   Future<void> repost(String postId);
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId);
   Future<Map<String, dynamic>> addCommentToPost(String postId, String content);
+  Future<List<PostModel>> searchPosts(String query);
 }
 
 class PostRepositoryImpl implements PostRepository {
@@ -91,5 +92,23 @@ class PostRepositoryImpl implements PostRepository {
       'timeAgo': 'Agora',
       'likesCount': 0,
     };
+  }
+
+  @override
+  Future<List<PostModel>> searchPosts(String query) async {
+    try {
+      final response = await _apiClient.get('/posts/busca?q=${Uri.encodeComponent(query)}');
+      if (response != null) {
+        final rawData = response is Map && response.containsKey('data') 
+            ? response['data'] 
+            : response;
+        if (rawData is List) {
+          return rawData.map((item) => PostModel.fromJson(Map<String, dynamic>.from(item))).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao buscar postagens: $e');
+    }
+    return [];
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/shared/repositories/search_repository.dart';
+import 'package:frontend/features/settings/profile_screen.dart';
 
 class GlobalSearchModal extends StatefulWidget {
   final AppTheme currentTheme;
@@ -237,6 +238,30 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     );
   }
 
+  void _onItemTapped(SearchResult item) {
+    Navigator.of(context).pop();
+    if (item.category == SearchCategory.users) {
+      final nodeId = item.id.replaceAll('@', '');
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            backgroundColor: widget.currentTheme.backgroundColor,
+            appBar: AppBar(
+              backgroundColor: widget.currentTheme.backgroundColor,
+              elevation: 0,
+              iconTheme: IconThemeData(color: widget.currentTheme.textColor),
+              title: Text(item.title, style: TextStyle(color: widget.currentTheme.textColor, fontWeight: FontWeight.bold)),
+            ),
+            body: ProfileScreen(
+              currentTheme: widget.currentTheme,
+              nodeId: nodeId,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildResultItem(SearchResult item) {
     IconData icon;
     Color color;
@@ -262,9 +287,7 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).pop();
-        },
+        onTap: () => _onItemTapped(item),
         hoverColor: widget.currentTheme.primaryColor.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

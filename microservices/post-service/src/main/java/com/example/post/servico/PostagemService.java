@@ -10,6 +10,7 @@ import com.example.post.modelo.Postagem;
 import com.example.post.repositorio.PostagemRepository;
 import com.example.post.seguranca.UsuarioAutenticado;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostagemService {
@@ -62,8 +64,33 @@ public class PostagemService {
     }
 
     public List<PostagemRespostaDto> listarPostagensPorUsuario(String autorNodeId, UsuarioAutenticado usuarioLogado) {
-        List<Postagem> postagens = postagemRepository.findByAutorNodeIdOrderByCriadoEmDesc(autorNodeId);
+        if (autorNodeId == null || autorNodeId.isBlank()) {
+            return Collections.emptyList();
+        }
+        String limpo = autorNodeId.trim();
+        List<String> nodeIds = new ArrayList<>();
+        nodeIds.add(limpo);
+        if (limpo.startsWith("@")) {
+            nodeIds.add(limpo.substring(1));
+        } else {
+            nodeIds.add("@" + limpo);
+        }
 
+        List<Postagem> postagens = postagemRepository.findByAutorNodeIdInOrderByCriadoEmDesc(nodeIds);
+
+        List<String> identificadores = extrairIdentificadores(postagens);
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+
+        return postagens.stream()
+                .map(p -> mapearParaRespostaDto(p, usuarioLogado, obterPerfilDoMap(p, perfisMap)))
+                .toList();
+    }
+
+    public List<PostagemRespostaDto> buscarPostagens(String query, UsuarioAutenticado usuarioLogado) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        List<Postagem> postagens = postagemRepository.findByConteudoContainingIgnoreCaseOrderByCriadoEmDesc(query.trim());
         List<String> identificadores = extrairIdentificadores(postagens);
         Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
 
@@ -146,14 +173,15 @@ public class PostagemService {
                         mapa.put(perfil.getId(), perfil);
                     }
                     if (perfil.getNodeId() != null) {
-                        // Garante que o post antigo ache o perfil mesmo buscando pelo @handle/nodeId
+                        // Garante que o post antigo ache o perfil mesmo buscando pelo @handle/nodeId ou com @
                         mapa.put(perfil.getNodeId(), perfil);
+                        mapa.put("@" + perfil.getNodeId(), perfil);
                     }
                 }
                 return mapa;
             }
         } catch (Exception e) {
-            // Fallback silencioso
+            log.error("Erro ao sincronizar perfis em lote via auth-service: {}", e.getMessage(), e);
         }
         return Collections.emptyMap();
     }
@@ -163,8 +191,17 @@ public class PostagemService {
         if (postagem.getAutorId() != null && perfisMap.containsKey(postagem.getAutorId())) {
             return perfisMap.get(postagem.getAutorId());
         }
-        if (postagem.getAutorNodeId() != null && perfisMap.containsKey(postagem.getAutorNodeId())) {
-            return perfisMap.get(postagem.getAutorNodeId());
+        if (postagem.getAutorNodeId() != null) {
+            String nodeId = postagem.getAutorNodeId();
+            if (perfisMap.containsKey(nodeId)) {
+                return perfisMap.get(nodeId);
+            }
+            if (!nodeId.startsWith("@") && perfisMap.containsKey("@" + nodeId)) {
+                return perfisMap.get("@" + nodeId);
+            }
+            if (nodeId.startsWith("@") && perfisMap.containsKey(nodeId.substring(1))) {
+                return perfisMap.get(nodeId.substring(1));
+            }
         }
         return null;
     }
