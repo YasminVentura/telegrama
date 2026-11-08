@@ -14,6 +14,7 @@ class PostModel {
   final int comments;
   final int reposts;
   final bool curtidoPeloUsuario;
+  final bool salvoPeloUsuario;
 
   PostModel({
     required this.id,
@@ -29,6 +30,7 @@ class PostModel {
     this.comments = 0,
     this.reposts = 0,
     this.curtidoPeloUsuario = false,
+    this.salvoPeloUsuario = false,
   });
 
   int get likesCount => likes;
@@ -52,6 +54,7 @@ class PostModel {
     int? comments,
     int? reposts,
     bool? curtidoPeloUsuario,
+    bool? salvoPeloUsuario,
   }) {
     return PostModel(
       id: id ?? this.id,
@@ -67,6 +70,7 @@ class PostModel {
       comments: comments ?? this.comments,
       reposts: reposts ?? this.reposts,
       curtidoPeloUsuario: curtidoPeloUsuario ?? this.curtidoPeloUsuario,
+      salvoPeloUsuario: salvoPeloUsuario ?? this.salvoPeloUsuario,
     );
   }
 
@@ -96,6 +100,7 @@ class PostModel {
       comments: (json['commentsCount'] ?? json['comments'] ?? json['quantidadeComentarios'] ?? 0) as int,
       reposts: (json['repostsCount'] ?? json['reposts'] ?? 0) as int,
       curtidoPeloUsuario: json['curtidoPeloUsuario'] == true,
+      salvoPeloUsuario: json['salvoPeloUsuario'] == true,
     );
   }
 
@@ -128,6 +133,7 @@ class PostModel {
       'reposts': reposts,
       'repostsCount': reposts,
       'curtidoPeloUsuario': curtidoPeloUsuario,
+      'salvoPeloUsuario': salvoPeloUsuario,
     };
   }
 
@@ -165,6 +171,8 @@ class PostModel {
         return repostsCount;
       case 'curtidoPeloUsuario':
         return curtidoPeloUsuario;
+      case 'salvoPeloUsuario':
+        return salvoPeloUsuario;
       default:
         return null;
     }

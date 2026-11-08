@@ -53,17 +53,25 @@ public class JwtUtils {
     public UsuarioAutenticado extrairUsuario(String token) {
         Claims claims = extrairTodasClaims(token);
         String nodeId = claims.getSubject();
-        String nome = (String) claims.get("nome");
-        String id = (String) claims.get("id");
+        if ((nodeId == null || nodeId.isBlank()) && claims.get("nodeId") != null) {
+            nodeId = String.valueOf(claims.get("nodeId"));
+        }
+        String nome = claims.get("nome") != null ? String.valueOf(claims.get("nome")) : null;
+        String id = claims.get("id") != null ? String.valueOf(claims.get("id")) : null;
+        String role = claims.get("role") != null ? String.valueOf(claims.get("role")) : null;
 
         if (nome == null || nome.isBlank()) {
             nome = nodeId;
+        }
+        if (role == null || role.isBlank()) {
+            role = "USER";
         }
 
         return UsuarioAutenticado.builder()
                 .id(id)
                 .nodeId(nodeId)
                 .nome(nome)
+                .role(role)
                 .build();
     }
 }

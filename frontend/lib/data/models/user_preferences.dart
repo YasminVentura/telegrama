@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
+
 class UserPreferences {
   static const String defaultAvatar = 'lib/assets/images/avatars/avatar_1.webp';
+  static const String defaultBannerColor = '#2E4F3E';
 
   static const List<String> fixedAvatars = [
     'lib/assets/images/avatars/avatar_1.webp',
@@ -8,6 +11,17 @@ class UserPreferences {
     'lib/assets/images/avatars/avatar_4.jpg',
     'lib/assets/images/avatars/avatar_5.jpg',
     'lib/assets/images/avatars/avatar_6.jpg',
+  ];
+
+  static const List<String> fixedBannerColors = [
+    '#2E4F3E', // Verde musgo retrô (Padrão)
+    '#1E3A5F', // Azul marinho profundo
+    '#5C2D46', // Vinho retrô
+    '#6E3B1E', // Terracota / Âmbar escuro
+    '#3D2C5E', // Roxo espacial
+    '#1F4E5B', // Petróleo / Teal
+    '#4A4E2E', // Oliva militar
+    '#2B2B2B', // Grafite escuro
   ];
 
   final bool privateFrequencyMode;
@@ -19,6 +33,7 @@ class UserPreferences {
   final bool twoFactorAuth;
   final String theme;
   final String avatarUrl;
+  final String bannerColor;
 
   const UserPreferences({
     this.privateFrequencyMode = false,
@@ -30,6 +45,7 @@ class UserPreferences {
     this.twoFactorAuth = false,
     this.theme = 'RETRO_GREEN',
     this.avatarUrl = defaultAvatar,
+    this.bannerColor = defaultBannerColor,
   });
 
   static String? extractRawAvatar(Map<String, dynamic>? json) {
@@ -45,11 +61,44 @@ class UserPreferences {
     return null;
   }
 
+  static String? extractRawBannerColor(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    final raw = json['bannerColor'] ??
+        json['corCapa'] ??
+        json['banner_color'] ??
+        json['headerColor'];
+    if (raw != null && raw.toString().trim().isNotEmpty) {
+      return raw.toString().trim();
+    }
+    return null;
+  }
+
+  static Color parseBannerColor(String? hex, {Color? fallback}) {
+    final raw = (hex != null && hex.trim().isNotEmpty)
+        ? hex.trim()
+        : defaultBannerColor;
+    final cleaned = raw.replaceAll('#', '');
+    if (cleaned.length == 6) {
+      final parsed = int.tryParse('FF$cleaned', radix: 16);
+      if (parsed != null) {
+        return Color(parsed);
+      }
+    } else if (cleaned.length == 8) {
+      final parsed = int.tryParse(cleaned, radix: 16);
+      if (parsed != null) {
+        return Color(parsed);
+      }
+    }
+    return fallback ?? const Color(0xFF2E4F3E);
+  }
+
   factory UserPreferences.fromJson(
     Map<String, dynamic> json, {
     String? fallbackAvatar,
+    String? fallbackBannerColor,
   }) {
     final rawAvatar = extractRawAvatar(json);
+    final rawBannerColor = extractRawBannerColor(json);
     return UserPreferences(
       privateFrequencyMode: json['privateFrequencyMode'] ?? false,
       directTransmissions: json['directTransmissions'] ?? true,
@@ -60,6 +109,7 @@ class UserPreferences {
       twoFactorAuth: json['twoFactorAuth'] ?? false,
       theme: json['theme'] ?? 'RETRO_GREEN',
       avatarUrl: rawAvatar ?? fallbackAvatar ?? defaultAvatar,
+      bannerColor: rawBannerColor ?? fallbackBannerColor ?? defaultBannerColor,
     );
   }
 
@@ -74,6 +124,7 @@ class UserPreferences {
       'twoFactorAuth': twoFactorAuth,
       'theme': theme,
       'avatarUrl': avatarUrl,
+      'bannerColor': bannerColor,
     };
   }
 
@@ -87,6 +138,7 @@ class UserPreferences {
     bool? twoFactorAuth,
     String? theme,
     String? avatarUrl,
+    String? bannerColor,
   }) {
     return UserPreferences(
       privateFrequencyMode: privateFrequencyMode ?? this.privateFrequencyMode,
@@ -98,6 +150,7 @@ class UserPreferences {
       twoFactorAuth: twoFactorAuth ?? this.twoFactorAuth,
       theme: theme ?? this.theme,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      bannerColor: bannerColor ?? this.bannerColor,
     );
   }
 }

@@ -41,13 +41,9 @@ public class ConfiguracaoSeguranca {
             .authorizeHttpRequests(auth -> auth
                 // Libera requisições preflight (OPTIONS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Libera o acesso para registro, login e erros
-                .requestMatchers("/auth/registro", "/auth/login", "/error").permitAll()
-                // Libera chamada em lote inter-serviços (Feign do post-service)
-                .requestMatchers("/usuarios/batch").permitAll()
-                // Libera busca e acesso de leitura (GET) ao perfil e métricas de todos os usuários
-                .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
-                // Exige autenticação para o resto
+                // Libera o acesso para registro, login, refresh token, logout, endpoints internos de cascata e erros
+                .requestMatchers("/auth/registro", "/auth/login", "/auth/refresh", "/auth/logout", "/auth/interno/**", "/error").permitAll()
+                // Exige autenticação para o resto (ex: logout)
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -74,7 +70,7 @@ public class ConfiguracaoSeguranca {
         configuration.setAllowedHeaders(List.of("*"));
         
         // Cabeçalhos expostos na resposta para o cliente (Flutter Web)
-        configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id"));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id", "X-Refresh-Token"));
         
         // Permite envio de credenciais (cookies e autorizações)
         configuration.setAllowCredentials(true);

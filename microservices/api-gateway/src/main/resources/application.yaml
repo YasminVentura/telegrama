@@ -32,6 +32,7 @@ spring:
             exposedHeaders:
               - "Set-Cookie"
               - "X-Session-Id"
+              - "X-Refresh-Token"
             allowCredentials: true
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Expose-Headers Access-Control-Allow-Methods, RETAIN_FIRST
@@ -40,7 +41,12 @@ spring:
         - id: auth-service-route
           uri: lb://auth-service
           predicates:
-            - Path=/auth/**, /usuarios/**
+            - Path=/auth/**
+
+        - id: user-profile-service-route
+          uri: lb://user-profile-service
+          predicates:
+            - Path=/usuarios/**
             
         - id: post-service-route
           uri: lb://post-service

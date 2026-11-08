@@ -9,12 +9,14 @@ import 'package:frontend/features/feed/models/post_model.dart';
 class PostDetailScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final String postId;
+  final PostModel? initialPost;
   final VoidCallback? onBack;
 
   const PostDetailScreen({
     super.key,
     required this.currentTheme,
     required this.postId,
+    this.initialPost,
     this.onBack,
   });
 
@@ -24,28 +26,40 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
-  
+  final FocusNode _replyFocusNode = FocusNode();
+
   bool _isLoading = true;
   PostModel? _postData;
-  List<dynamic> _comments = [];
+  List<Map<String, dynamic>> _comments = [];
+  String? _replyingToCommentId;
+  String? _replyingToHandle;
 
   @override
   void initState() {
     super.initState();
+    _postData = widget.initialPost;
     _fetchPostDetails();
   }
 
+  @override
+  void dispose() {
+    _replyFocusNode.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchPostDetails() async {
-    setState(() => _isLoading = true);
-    
-    final posts = await _postRepository.getFeedPosts();
-    final post = posts.firstWhere((p) => p.id == widget.postId, orElse: () => posts.first);
-    
+    if (_postData == null) {
+      setState(() => _isLoading = true);
+    }
+
+    final fetchedPost = await _postRepository.getPostById(widget.postId);
     final comments = await _postRepository.getCommentsForPost(widget.postId);
 
     if (mounted) {
       setState(() {
-        _postData = post;
+        if (fetchedPost != null) {
+          _postData = fetchedPost;
+        }
         _comments = comments;
         _isLoading = false;
       });
@@ -53,21 +67,116 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _addComment(String text) async {
-    final newComment = await _postRepository.addCommentToPost(widget.postId, text);
-    if (mounted && _postData != null) {
+    final parentId = _replyingToCommentId;
+    try {
+      await _postRepository.addCommentToPost(
+        widget.postId,
+        text,
+        parentId: parentId,
+      );
       setState(() {
-        _comments.insert(0, newComment);
-        // Atualiza a quantidade de comentários usando copyWith
-        _postData = _postData!.copyWith(comments: _postData!.comments + 1);
+        _replyingToCommentId = null;
+        _replyingToHandle = null;
       });
+      await _fetchPostDetails();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao enviar comentário: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _togglePostLike() async {
+    if (_postData == null) return;
+    final atualizado = await _postRepository.likePost(widget.postId);
+    if (atualizado != null && mounted) {
+      setState(() {
+        _postData = atualizado;
+      });
+    }
+  }
+
+  Future<void> _togglePostSave() async {
+    if (_postData == null) return;
+    final atualizado = await _postRepository.savePost(widget.postId);
+    if (atualizado != null && mounted) {
+      setState(() {
+        _postData = atualizado;
+      });
+    }
+  }
+
+  Future<void> _toggleCommentLike(String commentId) async {
+    await _postRepository.likeComment(widget.postId, commentId);
+    final comments = await _postRepository.getCommentsForPost(widget.postId);
+    if (mounted) {
+      setState(() {
+        _comments = comments;
+      });
+    }
+  }
+
+  void _startReplyingToComment(String commentId, String handle) {
+    setState(() {
+      _replyingToCommentId = commentId;
+      _replyingToHandle = handle;
+    });
+    _replyFocusNode.requestFocus();
+  }
+
+  void _cancelReplyToComment() {
+    setState(() {
+      _replyingToCommentId = null;
+      _replyingToHandle = null;
+    });
+  }
+
+  void _handleBack(BuildContext context) {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(_postData);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading || _postData == null) {
-      return Center(
-        child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+    if (_isLoading && _postData == null) {
+      return Scaffold(
+        backgroundColor: widget.currentTheme.backgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: widget.currentTheme.primaryColor,
+          ),
+        ),
+      );
+    }
+
+    if (_postData == null) {
+      return Scaffold(
+        backgroundColor: widget.currentTheme.backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Transmissão não encontrada.',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: widget.currentTheme.textColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _handleBack(context),
+                child: const Text('Voltar'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -79,40 +188,47 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: widget.currentTheme.shadowColor, width: 2)),
+              border: Border(
+                bottom: BorderSide(
+                  color: widget.currentTheme.shadowColor,
+                  width: 2,
+                ),
+              ),
             ),
             child: Row(
               children: [
-                if (widget.onBack != null)
-                  GestureDetector(
-                    onTap: widget.onBack,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: Row(
-                        children: [
-                          Icon(Icons.arrow_back, color: widget.currentTheme.textColor),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Back',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: widget.currentTheme.textColor,
-                            ),
+                GestureDetector(
+                  onTap: () => _handleBack(context),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_back,
+                          color: widget.currentTheme.textColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Voltar',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: widget.currentTheme.textColor,
                           ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Text(
-                    'Thread',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: widget.currentTheme.textColor,
+                        ),
+                      ],
                     ),
                   ),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  '• Transmissão & Respostas',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme.textColor.withValues(alpha: 0.6),
+                  ),
+                ),
               ],
             ),
           ),
@@ -132,23 +248,34 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         content: _postData!.content,
                         authorAvatarUrl: _postData!.authorAvatarUrl,
                         imageUrl: _postData!.imageUrl,
-                        frequencyTag: _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
-                        exactTime: '8:45 PM · Oct 24, 2026 · Telegrama Desktop',
+                        frequencyTag:
+                            _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
+                        exactTime: _postData!.timeAgo,
                         likesCount: _postData!.likesCount,
                         commentsCount: _postData!.commentsCount,
                         repostsCount: _postData!.repostsCount,
+                        isLiked: _postData!.curtidoPeloUsuario,
+                        isSaved: _postData!.salvoPeloUsuario,
+                        onLikePressed: _togglePostLike,
+                        onSavePressed: _togglePostSave,
+                        onCommentPressed: () {
+                          _cancelReplyToComment();
+                          _replyFocusNode.requestFocus();
+                        },
                       ),
-                      
+
                       // Comments Section
                       if (_comments.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(40),
                           child: Text(
-                            'No replies yet. Be the first to transmit.',
+                            'Nenhum comentário ainda. Seja o primeiro nó a responder!',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: widget.currentTheme.textColor.withValues(alpha: 0.5),
+                              color: widget.currentTheme.textColor.withValues(
+                                alpha: 0.5,
+                              ),
                             ),
                           ),
                         )
@@ -160,21 +287,35 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           itemBuilder: (context, index) {
                             final comment = _comments[index];
                             final isLast = index == _comments.length - 1;
+                            final List<Map<String, dynamic>> repliesList =
+                                (comment['replies'] is List)
+                                    ? (comment['replies'] as List)
+                                        .map((e) => Map<String, dynamic>.from(e as Map))
+                                        .toList()
+                                    : const [];
+
                             return Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24),
                               child: CommentItemComponent(
+                                key: ValueKey(comment['id'] ?? 'comment_$index'),
                                 currentTheme: widget.currentTheme,
+                                commentId: comment['id']?.toString() ?? '',
                                 name: comment['authorName'] ?? 'Node Anônimo',
                                 handle: comment['authorHandle'] ?? '@node',
+                                authorAvatarUrl: comment['authorAvatarUrl']?.toString(),
                                 content: comment['content'] ?? '',
                                 timeAgo: comment['timeAgo'] ?? 'Agora',
                                 likesCount: (comment['likesCount'] ?? 0) as int,
+                                isLiked: comment['curtidoPeloUsuario'] == true,
                                 isLast: isLast,
+                                replies: repliesList,
+                                onReplyPressed: _startReplyingToComment,
+                                onLikePressed: _toggleCommentLike,
                               ),
                             );
                           },
                         ),
-                        
+
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -186,6 +327,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           // Bottom Reply Input
           ReplyInputWidget(
             currentTheme: widget.currentTheme,
+            focusNode: _replyFocusNode,
+            replyingToHandle: _replyingToHandle,
+            onCancelReply: _cancelReplyToComment,
             onReplySubmitted: _addComment,
           ),
         ],

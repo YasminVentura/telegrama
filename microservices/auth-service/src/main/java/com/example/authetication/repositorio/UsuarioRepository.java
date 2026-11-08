@@ -14,6 +14,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByNodeId(String nodeId);
 
+    Optional<Usuario> findByNodeIdIgnoreCase(String nodeId);
+
     // Essencial para permitir que o usuário logue tanto com email quanto com @node_id
     Optional<Usuario> findByEmailOrNodeId(String email, String nodeId);
 
@@ -21,5 +23,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     boolean existsByNodeId(String nodeId);
 
-    java.util.List<Usuario> findByNomeContainingIgnoreCaseOrNodeIdContainingIgnoreCase(String nome, String nodeId);
+    boolean existsByNodeIdIgnoreCase(String nodeId);
 }

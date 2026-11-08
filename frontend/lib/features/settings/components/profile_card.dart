@@ -11,15 +11,19 @@ class ProfileCard extends StatelessWidget {
   final String bio;
   final String? location;
   final String? avatarUrl;
+  final String? bannerColor;
   final String followingCount;
   final String followersCount;
   final String artifactsCount;
   final VoidCallback? onFollowPressed;
   final VoidCallback? onMessagePressed;
+  final VoidCallback? onDeleteUserPressed;
+  final VoidCallback? onEditProfilePressed;
   final ValueChanged<String>? onAvatarSelected;
   final bool isFollowing;
   final bool isLoadingFollow;
   final bool isOwner;
+  final bool canDeleteUser;
 
   const ProfileCard({
     super.key,
@@ -29,15 +33,19 @@ class ProfileCard extends StatelessWidget {
     required this.bio,
     this.location,
     this.avatarUrl,
+    this.bannerColor,
     required this.followingCount,
     required this.followersCount,
     required this.artifactsCount,
     this.onFollowPressed,
     this.onMessagePressed,
+    this.onDeleteUserPressed,
+    this.onEditProfilePressed,
     this.onAvatarSelected,
     this.isFollowing = false,
     this.isLoadingFollow = false,
     this.isOwner = false,
+    this.canDeleteUser = false,
   });
 
   void _showAvatarPickerModal(BuildContext context, String currentAvatar) {
@@ -185,17 +193,28 @@ class ProfileCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: currentTheme.secondaryColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              border: Border(bottom: BorderSide(color: currentTheme.shadowColor, width: 2)),
-              image: const DecorationImage(
-                image: AssetImage('lib/assets/images/signal_artwork.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+          ValueListenableBuilder<String>(
+            valueListenable: UserRepositoryImpl.currentBannerColorNotifier,
+            builder: (context, myCurrentBannerColor, _) {
+              final String effectiveBannerHex = isOwner
+                  ? myCurrentBannerColor
+                  : (bannerColor ?? UserPreferences.defaultBannerColor);
+              final Color resolvedBannerColor = UserPreferences.parseBannerColor(
+                effectiveBannerHex,
+                fallback: currentTheme.secondaryColor,
+              );
+
+              return Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  color: resolvedBannerColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  border: Border(
+                    bottom: BorderSide(color: currentTheme.shadowColor, width: 2),
+                  ),
+                ),
+              );
+            },
           ),
 
           Padding(
@@ -287,7 +306,48 @@ class ProfileCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (!isOwner)
+                        if (isOwner && onEditProfilePressed != null)
+                          GestureDetector(
+                            onTap: onEditProfilePressed,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: currentTheme.backgroundColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: currentTheme.shadowColor,
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      size: 16,
+                                      color: currentTheme.textColor,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'EDIT PROFILE',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: currentTheme.textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (!isOwner)
                           Row(
                             children: [
                               _buildActionButton(
@@ -298,6 +358,37 @@ class ProfileCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 10),
                               _buildActionButton('MESSAGE', isPrimary: false, onTap: onMessagePressed),
+                              if (canDeleteUser && onDeleteUserPressed != null) ...[
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: onDeleteUserPressed,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF4D4D).withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFF4D4D), width: 2),
+                                      boxShadow: [
+                                        BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.person_remove_outlined, size: 16, color: Color(0xFFFF4D4D)),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'DELETE NODE',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFFF4D4D),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                       ],

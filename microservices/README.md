@@ -21,16 +21,24 @@ Atua como o servidor do Netflix Eureka. Ele é a "lista telefônica" do projeto.
 Ponto de entrada único para o front-end. Ele expõe rotas (como `/auth/**` ou `/usuarios/**`) e usa o `service-discovery` para redirecionar o tráfego para os serviços de destino corretos.
 
 ### 3. `auth-service` (Porta `8081`)
-Responsável pela **Segurança, Autenticação e Gestão de Usuários**.
-- Banco de Dados: PostgreSQL
-- Domínios: Usuários, Perfis, Permissões (Roles: USER, ADMIN), Sistema de Seguidores.
-- **Autenticação (BFF / Token Handler Pattern com Redis)**: O front-end recebe apenas um `idSessao` opaco (UUID) em cookie `HttpOnly` e no header `X-Session-Id`. A sessão fica armazenada em memória no **Redis** (TTL de 24h). O `api-gateway` intercepta as requisições, busca reativamente a sessão no Redis (< 1ms) e repassa o JWT interno no cabeçalho `Authorization: Bearer <jwt>` para os microsserviços. O cliente nunca toca no JWT e o logout é instantâneo (basta deletar a chave no Redis).
+Responsável pela **Segurança, Autenticação e Credenciais**.
+- Banco de Dados: PostgreSQL (`telegrama_auth`)
+- Domínios: Credenciais de Acesso, Permissões (`Role`: `USER`, `ADMIN`), Sessões e Emissão de JWT.
+- **Autenticação (BFF / Token Handler Pattern com Redis)**: O front-end recebe apenas um `idSessao` opaco (UUID) em cookie `HttpOnly` e no header `X-Session-Id`. A sessão fica armazenada em memória no **Redis** (TTL de 24h). O `api-gateway` intercepta as requisições, busca reativamente a sessão no Redis (< 1ms) e repassa o JWT interno no cabeçalho `Authorization: Bearer <jwt>` (incluindo a claim `role`) para os microsserviços.
+- **Bootstrap de Admin/Moderador**: Cria/garante automaticamente a conta padrão `@admin` (`admin@telegrama.zone` / `Admin@123`) com papel `ADMIN`.
 
-### 4. `post-service` (Porta `8082`)
+### 4. `user-profile-service` (Porta `8083`)
+Responsável pelo **Perfil Social, Preferências e Seguidores**.
+- Banco de Dados: PostgreSQL (`telegrama_profile`)
+- Domínios: Perfis públicos (`/usuarios/**`), Busca de usuários, Consultas em lote (`/usuarios/batch`), Preferências de tema/avatar (`/usuarios/me/preferences`) e Sistema de Seguidores (`/seguir`).
+- **Exclusão em Cascata e Moderação**: Permite que o próprio dono ou um `ADMIN` exclua uma conta (`DELETE /usuarios/{nodeId}`), acionando via Feign a limpeza de postagens no `post-service` e de credenciais no `auth-service`.
+
+### 5. `post-service` (Porta `8082`)
 Responsável pela **Criação, Leitura e Interação com Postagens**.
 - Banco de Dados: MongoDB (`telegrama_posts`)
 - Domínios: Postagens de texto, Sistema de Curtidas (toggle curtir/descurtir), Contagem de comentários/reposts, Auditoria de datas.
-- **Segurança**: Validação de JWT injetado pelo API Gateway. Apenas usuários autenticados com token válido podem criar publicações, curtir ou excluir suas postagens.
+- **Integração**: Consulta o `user-profile-service` via Feign (`POST /usuarios/batch`) para enriquecer postagens com nome e avatar atualizados.
+- **Segurança e Moderação**: Validação de JWT injetado pelo API Gateway. Tanto o autor da publicação quanto usuários com papel `ADMIN` podem excluir postagens.
 
 ### Serviços Futuros (Em Planejamento)
 - **`feed-service`**: Para orquestração da linha do tempo e cache em memória (Redis) baseada em quem o usuário segue.

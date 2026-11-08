@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class RegisterScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final VoidCallback onRegisterSuccess;
   final VoidCallback onNavigateToLogin;
+  final VoidCallback? onContinueAsGuest;
 
   const RegisterScreen({
     super.key,
     required this.currentTheme,
     required this.onRegisterSuccess,
     required this.onNavigateToLogin,
+    this.onContinueAsGuest,
   });
 
   @override
@@ -23,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nodeIdController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String? _selectedAvatarUrl;
   bool _acceptTerms = true;
   bool _isHoveredButton = false;
   bool _isLoading = false;
@@ -48,6 +53,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (_selectedAvatarUrl == null || _selectedAvatarUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, escolha uma foto de perfil para o seu nó.')),
+      );
+      return;
+    }
+
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Você deve aceitar os termos de uso.')),
@@ -58,11 +70,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     try {
       await _authRepository.registro(
-        _displayNameController.text,
-        _nodeIdController.text,
-        _emailController.text,
+        _displayNameController.text.trim(),
+        _nodeIdController.text.trim(),
+        _emailController.text.trim(),
         _passwordController.text,
         _acceptTerms,
+        avatarUrl: _selectedAvatarUrl,
       );
       
       // Se for bem sucedido, chamamos o callback de sucesso (que provavelmente redireciona)
@@ -254,7 +267,82 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   color: widget.currentTheme.textColor.withOpacity(0.7),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
+
+              _buildFieldLabel('CHOOSE YOUR NODE AVATAR'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                runSpacing: 10,
+                children: UserPreferences.fixedAvatars.map((preset) {
+                  final bool isSelected = _selectedAvatarUrl == preset;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedAvatarUrl = preset),
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Stack(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 120),
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? widget.currentTheme.primaryColor
+                                  : widget.currentTheme.backgroundColor,
+                              border: Border.all(
+                                color: isSelected
+                                    ? widget.currentTheme.primaryColor
+                                    : widget.currentTheme.shadowColor,
+                                width: isSelected ? 2.5 : 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: widget.currentTheme.shadowColor,
+                                  offset: const Offset(2, 2),
+                                  blurRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: UserAvatar(
+                              imageUrl: preset,
+                              name: _displayNameController.text.isNotEmpty
+                                  ? _displayNameController.text
+                                  : 'Node',
+                              radius: 22,
+                              showShadow: false,
+                              borderWidth: 1.5,
+                              borderColor: widget.currentTheme.shadowColor,
+                            ),
+                          ),
+                          if (isSelected)
+                            Positioned(
+                              right: 0,
+                              bottom: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: widget.currentTheme.primaryColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: widget.currentTheme.shadowColor,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.check,
+                                  size: 11,
+                                  color: widget.currentTheme.backgroundColor,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 18),
 
               // Linha dupla: Display Name e Node ID[cite: 4]
               Row(
@@ -283,7 +371,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextField(
                           controller: _nodeIdController,
                           style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                          decoration: _inputDecoration(hintText: '@sas_vance', prefixIcon: Icons.alternate_email),
+                          decoration: _inputDecoration(hintText: 'sas_vance', prefixIcon: Icons.alternate_email),
                         ),
                       ],
                     ),
@@ -417,6 +505,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
+                    if (widget.onContinueAsGuest != null) ...[
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: widget.onContinueAsGuest,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Text(
+                            'Voltar para o Feed público (sem login)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: widget.currentTheme.textColor.withOpacity(0.65),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

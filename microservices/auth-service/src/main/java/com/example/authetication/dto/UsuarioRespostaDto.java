@@ -1,5 +1,6 @@
 package com.example.authetication.dto;
 
+import com.example.authetication.modelo.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class UsuarioRespostaDto {
     private String nome;
     private String nodeId;
     private String email;
-    private String bio;
-    private String localizacao;
+    private Role perfil;
+    private String idSessao;
+    private String refreshToken;
 }

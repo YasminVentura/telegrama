@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/shared/components/menu_item_button.dart';
 
 class MenuWidget extends StatefulWidget {
   final AppTheme currentTheme;
-  final String activeRoute; 
+  final String activeRoute;
   final Function(String) onItemSelected;
+  final VoidCallback? onLogout;
 
   const MenuWidget({
     super.key,
     required this.currentTheme,
     this.activeRoute = 'Home Feed',
     required this.onItemSelected,
+    this.onLogout,
   });
 
   @override
@@ -21,53 +24,74 @@ class MenuWidget extends StatefulWidget {
 class _MenuWidgetState extends State<MenuWidget> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 240,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-      decoration: BoxDecoration(
-        color: widget.currentTheme.backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: widget.currentTheme.shadowColor,
-            offset: const Offset(4, 4), 
-            blurRadius: 0,
+    return ValueListenableBuilder<bool>(
+      valueListenable: UserRepositoryImpl.isLoggedInNotifier,
+      builder: (context, isLoggedIn, _) {
+        final bool autenticado = isLoggedIn || UserRepositoryImpl.isLoggedIn;
+
+        return Container(
+          width: 240,
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            color: widget.currentTheme.backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: widget.currentTheme.shadowColor,
+                offset: const Offset(4, 4),
+                blurRadius: 0,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildMenuItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
-            title: 'Home Feed',
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildMenuItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                title: 'Home Feed',
+              ),
+              const SizedBox(height: 8),
+              _buildMenuItem(
+                icon: Icons.explore_outlined,
+                activeIcon: Icons.explore,
+                title: 'Explore Zones',
+              ),
+              const SizedBox(height: 8),
+              _buildMenuItem(
+                icon: Icons.chat_bubble_outline,
+                activeIcon: Icons.chat_bubble,
+                title: 'Wave Chats',
+              ),
+              const SizedBox(height: 16),
+              Divider(color: widget.currentTheme.shadowColor, thickness: 2, height: 24),
+              const SizedBox(height: 8),
+              _buildMenuItem(
+                icon: Icons.person_outline,
+                activeIcon: Icons.person,
+                title: 'My Profile',
+                hasIndicator: autenticado,
+              ),
+              if (autenticado && widget.onLogout != null) ...[
+                const SizedBox(height: 12),
+                CustomMenuItemButton(
+                  icon: Icons.logout,
+                  activeIcon: Icons.logout,
+                  title: 'Logout',
+                  isActive: false,
+                  hasIndicator: false,
+                  primaryColor: const Color(0xFFFF4D4D),
+                  textColor: widget.currentTheme.textColor,
+                  shadowColor: widget.currentTheme.shadowColor,
+                  onTap: widget.onLogout!,
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 8),
-          _buildMenuItem(
-            icon: Icons.explore_outlined,
-            activeIcon: Icons.explore,
-            title: 'Explore Zones',
-          ),
-          const SizedBox(height: 8),
-          _buildMenuItem(
-            icon: Icons.chat_bubble_outline,
-            activeIcon: Icons.chat_bubble,
-            title: 'Wave Chats',
-          ),
-          const SizedBox(height: 16),
-          Divider(color: widget.currentTheme.shadowColor, thickness: 2, height: 24),
-          const SizedBox(height: 8),
-          _buildMenuItem(
-            icon: Icons.person_outline,
-            activeIcon: Icons.person,
-            title: 'My Profile',
-            hasIndicator: true, 
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

@@ -20,6 +20,7 @@ class ProfileSettingsContent extends StatefulWidget {
 
 class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
   String _selectedAvatarUrl = UserPreferences.defaultAvatar;
+  String _selectedBannerColor = UserPreferences.defaultBannerColor;
   final UserRepository _userRepository = UserRepositoryImpl();
 
   late Future<PerfilRespostaDto> _profileFuture;
@@ -41,7 +42,15 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     _profileFuture = _userRepository.getMyProfile();
     _profileFuture.then((profile) {
       if (mounted) {
-        final resolvedAvatar = UserRepositoryImpl.selectedAvatarOrDefault;
+        final rawAvatar = profile.preferencias?.avatarUrl ??
+            profile.avatarUrl ??
+            UserRepositoryImpl.selectedAvatarOrDefault;
+        final resolvedAvatar =
+            UserAvatar.resolvePresetAsset(rawAvatar) ?? rawAvatar;
+
+        final rawBanner = profile.preferencias?.bannerColor ??
+            profile.bannerColor ??
+            UserRepositoryImpl.selectedBannerColorOrDefault;
 
         setState(() {
           _nameController.text = profile.nome;
@@ -52,6 +61,7 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
           _locationController.text = profile.localizacao ?? '';
           _userEmail = profile.email;
           _selectedAvatarUrl = resolvedAvatar;
+          _selectedBannerColor = rawBanner;
         });
       }
     }).catchError((_) {});
@@ -66,22 +76,20 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     super.dispose();
   }
 
-  Future<void> _selectFixedAvatar(String avatarAssetPath) async {
+  /// Seleciona uma das 6 fotos fixas no preview; a alteração é efetivada ao clicar em "SAVE PROFILE"
+  void _selectFixedAvatar(String avatarAssetPath) {
+    final resolved =
+        UserAvatar.resolvePresetAsset(avatarAssetPath) ?? avatarAssetPath;
     setState(() {
-      _selectedAvatarUrl = avatarAssetPath;
+      _selectedAvatarUrl = resolved;
     });
-    UserRepositoryImpl.setExplicitAvatarChoice(avatarAssetPath);
+  }
 
-    try {
-      await _userRepository.updatePreferences({'avatarUrl': avatarAssetPath});
-      await _userRepository.updateProfile({
-        'avatarUrl': avatarAssetPath,
-        'preferencias': {'avatarUrl': avatarAssetPath},
-      });
-      widget.onProfileUpdated?.call();
-    } catch (e) {
-      debugPrint('Erro ao atualizar foto do perfil nas preferências: $e');
-    }
+  /// Seleciona uma das cores fixas da capa no preview; efetivada ao clicar em "SAVE PROFILE"
+  void _selectBannerColor(String hexColor) {
+    setState(() {
+      _selectedBannerColor = hexColor;
+    });
   }
 
   Future<void> _saveProfile() async {
@@ -89,22 +97,33 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
 
     setState(() => _isSaving = true);
     try {
+      final resolvedAvatar =
+          UserAvatar.resolvePresetAsset(_selectedAvatarUrl) ??
+              _selectedAvatarUrl;
+      UserRepositoryImpl.setExplicitAvatarChoice(resolvedAvatar);
+      UserRepositoryImpl.setExplicitBannerColorChoice(_selectedBannerColor);
+
       final updateData = {
         'nome': _nameController.text,
         'bio': _bioController.text,
         'localizacao': _locationController.text,
-        'avatarUrl': _selectedAvatarUrl,
+        'avatarUrl': resolvedAvatar,
+        'bannerColor': _selectedBannerColor,
         'preferencias': {
-          'avatarUrl': _selectedAvatarUrl,
+          'avatarUrl': resolvedAvatar,
+          'bannerColor': _selectedBannerColor,
         },
       };
 
-      await _userRepository.updatePreferences({'avatarUrl': _selectedAvatarUrl});
+      await _userRepository.updatePreferences({
+        'avatarUrl': resolvedAvatar,
+        'bannerColor': _selectedBannerColor,
+      });
       await _userRepository.updateProfile(updateData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil e foto atualizados com sucesso!')),
+          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
         );
 
         widget.onProfileUpdated?.call();
@@ -183,37 +202,102 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                       'What other nodes see across the retroverse.',
                       style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withValues(alpha: 0.6)),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // Seção de Transmissão de Perfil (Avatar Atual + 6 Imagens Fixas)
-                    Row(
-                      children: [
-                        UserAvatar(
+                    // Preview do fundo da capa atrás do avatar
+                    Container(
+                      height: 95,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: UserPreferences.parseBannerColor(
+                          _selectedBannerColor,
+                          fallback: widget.currentTheme.secondaryColor,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                      ),
+                      alignment: Alignment.center,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: widget.currentTheme.backgroundColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                        ),
+                        child: UserAvatar(
                           name: _nameController.text.isNotEmpty ? _nameController.text : 'User',
-                          radius: 32,
+                          radius: 28,
                           imageUrl: _selectedAvatarUrl,
                           borderColor: widget.currentTheme.shadowColor,
+                          showShadow: false,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Profile transmission (6 fixed avatars)',
-                                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Escolha uma das 6 imagens abaixo para sincronizar nos posts, perfil e barra superior.',
-                                style: TextStyle(fontSize: 10.5, color: widget.currentTheme.textColor.withValues(alpha: 0.6)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 16),
+
+                    Text(
+                      'COR DE FUNDO DA CAPA',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                        color: widget.currentTheme.textColor.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: UserPreferences.fixedBannerColors.map((hexColor) {
+                        final bool isSelected =
+                            _selectedBannerColor.toUpperCase() == hexColor.toUpperCase();
+                        final Color swatchColor = UserPreferences.parseBannerColor(hexColor);
+                        return GestureDetector(
+                          onTap: () => _selectBannerColor(hexColor),
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: swatchColor,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? widget.currentTheme.primaryColor
+                                      : widget.currentTheme.shadowColor,
+                                  width: isSelected ? 3 : 1.5,
+                                ),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: widget.currentTheme.shadowColor,
+                                          offset: const Offset(2, 2),
+                                          blurRadius: 0,
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              child: isSelected
+                                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 18),
+
+                    Text(
+                      'FOTO DO PERFIL (6 IMAGENS FIXAS)',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.1,
+                        color: widget.currentTheme.textColor.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
 
                     // Grade com as 6 fotos de perfil fixas
                     Container(
@@ -511,7 +595,7 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
+                 Text(title, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
                 Text(subtitle, style: TextStyle(fontSize: 10.5, color: widget.currentTheme.textColor.withValues(alpha: 0.5))),
               ],
             ),

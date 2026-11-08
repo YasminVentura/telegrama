@@ -10,7 +10,9 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Document(collection = "postagens")
@@ -35,6 +37,12 @@ public class Postagem {
 
     @Builder.Default
     private Set<String> curtidas = new HashSet<>();
+
+    @Builder.Default
+    private Set<String> salvos = new HashSet<>();
+
+    @Builder.Default
+    private List<ComentarioPostagem> comentarios = new ArrayList<>();
 
     @Builder.Default
     private int quantidadeCurtidas = 0;

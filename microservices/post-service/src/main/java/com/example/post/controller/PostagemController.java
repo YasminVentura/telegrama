@@ -1,5 +1,7 @@
 package com.example.post.controller;
 
+import com.example.post.dto.ComentarioRespostaDto;
+import com.example.post.dto.CriarComentarioRequisicaoDto;
 import com.example.post.dto.CriarPostagemRequisicaoDto;
 import com.example.post.dto.PostagemRespostaDto;
 import com.example.post.dto.RespostaEnvelopeDto;
@@ -71,6 +73,28 @@ public class PostagemController {
         return new RespostaEnvelopeDto<>(postagens);
     }
 
+    @GetMapping(path = {"/usuario/{nodeId}/curtidas", "/usuario/{nodeId}/likes"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> listarPostagensCurtidasPorUsuario(
+            @PathVariable String nodeId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.listarPostagensCurtidasPorUsuario(nodeId, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
+    @GetMapping(path = {"/usuario/{nodeId}/salvos", "/usuario/{nodeId}/saved"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> listarPostagensSalvasPorUsuario(
+            @PathVariable String nodeId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.listarPostagensSalvasPorUsuario(nodeId, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
     @GetMapping(path = {"/busca", "/search"})
     @ResponseStatus(HttpStatus.OK)
     public RespostaEnvelopeDto<List<PostagemRespostaDto>> buscarPostagens(
@@ -104,6 +128,52 @@ public class PostagemController {
         return new RespostaEnvelopeDto<>(postagem);
     }
 
+    @PostMapping(path = {"/{id}/salvar", "/{id}/save"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<PostagemRespostaDto> alternarSalvo(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
+        PostagemRespostaDto postagem = postagemService.alternarSalvo(id, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagem);
+    }
+
+    @GetMapping(path = {"/{id}/comentarios", "/{id}/comments"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<ComentarioRespostaDto>> listarComentarios(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<ComentarioRespostaDto> comentarios = postagemService.listarComentarios(id, usuarioLogado);
+        return new RespostaEnvelopeDto<>(comentarios);
+    }
+
+    @PostMapping(path = {"/{id}/comentarios", "/{id}/comments"})
+    @ResponseStatus(HttpStatus.CREATED)
+    public RespostaEnvelopeDto<ComentarioRespostaDto> adicionarComentario(
+            @PathVariable String id,
+            @Valid @RequestBody CriarComentarioRequisicaoDto requisicao,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado autor = extrairUsuario(authentication);
+        ComentarioRespostaDto criado = postagemService.adicionarComentario(id, requisicao, autor);
+        return new RespostaEnvelopeDto<>(criado);
+    }
+
+    @PostMapping(path = {"/{id}/comentarios/{comentarioId}/curtir", "/{id}/comments/{comentarioId}/like"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<ComentarioRespostaDto> alternarCurtidaComentario(
+            @PathVariable String id,
+            @PathVariable String comentarioId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
+        ComentarioRespostaDto atualizado = postagemService.alternarCurtidaComentario(id, comentarioId, usuarioLogado);
+        return new RespostaEnvelopeDto<>(atualizado);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void excluirPostagem(
@@ -112,6 +182,12 @@ public class PostagemController {
     ) {
         UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
         postagemService.excluirPostagem(id, usuarioLogado);
+    }
+
+    @DeleteMapping("/interno/autor/{nodeId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirPostagensPorAutorInterno(@PathVariable String nodeId) {
+        postagemService.excluirPostagensPorAutorInterno(nodeId);
     }
 
     private UsuarioAutenticado extrairUsuario(Authentication authentication) {

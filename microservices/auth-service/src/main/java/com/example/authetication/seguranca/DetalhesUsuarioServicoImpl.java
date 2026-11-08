@@ -26,10 +26,12 @@ public class DetalhesUsuarioServicoImpl implements UserDetailsService {
         // 1. Tenta exatamente como veio (por email ou nodeId)
         Optional<Usuario> usuario = usuarioRepository.findByEmailOrNodeId(limpo, limpo);
 
-        // 2. Se não encontrou, tenta alternando o prefixo '@' no nodeId
+        // 2. Se não encontrou, tenta alternando o prefixo '@' no nodeId (case-insensitive)
         if (usuario.isEmpty()) {
-            String alternativo = limpo.startsWith("@") ? limpo.substring(1) : "@" + limpo;
-            usuario = usuarioRepository.findByNodeId(alternativo);
+            String semArroba = limpo.startsWith("@") ? limpo.substring(1) : limpo;
+            String comArroba = "@" + semArroba;
+            usuario = usuarioRepository.findByNodeIdIgnoreCase(comArroba)
+                    .or(() -> usuarioRepository.findByNodeIdIgnoreCase(semArroba));
         }
 
         return usuario.map(DetalhesUsuarioImpl::new)

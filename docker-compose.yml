@@ -16,7 +16,7 @@ services:
     networks:
       - telegrama-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d telegrama_auth"]
+      test: ["CMD-SHELL", "pg_isready -U user -d telegrama_auth && (psql -U user -d telegrama_auth -tc \"SELECT 1 FROM pg_database WHERE datname = 'telegrama_profile'\" | grep -q 1 || psql -U user -d telegrama_auth -c \"CREATE DATABASE telegrama_profile\")"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,6 +50,25 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      service-discovery:
+        condition: service_started
+    networks:
+      - telegrama-network
+
+  # User Profile Service
+  user-profile-service:
+    build:
+      context: ./microservices
+      dockerfile: user-profile-service/Dockerfile
+    container_name: telegrama-user-profile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/telegrama_profile
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-discovery:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
       service-discovery:
         condition: service_started
     networks:

@@ -5,12 +5,14 @@ class WelcomeScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final VoidCallback onNavigateToLogin;
   final VoidCallback onNavigateToRegister;
+  final VoidCallback? onContinueAsGuest;
 
   const WelcomeScreen({
     super.key,
     required this.currentTheme,
     required this.onNavigateToLogin,
     required this.onNavigateToRegister,
+    this.onContinueAsGuest,
   });
 
   @override
@@ -276,8 +278,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-
+              const SizedBox(height: 24),
+              if (widget.onContinueAsGuest != null)
+                Center(
+                  child: GestureDetector(
+                    onTap: widget.onContinueAsGuest,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Text(
+                        'Continuar sem login (acessar apenas o Feed)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: widget.currentTheme.textColor.withOpacity(0.7),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

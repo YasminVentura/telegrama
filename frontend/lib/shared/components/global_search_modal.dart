@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 import 'package:frontend/shared/repositories/search_repository.dart';
 import 'package:frontend/features/settings/profile_screen.dart';
+import 'package:frontend/features/feed/post_detail_screen.dart';
+import 'package:frontend/features/feed/models/post_model.dart';
 
 class GlobalSearchModal extends StatefulWidget {
   final AppTheme currentTheme;
@@ -259,6 +263,17 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
           ),
         ),
       );
+    } else if (item.category == SearchCategory.posts && item.id.isNotEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (ctx) => PostDetailScreen(
+            currentTheme: widget.currentTheme,
+            postId: item.id,
+            initialPost: item.originalData is PostModel ? item.originalData as PostModel : null,
+            onBack: () => Navigator.of(ctx).pop(),
+          ),
+        ),
+      );
     }
   }
 
@@ -293,15 +308,45 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: color, width: 2),
+              if (item.category == SearchCategory.users ||
+                  item.category == SearchCategory.posts)
+                ValueListenableBuilder<String>(
+                  valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                  builder: (context, currentMyAvatar, _) {
+                    final String targetHandle = item.category == SearchCategory.users
+                        ? item.id
+                        : item.subtitle;
+                    final bool isMe = UserRepositoryImpl.isCurrentUser(
+                      targetHandle,
+                      authorName: item.category == SearchCategory.users ? item.title : null,
+                    );
+                    final String effectiveAvatar = isMe
+                        ? currentMyAvatar
+                        : ((item.avatarOrImageUrl != null &&
+                                item.avatarOrImageUrl!.isNotEmpty)
+                            ? item.avatarOrImageUrl!
+                            : UserAvatar.defaultAvatar);
+
+                    return UserAvatar(
+                      imageUrl: effectiveAvatar,
+                      name: item.title,
+                      radius: 19,
+                      borderColor: widget.currentTheme.shadowColor,
+                      borderWidth: 2,
+                      backgroundColor: color,
+                    );
+                  },
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: color, width: 2),
+                  ),
+                  child: Icon(icon, size: 20, color: color),
                 ),
-                child: Icon(icon, size: 20, color: color),
-              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
