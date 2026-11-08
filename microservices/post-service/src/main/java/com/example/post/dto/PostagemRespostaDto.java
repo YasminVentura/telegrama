@@ -75,4 +75,7 @@ public class PostagemRespostaDto {
 
     @JsonProperty("curtidoPeloUsuario")
     private boolean curtidoPeloUsuario;
+
+    @JsonProperty("salvoPeloUsuario")
+    private boolean salvoPeloUsuario;
 }

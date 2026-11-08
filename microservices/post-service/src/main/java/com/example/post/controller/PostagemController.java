@@ -71,6 +71,28 @@ public class PostagemController {
         return new RespostaEnvelopeDto<>(postagens);
     }
 
+    @GetMapping(path = {"/usuario/{nodeId}/curtidas", "/usuario/{nodeId}/likes"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> listarPostagensCurtidasPorUsuario(
+            @PathVariable String nodeId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.listarPostagensCurtidasPorUsuario(nodeId, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
+    @GetMapping(path = {"/usuario/{nodeId}/salvos", "/usuario/{nodeId}/saved"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<List<PostagemRespostaDto>> listarPostagensSalvasPorUsuario(
+            @PathVariable String nodeId,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuarioOpcional(authentication);
+        List<PostagemRespostaDto> postagens = postagemService.listarPostagensSalvasPorUsuario(nodeId, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagens);
+    }
+
     @GetMapping(path = {"/busca", "/search"})
     @ResponseStatus(HttpStatus.OK)
     public RespostaEnvelopeDto<List<PostagemRespostaDto>> buscarPostagens(
@@ -101,6 +123,17 @@ public class PostagemController {
     ) {
         UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
         PostagemRespostaDto postagem = postagemService.alternarCurtida(id, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagem);
+    }
+
+    @PostMapping(path = {"/{id}/salvar", "/{id}/save"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<PostagemRespostaDto> alternarSalvo(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
+        PostagemRespostaDto postagem = postagemService.alternarSalvo(id, usuarioLogado);
         return new RespostaEnvelopeDto<>(postagem);
     }
 

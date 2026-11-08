@@ -15,7 +15,10 @@ class PostCard extends StatefulWidget {
   final int likesCount;
   final int commentsCount;
   final int repostsCount;
+  final bool isLiked;
+  final bool isSaved;
   final VoidCallback? onLikePressed;
+  final VoidCallback? onSavePressed;
   final VoidCallback? onCommentPressed;
   final VoidCallback? onRepostPressed;
   final VoidCallback? onDeletePressed;
@@ -34,7 +37,10 @@ class PostCard extends StatefulWidget {
     required this.likesCount,
     required this.commentsCount,
     required this.repostsCount,
+    this.isLiked = false,
+    this.isSaved = false,
     this.onLikePressed,
+    this.onSavePressed,
     this.onCommentPressed,
     this.onRepostPressed,
     this.onDeletePressed,
@@ -46,13 +52,34 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
-  bool _isLiked = false;
+  late bool _isLiked;
+  late int _likesCount;
+  late bool _isSaved;
   bool _isReposted = false;
-  bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isLiked = widget.isLiked;
+    _likesCount = widget.likesCount;
+    _isSaved = widget.isSaved;
+  }
+
+  @override
+  void didUpdateWidget(covariant PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isLiked != widget.isLiked || oldWidget.likesCount != widget.likesCount) {
+      _isLiked = widget.isLiked;
+      _likesCount = widget.likesCount;
+    }
+    if (oldWidget.isSaved != widget.isSaved) {
+      _isSaved = widget.isSaved;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    int currentLikes = widget.likesCount + (_isLiked ? 1 : 0);
+    int currentLikes = _likesCount;
     int currentReposts = widget.repostsCount + (_isReposted ? 1 : 0);
 
     return Container(
@@ -232,6 +259,8 @@ class _PostCardState extends State<PostCard> {
                     onTap: () {
                       setState(() {
                         _isLiked = !_isLiked;
+                        _likesCount += _isLiked ? 1 : -1;
+                        if (_likesCount < 0) _likesCount = 0;
                       });
                       if (widget.onLikePressed != null) widget.onLikePressed!();
                     },
@@ -277,6 +306,7 @@ class _PostCardState extends State<PostCard> {
                   setState(() {
                     _isSaved = !_isSaved;
                   });
+                  if (widget.onSavePressed != null) widget.onSavePressed!();
                 },
               ),
             ],

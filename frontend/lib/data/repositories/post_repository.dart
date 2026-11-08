@@ -5,8 +5,11 @@ import 'package:frontend/features/feed/models/post_model.dart';
 abstract class PostRepository {
   Future<List<PostModel>> getFeedPosts({int page = 1, int limit = 10});
   Future<List<PostModel>> getUserPosts(String nodeId);
+  Future<List<PostModel>> getLikedPosts(String nodeId);
+  Future<List<PostModel>> getSavedPosts(String nodeId);
   Future<void> createPost(String content, String? imageUrl, String? frequencyTag);
-  Future<void> likePost(String postId);
+  Future<PostModel?> likePost(String postId);
+  Future<PostModel?> savePost(String postId);
   Future<void> deletePost(String postId);
   Future<void> repost(String postId);
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId);
@@ -64,13 +67,72 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<List<PostModel>> getLikedPosts(String nodeId) async {
+    try {
+      final response = await _apiClient.get('/posts/usuario/$nodeId/curtidas');
+      if (response != null) {
+        final rawData = response is Map && response.containsKey('data')
+            ? response['data']
+            : response;
+        if (rawData is List) {
+          return rawData.map((item) => PostModel.fromJson(Map<String, dynamic>.from(item))).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar posts curtidos de $nodeId: $e');
+    }
+    return [];
+  }
+
+  @override
+  Future<List<PostModel>> getSavedPosts(String nodeId) async {
+    try {
+      final response = await _apiClient.get('/posts/usuario/$nodeId/salvos');
+      if (response != null) {
+        final rawData = response is Map && response.containsKey('data')
+            ? response['data']
+            : response;
+        if (rawData is List) {
+          return rawData.map((item) => PostModel.fromJson(Map<String, dynamic>.from(item))).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Erro ao carregar posts salvos de $nodeId: $e');
+    }
+    return [];
+  }
+
+  @override
   Future<void> createPost(String content, String? imageUrl, String? frequencyTag) async {
     await _apiClient.post('/posts', body: {'content': content});
   }
 
   @override
-  Future<void> likePost(String postId) async {
-    await _apiClient.post('/posts/$postId/curtir');
+  Future<PostModel?> likePost(String postId) async {
+    final response = await _apiClient.post('/posts/$postId/curtir');
+    if (response != null) {
+      final rawData = response is Map && response.containsKey('data')
+          ? response['data']
+          : response;
+      if (rawData is Map) {
+        return PostModel.fromJson(Map<String, dynamic>.from(rawData));
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<PostModel?> savePost(String postId) async {
+    final response = await _apiClient.post('/posts/$postId/salvar');
+    if (response != null) {
+      final rawData = response is Map && response.containsKey('data')
+          ? response['data']
+          : response;
+      if (rawData is Map) {
+        return PostModel.fromJson(Map<String, dynamic>.from(rawData));
+      }
+    }
+    return null;
   }
 
   @override

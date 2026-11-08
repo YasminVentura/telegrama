@@ -38,6 +38,7 @@ public class PostagemService {
                 .autorAvatarUrl(null)
                 .conteudo(requisicao.getContent())
                 .curtidas(new HashSet<>())
+                .salvos(new HashSet<>())
                 .quantidadeCurtidas(0)
                 .quantidadeComentarios(0)
                 .criadoEm(agora)
@@ -88,6 +89,46 @@ public class PostagemService {
                 .toList();
     }
 
+    public List<PostagemRespostaDto> listarPostagensCurtidasPorUsuario(String nodeId, UsuarioAutenticado usuarioLogado) {
+        List<String> variacoes = construirVariacoesNodeId(nodeId);
+        if (variacoes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Postagem> postagens = postagemRepository.findByCurtidasInOrderByCriadoEmDesc(variacoes);
+        List<String> identificadores = extrairIdentificadores(postagens);
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+
+        return postagens.stream()
+                .map(p -> mapearParaRespostaDto(p, usuarioLogado, obterPerfilDoMap(p, perfisMap)))
+                .toList();
+    }
+
+    public List<PostagemRespostaDto> listarPostagensSalvasPorUsuario(String nodeId, UsuarioAutenticado usuarioLogado) {
+        List<String> variacoes = construirVariacoesNodeId(nodeId);
+        if (variacoes.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Postagem> postagens = postagemRepository.findBySalvosInOrderByCriadoEmDesc(variacoes);
+        List<String> identificadores = extrairIdentificadores(postagens);
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+
+        return postagens.stream()
+                .map(p -> mapearParaRespostaDto(p, usuarioLogado, obterPerfilDoMap(p, perfisMap)))
+                .toList();
+    }
+
+    private List<String> construirVariacoesNodeId(String nodeId) {
+        if (nodeId == null || nodeId.isBlank()) {
+            return Collections.emptyList();
+        }
+        String limpo = nodeId.trim();
+        String semArroba = limpo.startsWith("@") ? limpo.substring(1) : limpo;
+        String comArroba = "@" + semArroba;
+        return List.of(semArroba, comArroba, semArroba.toLowerCase(), comArroba.toLowerCase());
+    }
+
     public List<PostagemRespostaDto> buscarPostagens(String query, UsuarioAutenticado usuarioLogado) {
         if (query == null || query.isBlank()) {
             return List.of();
@@ -115,15 +156,25 @@ public class PostagemService {
         Postagem postagem = postagemRepository.findById(id)
                 .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + id));
 
-        String identificador = usuarioLogado.getNodeId();
         if (postagem.getCurtidas() == null) {
             postagem.setCurtidas(new HashSet<>());
         }
 
-        if (postagem.getCurtidas().contains(identificador)) {
-            postagem.getCurtidas().remove(identificador);
-        } else {
-            postagem.getCurtidas().add(identificador);
+        String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+        String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+        String handleNodeId = "@" + cleanNodeId;
+        String userId = usuarioLogado.getId();
+
+        // Verifica se este usuário já curtiu por qualquer variação do seu identificador (@nodeId, nodeId ou UUID)
+        boolean jaCurtiu = postagem.getCurtidas().removeIf(c ->
+                c.equalsIgnoreCase(rawNodeId)
+                || c.equalsIgnoreCase(cleanNodeId)
+                || c.equalsIgnoreCase(handleNodeId)
+                || (userId != null && c.equalsIgnoreCase(userId))
+        );
+
+        if (!jaCurtiu && !handleNodeId.equals("@")) {
+            postagem.getCurtidas().add(handleNodeId);
         }
 
         postagem.setQuantidadeCurtidas(postagem.getCurtidas().size());
@@ -131,6 +182,38 @@ public class PostagemService {
 
         Postagem atualizada = postagemRepository.save(postagem);
         
+        List<String> identificadores = extrairIdentificadores(List.of(atualizada));
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+
+        return mapearParaRespostaDto(atualizada, usuarioLogado, obterPerfilDoMap(atualizada, perfisMap));
+    }
+
+    public PostagemRespostaDto alternarSalvo(String id, UsuarioAutenticado usuarioLogado) {
+        Postagem postagem = postagemRepository.findById(id)
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + id));
+
+        if (postagem.getSalvos() == null) {
+            postagem.setSalvos(new HashSet<>());
+        }
+
+        String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+        String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+        String handleNodeId = "@" + cleanNodeId;
+        String userId = usuarioLogado.getId();
+
+        boolean jaSalvo = postagem.getSalvos().removeIf(s ->
+                s.equalsIgnoreCase(rawNodeId)
+                || s.equalsIgnoreCase(cleanNodeId)
+                || s.equalsIgnoreCase(handleNodeId)
+                || (userId != null && s.equalsIgnoreCase(userId))
+        );
+
+        if (!jaSalvo && !handleNodeId.equals("@")) {
+            postagem.getSalvos().add(handleNodeId);
+        }
+
+        Postagem atualizada = postagemRepository.save(postagem);
+
         List<String> identificadores = extrairIdentificadores(List.of(atualizada));
         Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
 
@@ -226,10 +309,34 @@ public class PostagemService {
 
     private PostagemRespostaDto mapearParaRespostaDto(Postagem postagem, UsuarioAutenticado usuarioLogado, PerfilResumidoDto perfilAtual) {
         boolean curtido = false;
-        if (usuarioLogado != null && postagem.getCurtidas() != null) {
-            curtido = postagem.getCurtidas().contains(usuarioLogado.getNodeId()) 
-                    || (usuarioLogado.getId() != null && postagem.getCurtidas().contains(usuarioLogado.getId()));
+        boolean salvo = false;
+        if (usuarioLogado != null) {
+            String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+            String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+            String handleNodeId = "@" + cleanNodeId;
+            String userId = usuarioLogado.getId();
+
+            if (postagem.getCurtidas() != null) {
+                curtido = postagem.getCurtidas().stream().anyMatch(c ->
+                        c.equalsIgnoreCase(rawNodeId)
+                        || c.equalsIgnoreCase(cleanNodeId)
+                        || c.equalsIgnoreCase(handleNodeId)
+                        || (userId != null && c.equalsIgnoreCase(userId))
+                );
+            }
+            if (postagem.getSalvos() != null) {
+                salvo = postagem.getSalvos().stream().anyMatch(s ->
+                        s.equalsIgnoreCase(rawNodeId)
+                        || s.equalsIgnoreCase(cleanNodeId)
+                        || s.equalsIgnoreCase(handleNodeId)
+                        || (userId != null && s.equalsIgnoreCase(userId))
+                );
+            }
         }
+
+        int totalCurtidas = postagem.getCurtidas() != null
+                ? postagem.getCurtidas().size()
+                : postagem.getQuantidadeCurtidas();
 
         String dataCriacaoFormatada = formatarDataIso(postagem.getCriadoEm());
         String dataAtualizacaoFormatada = formatarDataIso(postagem.getAtualizadoEm());
@@ -249,9 +356,10 @@ public class PostagemService {
                 .content(postagem.getConteudo())
                 .createdAt(dataCriacaoFormatada)
                 .updatedAt(dataAtualizacaoFormatada)
-                .likes(postagem.getQuantidadeCurtidas())
+                .likes(totalCurtidas)
                 .comments(postagem.getQuantidadeComentarios())
                 .curtidoPeloUsuario(curtido)
+                .salvoPeloUsuario(salvo)
                 .build();
     }
 

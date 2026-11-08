@@ -40,9 +40,26 @@ public class AuthController {
     private final UsuarioService usuarioService;
 
     @PostMapping("/registro")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void registrar(@RequestBody @Valid RegistroRequisicaoDto request) {
+    public ResponseEntity<UsuarioRespostaDto> registrar(@RequestBody @Valid RegistroRequisicaoDto request) {
         usuarioService.registrar(request);
+
+        LoginRequisicaoDto loginAuto = new LoginRequisicaoDto();
+        loginAuto.setIdentificador(request.getEmail());
+        loginAuto.setSenha(request.getSenha());
+        AutenticacaoResultado resultado = authService.autenticar(loginAuto);
+
+        ResponseCookie cookie = ResponseCookie.from("idSessao", resultado.idSessao())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header("X-Session-Id", resultado.idSessao())
+                .body(resultado.usuario());
     }
 
     @DeleteMapping("/interno/usuarios/{identificador}")

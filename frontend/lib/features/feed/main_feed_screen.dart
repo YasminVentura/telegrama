@@ -266,11 +266,34 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                     likesCount: post.likesCount,
                                                     commentsCount: post.commentsCount,
                                                     repostsCount: post.repostsCount,
+                                                    isLiked: post.curtidoPeloUsuario,
+                                                    isSaved: post.salvoPeloUsuario,
                                                     canDelete: canDeletePost && post.id.isNotEmpty,
                                                     onDeletePressed: () => _excluirPostagem(post.id),
                                                     onLikePressed: () async {
                                                       if (post.id.isNotEmpty) {
-                                                        await _postRepository.likePost(post.id);
+                                                        final atualizado = await _postRepository.likePost(post.id);
+                                                        if (atualizado != null && mounted) {
+                                                          setState(() {
+                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
+                                                            if (idx != -1) {
+                                                              _posts[idx] = atualizado;
+                                                            }
+                                                          });
+                                                        }
+                                                      }
+                                                    },
+                                                    onSavePressed: () async {
+                                                      if (post.id.isNotEmpty) {
+                                                        final atualizado = await _postRepository.savePost(post.id);
+                                                        if (atualizado != null && mounted) {
+                                                          setState(() {
+                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
+                                                            if (idx != -1) {
+                                                              _posts[idx] = atualizado;
+                                                            }
+                                                          });
+                                                        }
                                                       }
                                                     },
                                                     onCommentPressed: () {},

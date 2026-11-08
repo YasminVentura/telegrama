@@ -37,6 +37,9 @@ public class Postagem {
     private Set<String> curtidas = new HashSet<>();
 
     @Builder.Default
+    private Set<String> salvos = new HashSet<>();
+
+    @Builder.Default
     private int quantidadeCurtidas = 0;
 
     @Builder.Default

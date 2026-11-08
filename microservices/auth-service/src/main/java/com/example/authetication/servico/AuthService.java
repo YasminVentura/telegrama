@@ -81,6 +81,7 @@ public class AuthService {
                     .nodeId(usuario.getNodeId())
                     .email(usuario.getEmail())
                     .perfil(usuario.getPerfil())
+                    .idSessao(idSessao)
                     .build();
         }
 

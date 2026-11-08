@@ -29,6 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   late Future<PerfilRespostaDto> _profileFuture;
   Future<List<PostModel>>? _userPostsFuture;
+  Future<List<PostModel>>? _likedPostsFuture;
+  Future<List<PostModel>>? _savedPostsFuture;
   bool _isFollowing = false;
   int _followersCount = 0;
   int _followingCount = 0;
@@ -41,11 +43,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchProfileData();
   }
 
+  void _refreshPostsLists(String nodeId) {
+    _userPostsFuture = _postRepository.getUserPosts(nodeId);
+    _likedPostsFuture = _postRepository.getLikedPosts(nodeId);
+    _savedPostsFuture = _postRepository.getSavedPosts(nodeId);
+  }
+
   void _fetchProfileData() {
     if (widget.nodeId != null && widget.nodeId!.isNotEmpty) {
       _profileFuture = _userRepository.getUserProfile(widget.nodeId!);
     } else {
-      _profileFuture = _userRepository.getMyProfile();
+      _profileFuture = _userRepository.getMyProfile().catchError((error) {
+        final fallbackNodeId = UserRepositoryImpl.currentUserNodeId;
+        if (fallbackNodeId != null && fallbackNodeId.isNotEmpty) {
+          return _userRepository.getUserProfile(fallbackNodeId);
+        }
+        throw error;
+      });
     }
 
     _profileFuture.then((profile) {
@@ -55,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _followersCount = profile.seguidoresCount;
           _followingCount = profile.seguindoCount;
           _selectedAvatarUrl = profile.preferencias?.avatarUrl ?? profile.avatarUrl;
-          _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
+          _refreshPostsLists(profile.nodeId);
         });
       }
     }).catchError((_) {});
@@ -180,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _postRepository.deletePost(postId);
       if (mounted) {
         setState(() {
-          _userPostsFuture = _postRepository.getUserPosts(ownerNodeId);
+          _refreshPostsLists(ownerNodeId);
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Transmissão excluída com sucesso!')),
@@ -276,117 +290,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildTabsHeader(context),
                   const SizedBox(height: 20),
 
-                  if (_selectedTab == 0) ...[
-                    FutureBuilder<List<PostModel>>(
-                      future: _userPostsFuture,
-                      builder: (context, postsSnapshot) {
-                        if (postsSnapshot.connectionState == ConnectionState.waiting) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
-                            ),
-                          );
-                        }
-
-                        final posts = postsSnapshot.data ?? [];
-                        if (posts.isEmpty) {
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: widget.currentTheme.backgroundColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: widget.currentTheme.shadowColor,
-                                  offset: const Offset(4, 4),
-                                  blurRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(Icons.satellite_alt_outlined, size: 40, color: widget.currentTheme.primaryColor),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Nenhuma transmissão publicada por este nó.',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: widget.currentTheme.textColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return Column(
-                          children: posts.map((post) {
-                            final bool canDeletePost = isOwner ||
-                                UserRepositoryImpl.isCurrentUserAdmin ||
-                                UserRepositoryImpl.isCurrentUser(
-                                  post.authorHandle,
-                                  authorName: post.authorName,
-                                );
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: PostCard(
-                                key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
-                                currentTheme: widget.currentTheme,
-                                name: post.authorName,
-                                handle: post.authorHandle,
-                                timeAgo: post.timeAgo,
-                                frequencyTag: post.frequencyTag,
-                                content: post.content,
-                                authorAvatarUrl: isOwner
-                                    ? effectiveAvatar
-                                    : (post.authorAvatarUrl ?? effectiveAvatar),
-                                imageUrl: post.imageUrl,
-                                likesCount: post.likesCount,
-                                commentsCount: post.commentsCount,
-                                repostsCount: post.repostsCount,
-                                canDelete: canDeletePost && post.id.isNotEmpty,
-                                onDeletePressed: () => _deletePost(post.id, profile.nodeId),
-                                onLikePressed: () async {
-                                  if (post.id.isNotEmpty) {
-                                    await _postRepository.likePost(post.id);
-                                    if (mounted) {
-                                      setState(() {
-                                        _userPostsFuture = _postRepository.getUserPosts(profile.nodeId);
-                                      });
-                                    }
-                                  }
-                                },
-                                onCommentPressed: () {},
-                                onRepostPressed: () {},
-                              ),
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
-                  ] else ...[
-                    Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Center(
-                        child: Text(
-                          'Nenhum item nesta seção ainda.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: widget.currentTheme.textColor.withOpacity(0.6),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  _buildActiveTabPostsList(profile, isOwner, effectiveAvatar),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildActiveTabPostsList(
+    PerfilRespostaDto profile,
+    bool isOwner,
+    String effectiveAvatar,
+  ) {
+    Future<List<PostModel>>? currentFuture;
+    String emptyMessage;
+    IconData emptyIcon;
+
+    if (_selectedTab == 1) {
+      currentFuture = _likedPostsFuture;
+      emptyMessage = 'Nenhuma transmissão curtida por este nó ainda.';
+      emptyIcon = Icons.favorite_border;
+    } else if (_selectedTab == 2) {
+      currentFuture = _savedPostsFuture;
+      emptyMessage = 'Nenhuma transmissão salva por este nó ainda.';
+      emptyIcon = Icons.bookmark_border;
+    } else {
+      currentFuture = _userPostsFuture;
+      emptyMessage = 'Nenhuma transmissão publicada por este nó.';
+      emptyIcon = Icons.satellite_alt_outlined;
+    }
+
+    return FutureBuilder<List<PostModel>>(
+      future: currentFuture,
+      builder: (context, postsSnapshot) {
+        if (postsSnapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+            ),
+          );
+        }
+
+        final posts = postsSnapshot.data ?? [];
+        if (posts.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: widget.currentTheme.backgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.currentTheme.shadowColor,
+                  offset: const Offset(4, 4),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(emptyIcon, size: 40, color: widget.currentTheme.primaryColor),
+                const SizedBox(height: 12),
+                Text(
+                  emptyMessage,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme.textColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: posts.map((post) {
+            final bool isPostFromProfileOwner = post.authorHandle.replaceAll('@', '').toLowerCase() ==
+                profile.nodeId.replaceAll('@', '').toLowerCase();
+            final bool canDeletePost = UserRepositoryImpl.isCurrentUserAdmin ||
+                UserRepositoryImpl.isCurrentUser(
+                  post.authorHandle,
+                  authorName: post.authorName,
+                );
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: PostCard(
+                key: ValueKey('${_selectedTab}_${post.id.isNotEmpty ? post.id : UniqueKey().toString()}'),
+                currentTheme: widget.currentTheme,
+                name: post.authorName,
+                handle: post.authorHandle,
+                timeAgo: post.timeAgo,
+                frequencyTag: post.frequencyTag,
+                content: post.content,
+                authorAvatarUrl: (isOwner && isPostFromProfileOwner)
+                    ? effectiveAvatar
+                    : (post.authorAvatarUrl ?? effectiveAvatar),
+                imageUrl: post.imageUrl,
+                likesCount: post.likesCount,
+                commentsCount: post.commentsCount,
+                repostsCount: post.repostsCount,
+                isLiked: post.curtidoPeloUsuario,
+                isSaved: post.salvoPeloUsuario,
+                canDelete: canDeletePost && post.id.isNotEmpty,
+                onDeletePressed: () => _deletePost(post.id, profile.nodeId),
+                onLikePressed: () async {
+                  if (post.id.isNotEmpty) {
+                    await _postRepository.likePost(post.id);
+                    if (mounted) {
+                      setState(() {
+                        _refreshPostsLists(profile.nodeId);
+                      });
+                    }
+                  }
+                },
+                onSavePressed: () async {
+                  if (post.id.isNotEmpty) {
+                    await _postRepository.savePost(post.id);
+                    if (mounted) {
+                      setState(() {
+                        _refreshPostsLists(profile.nodeId);
+                      });
+                    }
+                  }
+                },
+                onCommentPressed: () {},
+                onRepostPressed: () {},
+              ),
+            );
+          }).toList(),
         );
       },
     );

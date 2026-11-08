@@ -21,6 +21,10 @@ class AuthRepository {
       'senha': senha,
     });
     if (resposta is Map) {
+      final sessionId = resposta['idSessao'] ?? resposta['sessionId'];
+      if (sessionId != null && sessionId.toString().isNotEmpty) {
+        _apiClient.definirIdSessao(sessionId.toString());
+      }
       UserRepositoryImpl.syncUserSession(
         id: resposta['id']?.toString(),
         nome: resposta['nome']?.toString(),
@@ -42,12 +46,27 @@ class AuthRepository {
   }
 
   Future<void> registro(String nome, String nodeId, String email, String senha, bool termosAceitos) async {
-    await _apiClient.post('/auth/registro', body: {
+    final resposta = await _apiClient.post('/auth/registro', body: {
       'nome': nome,
       'nodeId': nodeId,
       'email': email,
       'senha': senha,
       'termosAceitos': termosAceitos,
     });
+    if (resposta is Map) {
+      final sessionId = resposta['idSessao'] ?? resposta['sessionId'];
+      if (sessionId != null && sessionId.toString().isNotEmpty) {
+        _apiClient.definirIdSessao(sessionId.toString());
+      }
+      UserRepositoryImpl.syncUserSession(
+        id: resposta['id']?.toString(),
+        nome: resposta['nome']?.toString(),
+        nodeId: resposta['nodeId']?.toString(),
+        email: resposta['email']?.toString(),
+        role: (resposta['perfil'] ?? resposta['role'])?.toString(),
+      );
+    } else {
+      await login(email, senha);
+    }
   }
 }

@@ -18,4 +18,5 @@ public class UsuarioRespostaDto {
     private String nodeId;
     private String email;
     private Role perfil;
+    private String idSessao;
 }

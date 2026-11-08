@@ -34,13 +34,15 @@ class ApiClient {
   }
 
   Map<String, String> _getHeaders() {
-    final headers = {
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    if (_idSessao != null) {
-      headers['Cookie'] = 'idSessao=$_idSessao';
+    if (_idSessao != null && _idSessao!.isNotEmpty) {
       headers['X-Session-Id'] = _idSessao!;
+      if (!kIsWeb) {
+        headers['Cookie'] = 'idSessao=$_idSessao';
+      }
     }
     return headers;
   }
@@ -98,8 +100,16 @@ class ApiClient {
     switch (response.statusCode) {
       case 200:
       case 201:
+      case 204:
         if (response.body.isEmpty) return null;
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map) {
+          final bodySessionId = decoded['idSessao'] ?? decoded['sessionId'];
+          if (bodySessionId != null && bodySessionId.toString().isNotEmpty) {
+            definirIdSessao(bodySessionId.toString());
+          }
+        }
+        return decoded;
       case 400:
         throw BadRequestException(response.body);
       case 401:
