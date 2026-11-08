@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/features/settings/components/profile_card.dart';
 import 'package:frontend/features/feed/components/post_card.dart';
 import 'package:frontend/features/feed/post_detail_screen.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
+import 'package:frontend/shared/components/user_avatar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final AppTheme currentTheme;
@@ -100,6 +102,366 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
+  }
+
+  Future<void> _showEditProfileDialog(PerfilRespostaDto profile, String currentEffectiveAvatar) async {
+    final nameController = TextEditingController(text: profile.nome);
+    final bioController = TextEditingController(text: profile.bio ?? '');
+    final locationController = TextEditingController(
+      text: (profile.localizacao != null && profile.localizacao!.isNotEmpty)
+          ? profile.localizacao!
+          : 'Penedo, Brasil',
+    );
+    String tempSelectedAvatar =
+        UserAvatar.resolvePresetAsset(currentEffectiveAvatar) ??
+            currentEffectiveAvatar;
+    bool isSaving = false;
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: 520,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: widget.currentTheme.backgroundColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.currentTheme.shadowColor,
+                      offset: const Offset(6, 6),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'EDITAR PERFIL',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: widget.currentTheme.textColor,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: isSaving
+                                ? null
+                                : () => Navigator.of(dialogContext).pop(),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Icon(
+                                Icons.close,
+                                color: widget.currentTheme.textColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'FOTO DO PERFIL',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                          color: widget.currentTheme.textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: UserPreferences.fixedAvatars.map((preset) {
+                          final bool isSelected = tempSelectedAvatar == preset;
+                          return GestureDetector(
+                            onTap: () {
+                              setDialogState(() {
+                                tempSelectedAvatar = preset;
+                              });
+                            },
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isSelected
+                                          ? widget.currentTheme.primaryColor
+                                          : widget.currentTheme.backgroundColor,
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? widget.currentTheme.primaryColor
+                                            : widget.currentTheme.shadowColor,
+                                        width: isSelected ? 2.5 : 2,
+                                      ),
+                                    ),
+                                    child: UserAvatar(
+                                      imageUrl: preset,
+                                      name: nameController.text.isNotEmpty
+                                          ? nameController.text
+                                          : profile.nome,
+                                      radius: 26,
+                                      showShadow: false,
+                                      borderWidth: 1.5,
+                                      borderColor: widget.currentTheme.shadowColor,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(3),
+                                        decoration: BoxDecoration(
+                                          color: widget.currentTheme.primaryColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: widget.currentTheme.shadowColor,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.check,
+                                          size: 12,
+                                          color: widget.currentTheme.backgroundColor,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 18),
+                      _buildDialogField(
+                        label: 'NOME DE EXIBIÇÃO',
+                        controller: nameController,
+                        hintText: 'Seu nome',
+                      ),
+                      const SizedBox(height: 14),
+                      _buildDialogField(
+                        label: 'LOCALIZAÇÃO',
+                        controller: locationController,
+                        hintText: 'Ex: Penedo, Brasil',
+                      ),
+                      const SizedBox(height: 14),
+                      _buildDialogField(
+                        label: 'BIOGRAFIA',
+                        controller: bioController,
+                        hintText: 'Conte um pouco sobre seu nó...',
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: isSaving
+                                ? null
+                                : () => Navigator.of(dialogContext).pop(),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: widget.currentTheme.backgroundColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: widget.currentTheme.shadowColor,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Text(
+                                  'CANCELAR',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: widget.currentTheme.textColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: isSaving
+                                ? null
+                                : () async {
+                                    setDialogState(() => isSaving = true);
+                                    try {
+                                      UserRepositoryImpl.setExplicitAvatarChoice(
+                                        tempSelectedAvatar,
+                                      );
+                                      await _userRepository.updatePreferences({
+                                        'avatarUrl': tempSelectedAvatar,
+                                      });
+                                      await _userRepository.updateProfile({
+                                        'nome': nameController.text.trim(),
+                                        'bio': bioController.text.trim(),
+                                        'localizacao':
+                                            locationController.text.trim(),
+                                        'avatarUrl': tempSelectedAvatar,
+                                        'preferencias': {
+                                          'avatarUrl': tempSelectedAvatar,
+                                        },
+                                      });
+                                      if (dialogContext.mounted) {
+                                        Navigator.of(dialogContext).pop();
+                                      }
+                                      if (mounted) {
+                                        setState(() {
+                                          _selectedAvatarUrl = tempSelectedAvatar;
+                                          _fetchProfileData();
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Perfil atualizado com sucesso!',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      setDialogState(() => isSaving = false);
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Erro ao salvar alterações: $e',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: widget.currentTheme.primaryColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: widget.currentTheme.shadowColor,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.currentTheme.shadowColor,
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: isSaving
+                                    ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: widget.currentTheme.backgroundColor,
+                                        ),
+                                      )
+                                    : Text(
+                                        'SALVAR ALTERAÇÕES',
+                                        style: TextStyle(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w900,
+                                          color: widget.currentTheme.backgroundColor,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+            color: widget.currentTheme.textColor,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: TextStyle(color: widget.currentTheme.textColor, fontSize: 14),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(
+              color: widget.currentTheme.textColor.withValues(alpha: 0.4),
+            ),
+            filled: true,
+            fillColor: widget.currentTheme.backgroundColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: widget.currentTheme.shadowColor,
+                width: 2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: widget.currentTheme.primaryColor,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _toggleFollow() async {
@@ -284,6 +646,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onDeleteUserPressed: () => _deleteUserAccount(profile.nodeId),
                     onFollowPressed: _toggleFollow,
                     onMessagePressed: () {},
+                    onEditProfilePressed: isOwner
+                        ? () => _showEditProfileDialog(profile, effectiveAvatar)
+                        : null,
                     onAvatarSelected: isOwner ? _updateAvatarPreference : null,
                   ),
                   const SizedBox(height: 24),

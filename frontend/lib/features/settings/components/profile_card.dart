@@ -17,6 +17,7 @@ class ProfileCard extends StatelessWidget {
   final VoidCallback? onFollowPressed;
   final VoidCallback? onMessagePressed;
   final VoidCallback? onDeleteUserPressed;
+  final VoidCallback? onEditProfilePressed;
   final ValueChanged<String>? onAvatarSelected;
   final bool isFollowing;
   final bool isLoadingFollow;
@@ -37,6 +38,7 @@ class ProfileCard extends StatelessWidget {
     this.onFollowPressed,
     this.onMessagePressed,
     this.onDeleteUserPressed,
+    this.onEditProfilePressed,
     this.onAvatarSelected,
     this.isFollowing = false,
     this.isLoadingFollow = false,
@@ -291,7 +293,48 @@ class ProfileCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (!isOwner)
+                        if (isOwner && onEditProfilePressed != null)
+                          GestureDetector(
+                            onTap: onEditProfilePressed,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: currentTheme.backgroundColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: currentTheme.shadowColor,
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      size: 16,
+                                      color: currentTheme.textColor,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'EDIT PROFILE',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: currentTheme.textColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (!isOwner)
                           Row(
                             children: [
                               _buildActionButton(
