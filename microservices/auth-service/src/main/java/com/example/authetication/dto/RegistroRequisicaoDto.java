@@ -31,4 +31,6 @@ public class RegistroRequisicaoDto {
 
     @AssertTrue(message = "Os termos de uso devem ser aceitos.")
     private Boolean termosAceitos;
+
+    private String avatarUrl;
 }

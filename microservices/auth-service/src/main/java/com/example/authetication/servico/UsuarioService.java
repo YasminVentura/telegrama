@@ -53,6 +53,10 @@ public class UsuarioService {
 
         Usuario salvo = usuarioRepository.save(usuario);
 
+        String avatarEscolhido = (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank())
+                ? dto.getAvatarUrl().trim()
+                : AVATAR_PADRAO;
+
         try {
             userProfileClient.criarOuSincronizarPerfil(
                     CriarPerfilInternoRequisicaoDto.builder()
@@ -60,7 +64,7 @@ public class UsuarioService {
                             .nome(salvo.getNome())
                             .nodeId(salvo.getNodeId())
                             .email(salvo.getEmail())
-                            .avatarUrl(AVATAR_PADRAO)
+                            .avatarUrl(avatarEscolhido)
                             .perfil(salvo.getPerfil())
                             .build()
             );

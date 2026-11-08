@@ -3,6 +3,7 @@ import 'package:frontend/shared/widgets/header.dart';
 import 'package:frontend/shared/widgets/side_menu.dart';
 import 'package:frontend/features/feed/components/send_post_widget.dart';
 import 'package:frontend/features/feed/components/post_card.dart';
+import 'package:frontend/features/feed/post_detail_screen.dart';
 import 'package:frontend/features/settings/profile_screen.dart';
 import 'package:frontend/features/zones/explore_zones_screen.dart';
 import 'package:frontend/features/chats/wave_chats_screen.dart';
@@ -296,7 +297,8 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                         }
                                                       }
                                                     },
-                                                    onCommentPressed: () {},
+                                                    onCommentPressed: () => _abrirDetalhesPost(post),
+                                                    onTap: () => _abrirDetalhesPost(post),
                                                     onRepostPressed: () {},
                                                   );
                                                 }),
@@ -312,5 +314,22 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _abrirDetalhesPost(PostModel post) async {
+    if (post.id.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => PostDetailScreen(
+          currentTheme: _currentTheme,
+          postId: post.id,
+          initialPost: post,
+          onBack: () => Navigator.of(ctx).pop(),
+        ),
+      ),
+    );
+    if (mounted) {
+      _carregarPostagens();
+    }
   }
 }

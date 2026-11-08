@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/features/settings/components/profile_card.dart';
 import 'package:frontend/features/feed/components/post_card.dart';
+import 'package:frontend/features/feed/post_detail_screen.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
@@ -419,7 +420,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     }
                   }
                 },
-                onCommentPressed: () {},
+                onCommentPressed: () => _openPostDetails(post, profile.nodeId),
+                onTap: () => _openPostDetails(post, profile.nodeId),
                 onRepostPressed: () {},
               ),
             );
@@ -427,6 +429,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+  }
+
+  Future<void> _openPostDetails(PostModel post, String ownerNodeId) async {
+    if (post.id.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => PostDetailScreen(
+          currentTheme: widget.currentTheme,
+          postId: post.id,
+          initialPost: post,
+          onBack: () => Navigator.of(ctx).pop(),
+        ),
+      ),
+    );
+    if (mounted) {
+      setState(() {
+        _refreshPostsLists(ownerNodeId);
+      });
+    }
   }
 
   Widget _buildTabsHeader(BuildContext context) {

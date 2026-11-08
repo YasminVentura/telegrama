@@ -45,13 +45,21 @@ class AuthRepository {
     }
   }
 
-  Future<void> registro(String nome, String nodeId, String email, String senha, bool termosAceitos) async {
+  Future<void> registro(
+    String nome,
+    String nodeId,
+    String email,
+    String senha,
+    bool termosAceitos, {
+    String? avatarUrl,
+  }) async {
     final resposta = await _apiClient.post('/auth/registro', body: {
       'nome': nome,
       'nodeId': nodeId,
       'email': email,
       'senha': senha,
       'termosAceitos': termosAceitos,
+      if (avatarUrl != null && avatarUrl.isNotEmpty) 'avatarUrl': avatarUrl,
     });
     if (resposta is Map) {
       final sessionId = resposta['idSessao'] ?? resposta['sessionId'];
@@ -64,9 +72,14 @@ class AuthRepository {
         nodeId: resposta['nodeId']?.toString(),
         email: resposta['email']?.toString(),
         role: (resposta['perfil'] ?? resposta['role'])?.toString(),
+        avatarUrl: avatarUrl,
+        fromExplicitUserSelection: avatarUrl != null && avatarUrl.isNotEmpty,
       );
     } else {
       await login(email, senha);
+      if (avatarUrl != null && avatarUrl.isNotEmpty) {
+        UserRepositoryImpl.setExplicitAvatarChoice(avatarUrl);
+      }
     }
   }
 }

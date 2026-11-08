@@ -60,7 +60,7 @@ public class AuthService {
                                 .nome(usuario.getNome())
                                 .nodeId(usuario.getNodeId())
                                 .email(usuario.getEmail())
-                                .avatarUrl(UsuarioService.AVATAR_PADRAO)
+                                .avatarUrl(null)
                                 .perfil(usuario.getPerfil())
                                 .build()
                 );

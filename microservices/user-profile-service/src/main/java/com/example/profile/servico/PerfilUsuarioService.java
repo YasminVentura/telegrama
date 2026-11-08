@@ -53,8 +53,19 @@ public class PerfilUsuarioService {
 
         if (existente.isPresent()) {
             PerfilUsuario atual = existente.get();
+            boolean alterou = false;
             if (dto.getPerfil() != null && atual.getPerfil() != dto.getPerfil()) {
                 atual.setPerfil(dto.getPerfil());
+                alterou = true;
+            }
+            if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
+                atual.setAvatarUrl(dto.getAvatarUrl().trim());
+                if (atual.getPreferencias() != null) {
+                    atual.getPreferencias().setAvatarUrl(dto.getAvatarUrl().trim());
+                }
+                alterou = true;
+            }
+            if (alterou) {
                 atual = perfilUsuarioRepository.save(atual);
             }
             return perfilUsuarioMapper.paraPerfilDto(atual);

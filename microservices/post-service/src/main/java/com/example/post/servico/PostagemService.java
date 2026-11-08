@@ -1,11 +1,14 @@
 package com.example.post.servico;
 
 import com.example.post.cliente.AuthClient;
+import com.example.post.dto.ComentarioRespostaDto;
+import com.example.post.dto.CriarComentarioRequisicaoDto;
 import com.example.post.dto.CriarPostagemRequisicaoDto;
 import com.example.post.dto.PerfilResumidoDto;
 import com.example.post.dto.PostagemRespostaDto;
 import com.example.post.excecao.AcessoNegadoException;
 import com.example.post.excecao.PostagemNaoEncontradaException;
+import com.example.post.modelo.ComentarioPostagem;
 import com.example.post.modelo.Postagem;
 import com.example.post.repositorio.PostagemRepository;
 import com.example.post.seguranca.UsuarioAutenticado;
@@ -259,6 +262,132 @@ public class PostagemService {
         postagemRepository.deleteByAutorNodeIdIn(nodeIds);
     }
 
+    public List<ComentarioRespostaDto> listarComentarios(String postId, UsuarioAutenticado usuarioLogado) {
+        Postagem postagem = postagemRepository.findById(postId)
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + postId));
+
+        if (postagem.getComentarios() == null || postagem.getComentarios().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<String> autorIds = new HashSet<>();
+        for (ComentarioPostagem c : postagem.getComentarios()) {
+            if (c.getAutorId() != null) autorIds.add(c.getAutorId());
+            if (c.getAutorNodeId() != null) autorIds.add(c.getAutorNodeId());
+        }
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(new ArrayList<>(autorIds));
+
+        Map<String, ComentarioRespostaDto> dtoPorId = new LinkedHashMap<>();
+        for (ComentarioPostagem c : postagem.getComentarios()) {
+            PerfilResumidoDto perfil = obterPerfilAutor(c.getAutorId(), c.getAutorNodeId(), perfisMap);
+            ComentarioRespostaDto dto = mapearComentarioParaDto(c, usuarioLogado, perfil);
+            dtoPorId.put(c.getId(), dto);
+        }
+
+        List<ComentarioRespostaDto> raizes = new ArrayList<>();
+        for (ComentarioPostagem c : postagem.getComentarios()) {
+            ComentarioRespostaDto atual = dtoPorId.get(c.getId());
+            String parentId = c.getParentId();
+            if (parentId != null && !parentId.isBlank() && dtoPorId.containsKey(parentId)) {
+                dtoPorId.get(parentId).getReplies().add(atual);
+            } else {
+                raizes.add(atual);
+            }
+        }
+
+        return raizes;
+    }
+
+    public ComentarioRespostaDto adicionarComentario(
+            String postId,
+            CriarComentarioRequisicaoDto requisicao,
+            UsuarioAutenticado autor
+    ) {
+        Postagem postagem = postagemRepository.findById(postId)
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + postId));
+
+        if (postagem.getComentarios() == null) {
+            postagem.setComentarios(new ArrayList<>());
+        }
+
+        List<String> idsAutor = new ArrayList<>();
+        if (autor.getId() != null) idsAutor.add(autor.getId());
+        if (autor.getNodeId() != null) idsAutor.add(autor.getNodeId());
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(idsAutor);
+        PerfilResumidoDto perfilAutor = obterPerfilAutor(autor.getId(), autor.getNodeId(), perfisMap);
+
+        String parentId = (requisicao.getParentId() != null && !requisicao.getParentId().isBlank())
+                ? requisicao.getParentId().trim()
+                : null;
+
+        ComentarioPostagem novoComentario = ComentarioPostagem.builder()
+                .id(UUID.randomUUID().toString())
+                .parentId(parentId)
+                .autorId(autor.getId())
+                .autorNodeId(perfilAutor != null && perfilAutor.getNodeId() != null ? perfilAutor.getNodeId() : autor.getNodeId())
+                .autorNome(perfilAutor != null && perfilAutor.getNome() != null ? perfilAutor.getNome() : autor.getNome())
+                .autorAvatarUrl(perfilAutor != null ? perfilAutor.getAvatarUrl() : null)
+                .conteudo(requisicao.getContent().trim())
+                .curtidas(new HashSet<>())
+                .criadoEm(LocalDateTime.now())
+                .build();
+
+        postagem.getComentarios().add(novoComentario);
+        postagem.setQuantidadeComentarios(postagem.getComentarios().size());
+        postagem.setAtualizadoEm(LocalDateTime.now());
+        postagemRepository.save(postagem);
+
+        return mapearComentarioParaDto(novoComentario, autor, perfilAutor);
+    }
+
+    public ComentarioRespostaDto alternarCurtidaComentario(
+            String postId,
+            String comentarioId,
+            UsuarioAutenticado usuarioLogado
+    ) {
+        Postagem postagem = postagemRepository.findById(postId)
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + postId));
+
+        if (postagem.getComentarios() == null) {
+            throw new PostagemNaoEncontradaException("Comentário não encontrado: " + comentarioId);
+        }
+
+        ComentarioPostagem alvo = postagem.getComentarios().stream()
+                .filter(c -> c.getId().equals(comentarioId))
+                .findFirst()
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Comentário não encontrado: " + comentarioId));
+
+        if (alvo.getCurtidas() == null) {
+            alvo.setCurtidas(new HashSet<>());
+        }
+
+        String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+        String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+        String handleNodeId = "@" + cleanNodeId;
+        String userId = usuarioLogado.getId();
+
+        boolean jaCurtiu = alvo.getCurtidas().removeIf(c ->
+                c.equalsIgnoreCase(rawNodeId)
+                || c.equalsIgnoreCase(cleanNodeId)
+                || c.equalsIgnoreCase(handleNodeId)
+                || (userId != null && c.equalsIgnoreCase(userId))
+        );
+
+        if (!jaCurtiu && !handleNodeId.equals("@")) {
+            alvo.getCurtidas().add(handleNodeId);
+        }
+
+        postagemRepository.save(postagem);
+
+        List<String> idsAutor = new ArrayList<>();
+        if (alvo.getAutorId() != null) idsAutor.add(alvo.getAutorId());
+        if (alvo.getAutorNodeId() != null) idsAutor.add(alvo.getAutorNodeId());
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(idsAutor);
+        PerfilResumidoDto perfilAutor = obterPerfilAutor(alvo.getAutorId(), alvo.getAutorNodeId(), perfisMap);
+
+        return mapearComentarioParaDto(alvo, usuarioLogado, perfilAutor);
+    }
+
     // --- Métodos Auxiliares ---
 
     private List<String> extrairIdentificadores(List<Postagem> postagens) {
@@ -303,17 +432,21 @@ public class PostagemService {
     }
 
     private PerfilResumidoDto obterPerfilDoMap(Postagem postagem, Map<String, PerfilResumidoDto> perfisMap) {
+        return obterPerfilAutor(postagem.getAutorId(), postagem.getAutorNodeId(), perfisMap);
+    }
+
+    private PerfilResumidoDto obterPerfilAutor(String autorId, String autorNodeId, Map<String, PerfilResumidoDto> perfisMap) {
         if (perfisMap.isEmpty()) return null;
-        if (postagem.getAutorId() != null) {
-            if (perfisMap.containsKey(postagem.getAutorId())) {
-                return perfisMap.get(postagem.getAutorId());
+        if (autorId != null) {
+            if (perfisMap.containsKey(autorId)) {
+                return perfisMap.get(autorId);
             }
-            if (perfisMap.containsKey(postagem.getAutorId().toLowerCase())) {
-                return perfisMap.get(postagem.getAutorId().toLowerCase());
+            if (perfisMap.containsKey(autorId.toLowerCase())) {
+                return perfisMap.get(autorId.toLowerCase());
             }
         }
-        if (postagem.getAutorNodeId() != null) {
-            String nodeId = postagem.getAutorNodeId().trim();
+        if (autorNodeId != null) {
+            String nodeId = autorNodeId.trim();
             String semArroba = nodeId.startsWith("@") ? nodeId.substring(1) : nodeId;
             String comArroba = "@" + semArroba;
             for (String chave : List.of(nodeId, semArroba, comArroba, semArroba.toLowerCase(), comArroba.toLowerCase())) {
@@ -323,6 +456,48 @@ public class PostagemService {
             }
         }
         return null;
+    }
+
+    private ComentarioRespostaDto mapearComentarioParaDto(
+            ComentarioPostagem comentario,
+            UsuarioAutenticado usuarioLogado,
+            PerfilResumidoDto perfilAtual
+    ) {
+        boolean curtido = false;
+        if (usuarioLogado != null && comentario.getCurtidas() != null) {
+            String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+            String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+            String handleNodeId = "@" + cleanNodeId;
+            String userId = usuarioLogado.getId();
+
+            curtido = comentario.getCurtidas().stream().anyMatch(c ->
+                    c.equalsIgnoreCase(rawNodeId)
+                    || c.equalsIgnoreCase(cleanNodeId)
+                    || c.equalsIgnoreCase(handleNodeId)
+                    || (userId != null && c.equalsIgnoreCase(userId))
+            );
+        }
+
+        int totalCurtidas = comentario.getCurtidas() != null ? comentario.getCurtidas().size() : 0;
+        String nomeAutor = (perfilAtual != null && perfilAtual.getNome() != null)
+                ? perfilAtual.getNome() : comentario.getAutorNome();
+        String handleAutor = (perfilAtual != null && perfilAtual.getNodeId() != null)
+                ? perfilAtual.getNodeId() : comentario.getAutorNodeId();
+        String avatarAutor = (perfilAtual != null)
+                ? perfilAtual.getAvatarUrl() : comentario.getAutorAvatarUrl();
+
+        return ComentarioRespostaDto.builder()
+                .id(comentario.getId())
+                .parentId(comentario.getParentId())
+                .authorName(nomeAutor)
+                .authorId(handleAutor)
+                .authorAvatarUrl(avatarAutor)
+                .content(comentario.getConteudo())
+                .createdAt(formatarDataIso(comentario.getCriadoEm()))
+                .likes(totalCurtidas)
+                .curtidoPeloUsuario(curtido)
+                .replies(new ArrayList<>())
+                .build();
     }
 
     private PostagemRespostaDto mapearParaRespostaDto(Postagem postagem, UsuarioAutenticado usuarioLogado, PerfilResumidoDto perfilAtual) {
@@ -356,6 +531,10 @@ public class PostagemService {
                 ? postagem.getCurtidas().size()
                 : postagem.getQuantidadeCurtidas();
 
+        int totalComentarios = (postagem.getComentarios() != null && !postagem.getComentarios().isEmpty())
+                ? postagem.getComentarios().size()
+                : postagem.getQuantidadeComentarios();
+
         String dataCriacaoFormatada = formatarDataIso(postagem.getCriadoEm());
         String dataAtualizacaoFormatada = formatarDataIso(postagem.getAtualizadoEm());
 
@@ -375,7 +554,7 @@ public class PostagemService {
                 .createdAt(dataCriacaoFormatada)
                 .updatedAt(dataAtualizacaoFormatada)
                 .likes(totalCurtidas)
-                .comments(postagem.getQuantidadeComentarios())
+                .comments(totalComentarios)
                 .curtidoPeloUsuario(curtido)
                 .salvoPeloUsuario(salvo)
                 .build();
