@@ -31,11 +31,22 @@ public class PostagemService {
     public PostagemRespostaDto criarPostagem(CriarPostagemRequisicaoDto requisicao, UsuarioAutenticado autor) {
         LocalDateTime agora = LocalDateTime.now();
 
+        List<String> idsAutor = new ArrayList<>();
+        if (autor.getId() != null) idsAutor.add(autor.getId());
+        if (autor.getNodeId() != null) idsAutor.add(autor.getNodeId());
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(idsAutor);
+        PerfilResumidoDto perfilAutor = null;
+        if (autor.getId() != null && perfisMap.containsKey(autor.getId().toLowerCase())) {
+            perfilAutor = perfisMap.get(autor.getId().toLowerCase());
+        } else if (autor.getNodeId() != null && perfisMap.containsKey(autor.getNodeId().toLowerCase())) {
+            perfilAutor = perfisMap.get(autor.getNodeId().toLowerCase());
+        }
+
         Postagem postagem = Postagem.builder()
                 .autorId(autor.getId())
-                .autorNodeId(autor.getNodeId())
-                .autorNome(autor.getNome())
-                .autorAvatarUrl(null)
+                .autorNodeId(perfilAutor != null && perfilAutor.getNodeId() != null ? perfilAutor.getNodeId() : autor.getNodeId())
+                .autorNome(perfilAutor != null && perfilAutor.getNome() != null ? perfilAutor.getNome() : autor.getNome())
+                .autorAvatarUrl(perfilAutor != null ? perfilAutor.getAvatarUrl() : null)
                 .conteudo(requisicao.getContent())
                 .curtidas(new HashSet<>())
                 .salvos(new HashSet<>())
@@ -46,8 +57,6 @@ public class PostagemService {
                 .build();
 
         Postagem salva = postagemRepository.save(postagem);
-        List<String> identificadores = extrairIdentificadores(List.of(salva));
-        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
         return mapearParaRespostaDto(salva, autor, obterPerfilDoMap(salva, perfisMap));
     }
 
@@ -272,11 +281,17 @@ public class PostagemService {
                 for (PerfilResumidoDto perfil : resposta.getData()) {
                     if (perfil.getId() != null) {
                         mapa.put(perfil.getId(), perfil);
+                        mapa.put(perfil.getId().toLowerCase(), perfil);
                     }
                     if (perfil.getNodeId() != null) {
-                        // Garante que o post antigo ache o perfil mesmo buscando pelo @handle/nodeId ou com @
-                        mapa.put(perfil.getNodeId(), perfil);
-                        mapa.put("@" + perfil.getNodeId(), perfil);
+                        String raw = perfil.getNodeId().trim();
+                        String semArroba = raw.startsWith("@") ? raw.substring(1) : raw;
+                        String comArroba = "@" + semArroba;
+                        mapa.put(raw, perfil);
+                        mapa.put(semArroba, perfil);
+                        mapa.put(comArroba, perfil);
+                        mapa.put(semArroba.toLowerCase(), perfil);
+                        mapa.put(comArroba.toLowerCase(), perfil);
                     }
                 }
                 return mapa;
@@ -289,19 +304,22 @@ public class PostagemService {
 
     private PerfilResumidoDto obterPerfilDoMap(Postagem postagem, Map<String, PerfilResumidoDto> perfisMap) {
         if (perfisMap.isEmpty()) return null;
-        if (postagem.getAutorId() != null && perfisMap.containsKey(postagem.getAutorId())) {
-            return perfisMap.get(postagem.getAutorId());
+        if (postagem.getAutorId() != null) {
+            if (perfisMap.containsKey(postagem.getAutorId())) {
+                return perfisMap.get(postagem.getAutorId());
+            }
+            if (perfisMap.containsKey(postagem.getAutorId().toLowerCase())) {
+                return perfisMap.get(postagem.getAutorId().toLowerCase());
+            }
         }
         if (postagem.getAutorNodeId() != null) {
-            String nodeId = postagem.getAutorNodeId();
-            if (perfisMap.containsKey(nodeId)) {
-                return perfisMap.get(nodeId);
-            }
-            if (!nodeId.startsWith("@") && perfisMap.containsKey("@" + nodeId)) {
-                return perfisMap.get("@" + nodeId);
-            }
-            if (nodeId.startsWith("@") && perfisMap.containsKey(nodeId.substring(1))) {
-                return perfisMap.get(nodeId.substring(1));
+            String nodeId = postagem.getAutorNodeId().trim();
+            String semArroba = nodeId.startsWith("@") ? nodeId.substring(1) : nodeId;
+            String comArroba = "@" + semArroba;
+            for (String chave : List.of(nodeId, semArroba, comArroba, semArroba.toLowerCase(), comArroba.toLowerCase())) {
+                if (perfisMap.containsKey(chave)) {
+                    return perfisMap.get(chave);
+                }
             }
         }
         return null;

@@ -170,7 +170,13 @@ class UserRepositoryImpl implements UserRepository {
     bool fromExplicitUserSelection = false,
   }) {
     if (nodeId != null && nodeId.trim().isNotEmpty) {
-      currentUserNodeId = nodeId.trim().replaceAll('@', '');
+      final incomingCleanNodeId = nodeId.trim().replaceAll('@', '');
+      if (currentUserNodeId != null &&
+          currentUserNodeId!.toLowerCase() != incomingCleanNodeId.toLowerCase()) {
+        // Se trocou de usuário logado, limpa a escolha anterior em memória
+        _userExplicitlyChosenAvatar = null;
+      }
+      currentUserNodeId = incomingCleanNodeId;
     }
     if (email != null && email.trim().isNotEmpty) {
       currentUserEmail = email.trim();

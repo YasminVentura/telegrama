@@ -14,10 +14,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByNodeId(String nodeId);
 
+    Optional<Usuario> findByNodeIdIgnoreCase(String nodeId);
+
     // Essencial para permitir que o usuário logue tanto com email quanto com @node_id
     Optional<Usuario> findByEmailOrNodeId(String email, String nodeId);
 
     boolean existsByEmail(String email);
 
     boolean existsByNodeId(String nodeId);
+
+    boolean existsByNodeIdIgnoreCase(String nodeId);
 }

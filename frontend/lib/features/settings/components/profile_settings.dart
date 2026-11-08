@@ -41,7 +41,11 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     _profileFuture = _userRepository.getMyProfile();
     _profileFuture.then((profile) {
       if (mounted) {
-        final resolvedAvatar = UserRepositoryImpl.selectedAvatarOrDefault;
+        final rawAvatar = profile.preferencias?.avatarUrl ??
+            profile.avatarUrl ??
+            UserRepositoryImpl.selectedAvatarOrDefault;
+        final resolvedAvatar =
+            UserAvatar.resolvePresetAsset(rawAvatar) ?? rawAvatar;
 
         setState(() {
           _nameController.text = profile.nome;
@@ -66,22 +70,13 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     super.dispose();
   }
 
-  Future<void> _selectFixedAvatar(String avatarAssetPath) async {
+  /// Seleciona uma das 6 fotos fixas no preview; a alteração é efetivada ao clicar em "SAVE PROFILE"
+  void _selectFixedAvatar(String avatarAssetPath) {
+    final resolved =
+        UserAvatar.resolvePresetAsset(avatarAssetPath) ?? avatarAssetPath;
     setState(() {
-      _selectedAvatarUrl = avatarAssetPath;
+      _selectedAvatarUrl = resolved;
     });
-    UserRepositoryImpl.setExplicitAvatarChoice(avatarAssetPath);
-
-    try {
-      await _userRepository.updatePreferences({'avatarUrl': avatarAssetPath});
-      await _userRepository.updateProfile({
-        'avatarUrl': avatarAssetPath,
-        'preferencias': {'avatarUrl': avatarAssetPath},
-      });
-      widget.onProfileUpdated?.call();
-    } catch (e) {
-      debugPrint('Erro ao atualizar foto do perfil nas preferências: $e');
-    }
   }
 
   Future<void> _saveProfile() async {
@@ -89,17 +84,22 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
 
     setState(() => _isSaving = true);
     try {
+      final resolvedAvatar =
+          UserAvatar.resolvePresetAsset(_selectedAvatarUrl) ??
+              _selectedAvatarUrl;
+      UserRepositoryImpl.setExplicitAvatarChoice(resolvedAvatar);
+
       final updateData = {
         'nome': _nameController.text,
         'bio': _bioController.text,
         'localizacao': _locationController.text,
-        'avatarUrl': _selectedAvatarUrl,
+        'avatarUrl': resolvedAvatar,
         'preferencias': {
-          'avatarUrl': _selectedAvatarUrl,
+          'avatarUrl': resolvedAvatar,
         },
       };
 
-      await _userRepository.updatePreferences({'avatarUrl': _selectedAvatarUrl});
+      await _userRepository.updatePreferences({'avatarUrl': resolvedAvatar});
       await _userRepository.updateProfile(updateData);
 
       if (mounted) {

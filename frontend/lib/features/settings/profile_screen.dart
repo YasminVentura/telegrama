@@ -388,9 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 timeAgo: post.timeAgo,
                 frequencyTag: post.frequencyTag,
                 content: post.content,
-                authorAvatarUrl: (isOwner && isPostFromProfileOwner)
+                authorAvatarUrl: isPostFromProfileOwner
                     ? effectiveAvatar
-                    : (post.authorAvatarUrl ?? effectiveAvatar),
+                    : post.authorAvatarUrl,
                 imageUrl: post.imageUrl,
                 likesCount: post.likesCount,
                 commentsCount: post.commentsCount,

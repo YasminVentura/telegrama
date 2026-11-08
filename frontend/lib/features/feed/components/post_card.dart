@@ -115,10 +115,9 @@ class _PostCardState extends State<PostCard> {
                       final String effectiveAvatar = isMyPost
                           ? currentMyAvatar
                           : ((widget.authorAvatarUrl != null &&
-                                  widget.authorAvatarUrl!.isNotEmpty &&
-                                  widget.authorAvatarUrl != UserAvatar.defaultAvatar)
+                                  widget.authorAvatarUrl!.isNotEmpty)
                               ? widget.authorAvatarUrl!
-                              : currentMyAvatar);
+                              : UserAvatar.defaultAvatar);
 
                       return UserAvatar(
                         imageUrl: effectiveAvatar,

@@ -14,7 +14,7 @@ public class RegistroRequisicaoDto {
     private String nome;
 
     @NotBlank(message = "O node_id (usuário) é obrigatório.")
-    @Pattern(regexp = "^@[a-zA-Z0-9_]{3,20}$", message = "O node_id deve começar com @ e conter apenas letras, números e underline, tendo entre 4 e 21 caracteres.")
+    @Pattern(regexp = "^@?[a-zA-Z0-9_]{3,20}$", message = "O node_id deve conter apenas letras, números e underline (3 a 20 caracteres), com ou sem @.")
     private String nodeId;
 
     @NotBlank(message = "O email é obrigatório.")

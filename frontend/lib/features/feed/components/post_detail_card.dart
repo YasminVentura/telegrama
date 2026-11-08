@@ -55,10 +55,9 @@ class PostDetailCard extends StatelessWidget {
                   final String effectiveAvatar = isMyPost
                       ? currentMyAvatar
                       : ((authorAvatarUrl != null &&
-                              authorAvatarUrl!.isNotEmpty &&
-                              authorAvatarUrl != UserAvatar.defaultAvatar)
+                              authorAvatarUrl!.isNotEmpty)
                           ? authorAvatarUrl!
-                          : currentMyAvatar);
+                          : UserAvatar.defaultAvatar);
 
                   return UserAvatar(
                     imageUrl: effectiveAvatar,

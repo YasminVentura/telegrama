@@ -58,9 +58,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     try {
       await _authRepository.registro(
-        _displayNameController.text,
-        _nodeIdController.text,
-        _emailController.text,
+        _displayNameController.text.trim(),
+        _nodeIdController.text.trim(),
+        _emailController.text.trim(),
         _passwordController.text,
         _acceptTerms,
       );
@@ -283,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextField(
                           controller: _nodeIdController,
                           style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                          decoration: _inputDecoration(hintText: '@sas_vance', prefixIcon: Icons.alternate_email),
+                          decoration: _inputDecoration(hintText: 'sas_vance', prefixIcon: Icons.alternate_email),
                         ),
                       ],
                     ),

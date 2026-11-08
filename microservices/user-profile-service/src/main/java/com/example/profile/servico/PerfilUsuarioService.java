@@ -359,7 +359,7 @@ public class PerfilUsuarioService {
         }
 
         for (String nodeId : nodeIds) {
-            perfilUsuarioRepository.findByNodeId(nodeId).ifPresent(u -> {
+            perfilUsuarioRepository.findByNodeIdIgnoreCase(nodeId).ifPresent(u -> {
                 if (!usuarios.contains(u)) {
                     usuarios.add(u);
                 }
@@ -418,15 +418,15 @@ public class PerfilUsuarioService {
         } catch (IllegalArgumentException ignored) {
         }
 
-        Optional<PerfilUsuario> usuario = perfilUsuarioRepository.findByNodeId(limpo);
+        Optional<PerfilUsuario> usuario = perfilUsuarioRepository.findByNodeIdIgnoreCase(limpo);
         if (usuario.isPresent()) {
             return usuario;
         }
 
         if (limpo.startsWith("@")) {
-            usuario = perfilUsuarioRepository.findByNodeId(limpo.substring(1));
+            usuario = perfilUsuarioRepository.findByNodeIdIgnoreCase(limpo.substring(1));
         } else {
-            usuario = perfilUsuarioRepository.findByNodeId("@" + limpo);
+            usuario = perfilUsuarioRepository.findByNodeIdIgnoreCase("@" + limpo);
         }
         if (usuario.isPresent()) {
             return usuario;

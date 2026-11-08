@@ -15,6 +15,8 @@ public interface PerfilUsuarioRepository extends JpaRepository<PerfilUsuario, UU
 
     Optional<PerfilUsuario> findByNodeId(String nodeId);
 
+    Optional<PerfilUsuario> findByNodeIdIgnoreCase(String nodeId);
+
     boolean existsByEmail(String email);
 
     boolean existsByNodeId(String nodeId);

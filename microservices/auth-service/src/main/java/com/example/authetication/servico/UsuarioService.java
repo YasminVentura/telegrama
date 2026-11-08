@@ -32,14 +32,23 @@ public class UsuarioService {
         if (!dto.getTermosAceitos()) {
             throw new RegraNegocioException("Você deve aceitar os termos de uso.");
         }
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+        String emailLimpo = dto.getEmail().trim();
+        String rawNodeId = dto.getNodeId().trim();
+        String semArroba = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+        String nodeIdNormalizado = "@" + semArroba;
+        dto.setNodeId(nodeIdNormalizado);
+        dto.setEmail(emailLimpo);
+
+        if (usuarioRepository.existsByEmail(emailLimpo)) {
             throw new RegraNegocioException("E-mail já cadastrado.");
         }
-        if (usuarioRepository.existsByNodeId(dto.getNodeId())) {
+        if (usuarioRepository.existsByNodeIdIgnoreCase(nodeIdNormalizado)
+                || usuarioRepository.existsByNodeIdIgnoreCase(semArroba)) {
             throw new RegraNegocioException("Node ID (usuário) já está em uso.");
         }
 
         Usuario usuario = usuarioMapper.paraEntidade(dto);
+        usuario.setNodeId(nodeIdNormalizado);
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
         Usuario salvo = usuarioRepository.save(usuario);
