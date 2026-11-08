@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/core/network/session_storage.dart';
 import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
 
@@ -133,13 +134,19 @@ class UserRepositoryImpl implements UserRepository {
       ValueNotifier<String>('User');
   static final ValueNotifier<String> currentUserRoleNotifier =
       ValueNotifier<String>('USER');
+  static final ValueNotifier<bool> isLoggedInNotifier =
+      ValueNotifier<bool>(false);
 
   static String? currentUserNodeId;
   static String? currentUserEmail;
   static String? currentUserId;
 
+  static bool get isLoggedIn =>
+      isLoggedInNotifier.value ||
+      (currentUserNodeId != null && currentUserNodeId!.isNotEmpty);
+
   static bool get isCurrentUserAdmin =>
-      currentUserRoleNotifier.value.toUpperCase() == 'ADMIN';
+      isLoggedIn && currentUserRoleNotifier.value.toUpperCase() == 'ADMIN';
 
   /// Guarda a foto escolhida pelo usuário para não perder mesmo se o container ainda não tiver reiniciado
   static String? _userExplicitlyChosenAvatar;
@@ -215,6 +222,45 @@ class UserRepositoryImpl implements UserRepository {
         currentAvatarNotifier.value = resolved;
       }
     }
+
+    if (currentUserNodeId != null && currentUserNodeId!.isNotEmpty) {
+      if (!isLoggedInNotifier.value) {
+        isLoggedInNotifier.value = true;
+      }
+      SessionStorage.saveUserData({
+        'id': currentUserId,
+        'nome': currentUserNameNotifier.value,
+        'nodeId': currentUserNodeId,
+        'email': currentUserEmail,
+        'role': currentUserRoleNotifier.value,
+        'avatarUrl': currentAvatarNotifier.value,
+      });
+    }
+  }
+
+  static void restoreCachedUserSession() {
+    final cached = SessionStorage.getUserData();
+    if (cached == null) return;
+    syncUserSession(
+      id: cached['id']?.toString(),
+      nome: cached['nome']?.toString(),
+      nodeId: cached['nodeId']?.toString(),
+      email: cached['email']?.toString(),
+      role: cached['role']?.toString(),
+      avatarUrl: cached['avatarUrl']?.toString(),
+    );
+  }
+
+  static void clearUserSession() {
+    currentUserNodeId = null;
+    currentUserEmail = null;
+    currentUserId = null;
+    _userExplicitlyChosenAvatar = null;
+    currentUserNameNotifier.value = 'User';
+    currentUserRoleNotifier.value = 'USER';
+    currentAvatarNotifier.value = UserPreferences.defaultAvatar;
+    isLoggedInNotifier.value = false;
+    SessionStorage.clearAll();
   }
 
   static bool isCurrentUser(String? handleOrNodeId, {String? authorName}) {

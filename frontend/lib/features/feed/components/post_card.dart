@@ -314,6 +314,10 @@ class _PostCardState extends State<PostCard> {
                         backgroundColor: widget.currentTheme.backgroundColor,
                         textColor: widget.currentTheme.textColor,
                         onTap: () {
+                          if (!UserRepositoryImpl.isLoggedIn) {
+                            if (widget.onLikePressed != null) widget.onLikePressed!();
+                            return;
+                          }
                           setState(() {
                             _isLiked = !_isLiked;
                             _likesCount += _isLiked ? 1 : -1;
@@ -345,6 +349,10 @@ class _PostCardState extends State<PostCard> {
                         backgroundColor: widget.currentTheme.backgroundColor,
                         textColor: widget.currentTheme.textColor,
                         onTap: () {
+                          if (!UserRepositoryImpl.isLoggedIn) {
+                            if (widget.onRepostPressed != null) widget.onRepostPressed!();
+                            return;
+                          }
                           setState(() {
                             _isReposted = !_isReposted;
                           });
@@ -360,6 +368,10 @@ class _PostCardState extends State<PostCard> {
                     backgroundColor: widget.currentTheme.backgroundColor,
                     textColor: widget.currentTheme.textColor,
                     onTap: () {
+                      if (!UserRepositoryImpl.isLoggedIn) {
+                        if (widget.onSavePressed != null) widget.onSavePressed!();
+                        return;
+                      }
                       setState(() {
                         _isSaved = !_isSaved;
                       });

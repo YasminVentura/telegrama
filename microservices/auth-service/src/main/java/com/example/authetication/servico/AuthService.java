@@ -5,7 +5,9 @@ import com.example.authetication.dto.AutenticacaoResultado;
 import com.example.authetication.dto.CriarPerfilInternoRequisicaoDto;
 import com.example.authetication.dto.LoginRequisicaoDto;
 import com.example.authetication.dto.UsuarioRespostaDto;
+import com.example.authetication.excecao.RegraNegocioException;
 import com.example.authetication.modelo.Usuario;
+import com.example.authetication.repositorio.UsuarioRepository;
 import com.example.authetication.seguranca.DetalhesUsuarioImpl;
 import com.example.authetication.seguranca.DetalhesUsuarioServicoImpl;
 import com.example.authetication.seguranca.JwtUtils;
@@ -27,8 +29,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
+    private static final Duration SESSAO_TTL = Duration.ofHours(24);
+    private static final Duration REFRESH_TTL = Duration.ofDays(7);
+
     private final AuthenticationManager authenticationManager;
     private final DetalhesUsuarioServicoImpl detalhesUsuarioServico;
+    private final UsuarioRepository usuarioRepository;
     private final JwtUtils jwtUtils;
     private final StringRedisTemplate redisTemplate;
     private final UserProfileClient userProfileClient;
@@ -42,7 +48,36 @@ public class AuthService {
         );
 
         UserDetails userDetails = detalhesUsuarioServico.loadUserByUsername(request.getIdentificador());
+        return emitirSessaoERefreshToken(userDetails);
+    }
 
+    public AutenticacaoResultado renovarSessaoComRefreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new RegraNegocioException("Refresh token não informado.");
+        }
+
+        String chaveRefresh = "refresh:" + refreshToken.trim();
+        String usuarioIdStr = redisTemplate.opsForValue().get(chaveRefresh);
+        if (usuarioIdStr == null || usuarioIdStr.isBlank()) {
+            throw new RegraNegocioException("Refresh token inválido ou expirado.");
+        }
+
+        Usuario usuario;
+        try {
+            usuario = usuarioRepository.findById(UUID.fromString(usuarioIdStr))
+                    .orElseThrow(() -> new RegraNegocioException("Usuário associado ao refresh token não encontrado."));
+        } catch (IllegalArgumentException e) {
+            throw new RegraNegocioException("Identificador de usuário inválido no refresh token.");
+        }
+
+        // Remove o refresh token antigo (rotação de refresh token)
+        redisTemplate.delete(chaveRefresh);
+
+        UserDetails userDetails = new DetalhesUsuarioImpl(usuario);
+        return emitirSessaoERefreshToken(userDetails);
+    }
+
+    private AutenticacaoResultado emitirSessaoERefreshToken(UserDetails userDetails) {
         Map<String, Object> claimsExtras = new HashMap<>();
         Usuario usuario = null;
         if (userDetails instanceof DetalhesUsuarioImpl detalhes) {
@@ -71,7 +106,12 @@ public class AuthService {
 
         String jwt = jwtUtils.gerarToken(claimsExtras, userDetails);
         String idSessao = UUID.randomUUID().toString();
-        redisTemplate.opsForValue().set("sessao:" + idSessao, jwt, Duration.ofHours(24));
+        String refreshToken = UUID.randomUUID().toString();
+
+        redisTemplate.opsForValue().set("sessao:" + idSessao, jwt, SESSAO_TTL);
+        if (usuario != null) {
+            redisTemplate.opsForValue().set("refresh:" + refreshToken, usuario.getId().toString(), REFRESH_TTL);
+        }
 
         UsuarioRespostaDto usuarioDto = null;
         if (usuario != null) {
@@ -82,15 +122,19 @@ public class AuthService {
                     .email(usuario.getEmail())
                     .perfil(usuario.getPerfil())
                     .idSessao(idSessao)
+                    .refreshToken(refreshToken)
                     .build();
         }
 
-        return new AutenticacaoResultado(idSessao, usuarioDto);
+        return new AutenticacaoResultado(idSessao, refreshToken, usuarioDto);
     }
 
-    public void encerrarSessao(String idSessao) {
+    public void encerrarSessao(String idSessao, String refreshToken) {
         if (idSessao != null && !idSessao.isBlank()) {
-            redisTemplate.delete("sessao:" + idSessao);
+            redisTemplate.delete("sessao:" + idSessao.trim());
+        }
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            redisTemplate.delete("refresh:" + refreshToken.trim());
         }
     }
 }

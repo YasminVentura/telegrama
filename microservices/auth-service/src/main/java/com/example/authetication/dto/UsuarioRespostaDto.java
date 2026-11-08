@@ -19,4 +19,5 @@ public class UsuarioRespostaDto {
     private String email;
     private Role perfil;
     private String idSessao;
+    private String refreshToken;
 }

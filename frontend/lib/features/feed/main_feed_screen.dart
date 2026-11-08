@@ -15,7 +15,16 @@ import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 
 class MainFeedScreen extends StatefulWidget {
-  const MainFeedScreen({super.key});
+  final VoidCallback? onRequireLogin;
+  final VoidCallback? onNavigateToRegister;
+  final VoidCallback? onLogout;
+
+  const MainFeedScreen({
+    super.key,
+    this.onRequireLogin,
+    this.onNavigateToRegister,
+    this.onLogout,
+  });
 
   @override
   State<MainFeedScreen> createState() => _MainFeedScreenState();
@@ -33,11 +42,39 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   @override
   void initState() {
     super.initState();
-    _carregarPerfilUsuario();
+    if (UserRepositoryImpl.isLoggedIn) {
+      _carregarPerfilUsuario();
+    }
     _carregarPostagens();
   }
 
+  bool _exigirAutenticacao({String mensagem = 'Faça login para acessar esta área.'}) {
+    if (UserRepositoryImpl.isLoggedIn) {
+      return true;
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensagem)),
+      );
+    }
+    widget.onRequireLogin?.call();
+    return false;
+  }
+
+  void _navegarParaRota(String route) {
+    if (route != 'Home Feed' && !UserRepositoryImpl.isLoggedIn) {
+      _exigirAutenticacao(
+        mensagem: 'Usuários não logados podem acessar apenas o Feed. Faça login para continuar.',
+      );
+      return;
+    }
+    setState(() {
+      _currentRoute = route;
+    });
+  }
+
   Future<void> _carregarPerfilUsuario() async {
+    if (!UserRepositoryImpl.isLoggedIn) return;
     try {
       final profile = await _userRepository.getMyProfile();
       if (mounted && profile.preferencias != null) {
@@ -77,6 +114,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   }
 
   Future<void> _publicarPostagem(String conteudo) async {
+    if (!_exigirAutenticacao(mensagem: 'Faça login para publicar uma transmissão.')) {
+      return;
+    }
     try {
       await _postRepository.createPost(conteudo, null, null);
       await _carregarPostagens();
@@ -95,6 +135,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   }
 
   Future<void> _excluirPostagem(String postId) async {
+    if (!_exigirAutenticacao()) return;
     try {
       await _postRepository.deletePost(postId);
       await _carregarPostagens();
@@ -112,61 +153,135 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     }
   }
 
+  Widget _buildGuestFeedBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _currentTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _currentTheme.shadowColor, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: _currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'MODO VISITANTE • APENAS FEED',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    color: _currentTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Conecte-se à sua conta para publicar transmissões, comentar, curtir e explorar perfis e zonas.',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: _currentTheme.textColor.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          GestureDetector(
+            onTap: widget.onRequireLogin,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _currentTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: _currentTheme.shadowColor, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _currentTheme.shadowColor,
+                      offset: const Offset(2, 2),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'FAZER LOGIN',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: _currentTheme.backgroundColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool autenticado = UserRepositoryImpl.isLoggedIn;
+    final String rotaEfetiva = autenticado ? _currentRoute : 'Home Feed';
+
     return Scaffold(
       backgroundColor: _currentTheme.backgroundColor,
       body: Column(
         children: [
           HeaderWidget(
             currentTheme: _currentTheme,
-            onNavigate: (route) {
-              setState(() {
-                _currentRoute = route;
-              });
-            },
+            onNavigate: _navegarParaRota,
+            onRequireLogin: widget.onRequireLogin,
+            onNavigateToRegister: widget.onNavigateToRegister,
           ),
 
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_currentRoute != 'Settings')
+                if (rotaEfetiva != 'Settings')
                   SizedBox(
                     width: 260,
                     child: MenuWidget(
                       currentTheme: _currentTheme,
-                      activeRoute: _currentRoute,
-                      onItemSelected: (route) {
-                        setState(() {
-                          _currentRoute = route;
-                        });
-                      },
+                      activeRoute: rotaEfetiva,
+                      onItemSelected: _navegarParaRota,
+                      onLogout: widget.onLogout,
                     ),
                   ),
 
                 Expanded(
-                  child: _currentRoute == 'My Profile'
+                  child: rotaEfetiva == 'My Profile'
                       ? ProfileScreen(
                           currentTheme: _currentTheme,
                           onNavigate: (route) {
-                            setState(() {
-                              _currentRoute = route;
-                            });
+                            _navegarParaRota(route);
                             if (route == 'Home Feed') {
                               _carregarPostagens();
                             }
                           },
                         )
-                      : _currentRoute == 'Explore Zones'
+                      : rotaEfetiva == 'Explore Zones'
                           ? ExploreZonesScreen(
                               currentTheme: _currentTheme,
                             )
-                          : _currentRoute == 'Wave Chats'
+                          : rotaEfetiva == 'Wave Chats'
                               ? WaveChatsScreen(
                                   currentTheme: _currentTheme,
                                 )
-                              : _currentRoute == 'Settings'
+                              : rotaEfetiva == 'Settings'
                                   ? SettingsScreen(
                                       currentTheme: _currentTheme,
                                       onThemeChanged: (newTheme) {
@@ -195,10 +310,13 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               const SizedBox(height: 24),
-                                              SendPostWidget(
-                                                currentTheme: _currentTheme,
-                                                onPostSubmitted: (post) => _publicarPostagem(post),
-                                              ),
+                                              if (autenticado)
+                                                SendPostWidget(
+                                                  currentTheme: _currentTheme,
+                                                  onPostSubmitted: (post) => _publicarPostagem(post),
+                                                )
+                                              else
+                                                _buildGuestFeedBanner(),
                                               const SizedBox(height: 24),
                                               if (_isLoadingPosts)
                                                 Center(
@@ -242,7 +360,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                         'Seja o primeiro nó a transmitir uma mensagem no retroverse!',
                                                         style: TextStyle(
                                                           fontSize: 13,
-                                                          color: _currentTheme.textColor.withOpacity(0.6),
+                                                          color: _currentTheme.textColor.withValues(alpha: 0.6),
                                                         ),
                                                       ),
                                                     ],
@@ -250,11 +368,12 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                 )
                                               else
                                                 ..._posts.map((post) {
-                                                  final bool canDeletePost = UserRepositoryImpl.isCurrentUserAdmin ||
-                                                      UserRepositoryImpl.isCurrentUser(
-                                                        post.authorHandle,
-                                                        authorName: post.authorName,
-                                                      );
+                                                  final bool canDeletePost = autenticado &&
+                                                      (UserRepositoryImpl.isCurrentUserAdmin ||
+                                                          UserRepositoryImpl.isCurrentUser(
+                                                            post.authorHandle,
+                                                            authorName: post.authorName,
+                                                          ));
                                                   return PostCard(
                                                     key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
                                                     currentTheme: _currentTheme,
@@ -271,7 +390,17 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                     isSaved: post.salvoPeloUsuario,
                                                     canDelete: canDeletePost && post.id.isNotEmpty,
                                                     onDeletePressed: () => _excluirPostagem(post.id),
+                                                    onProfileTap: autenticado
+                                                        ? null
+                                                        : () => _exigirAutenticacao(
+                                                              mensagem: 'Faça login para visualizar perfis de usuários.',
+                                                            ),
                                                     onLikePressed: () async {
+                                                      if (!_exigirAutenticacao(
+                                                        mensagem: 'Faça login para curtir transmissões.',
+                                                      )) {
+                                                        return;
+                                                      }
                                                       if (post.id.isNotEmpty) {
                                                         final atualizado = await _postRepository.likePost(post.id);
                                                         if (atualizado != null && mounted) {
@@ -285,6 +414,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                       }
                                                     },
                                                     onSavePressed: () async {
+                                                      if (!_exigirAutenticacao(
+                                                        mensagem: 'Faça login para salvar transmissões.',
+                                                      )) {
+                                                        return;
+                                                      }
                                                       if (post.id.isNotEmpty) {
                                                         final atualizado = await _postRepository.savePost(post.id);
                                                         if (atualizado != null && mounted) {
@@ -299,7 +433,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                     },
                                                     onCommentPressed: () => _abrirDetalhesPost(post),
                                                     onTap: () => _abrirDetalhesPost(post),
-                                                    onRepostPressed: () {},
+                                                    onRepostPressed: () {
+                                                      _exigirAutenticacao(
+                                                        mensagem: 'Faça login para interagir com transmissões.',
+                                                      );
+                                                    },
                                                   );
                                                 }),
                                             ],
@@ -317,6 +455,11 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   }
 
   Future<void> _abrirDetalhesPost(PostModel post) async {
+    if (!_exigirAutenticacao(
+      mensagem: 'Usuários não logados podem acessar apenas o Feed. Faça login para abrir e comentar na transmissão.',
+    )) {
+      return;
+    }
     if (post.id.isEmpty) return;
     await Navigator.of(context).push(
       MaterialPageRoute(

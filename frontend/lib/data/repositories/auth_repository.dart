@@ -5,7 +5,7 @@ import 'package:frontend/data/repositories/user_repository.dart';
 class AuthRepository {
   final ApiClient _apiClient;
 
-  AuthRepository({ApiClient? apiClient}) 
+  AuthRepository({ApiClient? apiClient})
       : _apiClient = apiClient ??
             ApiClient(
               baseUrl: kIsWeb
@@ -25,6 +25,10 @@ class AuthRepository {
       if (sessionId != null && sessionId.toString().isNotEmpty) {
         _apiClient.definirIdSessao(sessionId.toString());
       }
+      final refreshToken = resposta['refreshToken'];
+      if (refreshToken != null && refreshToken.toString().isNotEmpty) {
+        _apiClient.definirRefreshToken(refreshToken.toString());
+      }
       UserRepositoryImpl.syncUserSession(
         id: resposta['id']?.toString(),
         nome: resposta['nome']?.toString(),
@@ -36,11 +40,40 @@ class AuthRepository {
     return resposta;
   }
 
+  Future<bool> restaurarSessao() async {
+    if (!ApiClient.possuiCredenciaisSalvas) {
+      UserRepositoryImpl.clearUserSession();
+      return false;
+    }
+
+    UserRepositoryImpl.restoreCachedUserSession();
+
+    try {
+      final userRepository = UserRepositoryImpl(apiClient: _apiClient);
+      await userRepository.getMyProfile();
+      return true;
+    } catch (_) {
+      // Se falhou mesmo após a tentativa automática de refresh no ApiClient, tenta explicitamente o refresh:
+      final renovou = await _apiClient.tentarRenovarSessao();
+      if (renovou) {
+        try {
+          final userRepository = UserRepositoryImpl(apiClient: _apiClient);
+          await userRepository.getMyProfile();
+          return true;
+        } catch (_) {}
+      }
+      UserRepositoryImpl.clearUserSession();
+      _apiClient.limparIdSessao();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _apiClient.post('/auth/logout');
+    } catch (_) {
     } finally {
-      UserRepositoryImpl.currentUserRoleNotifier.value = 'USER';
+      UserRepositoryImpl.clearUserSession();
       _apiClient.limparIdSessao();
     }
   }
@@ -65,6 +98,10 @@ class AuthRepository {
       final sessionId = resposta['idSessao'] ?? resposta['sessionId'];
       if (sessionId != null && sessionId.toString().isNotEmpty) {
         _apiClient.definirIdSessao(sessionId.toString());
+      }
+      final refreshToken = resposta['refreshToken'];
+      if (refreshToken != null && refreshToken.toString().isNotEmpty) {
+        _apiClient.definirRefreshToken(refreshToken.toString());
       }
       UserRepositoryImpl.syncUserSession(
         id: resposta['id']?.toString(),

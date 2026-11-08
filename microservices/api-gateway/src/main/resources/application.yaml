@@ -32,6 +32,7 @@ spring:
             exposedHeaders:
               - "Set-Cookie"
               - "X-Session-Id"
+              - "X-Refresh-Token"
             allowCredentials: true
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Expose-Headers Access-Control-Allow-Methods, RETAIN_FIRST

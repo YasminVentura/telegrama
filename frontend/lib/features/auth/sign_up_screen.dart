@@ -8,12 +8,14 @@ class RegisterScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final VoidCallback onRegisterSuccess;
   final VoidCallback onNavigateToLogin;
+  final VoidCallback? onContinueAsGuest;
 
   const RegisterScreen({
     super.key,
     required this.currentTheme,
     required this.onRegisterSuccess,
     required this.onNavigateToLogin,
+    this.onContinueAsGuest,
   });
 
   @override
@@ -503,6 +505,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
+                    if (widget.onContinueAsGuest != null) ...[
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: widget.onContinueAsGuest,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Text(
+                            'Voltar para o Feed público (sem login)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: widget.currentTheme.textColor.withOpacity(0.65),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

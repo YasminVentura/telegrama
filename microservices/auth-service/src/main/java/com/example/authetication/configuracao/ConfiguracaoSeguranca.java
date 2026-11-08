@@ -41,8 +41,8 @@ public class ConfiguracaoSeguranca {
             .authorizeHttpRequests(auth -> auth
                 // Libera requisições preflight (OPTIONS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Libera o acesso para registro, login, endpoints internos de cascata e erros
-                .requestMatchers("/auth/registro", "/auth/login", "/auth/interno/**", "/error").permitAll()
+                // Libera o acesso para registro, login, refresh token, logout, endpoints internos de cascata e erros
+                .requestMatchers("/auth/registro", "/auth/login", "/auth/refresh", "/auth/logout", "/auth/interno/**", "/error").permitAll()
                 // Exige autenticação para o resto (ex: logout)
                 .anyRequest().authenticated()
             )
@@ -70,7 +70,7 @@ public class ConfiguracaoSeguranca {
         configuration.setAllowedHeaders(List.of("*"));
         
         // Cabeçalhos expostos na resposta para o cliente (Flutter Web)
-        configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id"));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id", "X-Refresh-Token"));
         
         // Permite envio de credenciais (cookies e autorizações)
         configuration.setAllowCredentials(true);

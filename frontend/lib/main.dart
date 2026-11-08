@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/feed/main_feed_screen.dart';
+import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/data/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/forget_password_screen.dart';
 import 'package:frontend/features/auth/login_screen.dart';
 import 'package:frontend/features/auth/sign_up_screen.dart';
 import 'package:frontend/features/auth/welcome_screen.dart';
-import 'package:frontend/features/auth/forget_password_screen.dart';
-import 'package:frontend/core/themes/app_themes.dart';
+import 'package:frontend/features/feed/main_feed_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,8 +20,28 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final AppTheme _currentTheme = AppTheme.retroGreen;
+  final AuthRepository _authRepository = AuthRepository();
 
-  String _currentRoute = 'welcome';
+  bool _isCheckingSession = true;
+  String _currentRoute = 'feed';
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarSessaoInicial();
+  }
+
+  Future<void> _verificarSessaoInicial() async {
+    final sessaoValida = await _authRepository.restaurarSessao();
+    if (mounted) {
+      setState(() {
+        _isCheckingSession = false;
+        // Se a sessão ainda estiver válida (ou renovada via refreshToken), entra direto no feed logado.
+        // Caso não esteja logado, ainda pode acessar o feed em modo visitante.
+        _currentRoute = sessaoValida ? 'feed' : 'feed';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +51,16 @@ class _MyAppState extends State<MyApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: _getScreen(),
+      home: _isCheckingSession
+          ? Scaffold(
+              backgroundColor: _currentTheme.backgroundColor,
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: _currentTheme.primaryColor,
+                ),
+              ),
+            )
+          : _getScreen(),
     );
   }
 
@@ -41,6 +71,7 @@ class _MyAppState extends State<MyApp> {
           currentTheme: _currentTheme,
           onNavigateToLogin: () => setState(() => _currentRoute = 'login'),
           onNavigateToRegister: () => setState(() => _currentRoute = 'register'),
+          onContinueAsGuest: () => setState(() => _currentRoute = 'feed'),
         );
 
       case 'login':
@@ -50,7 +81,9 @@ class _MyAppState extends State<MyApp> {
             setState(() => _currentRoute = 'feed');
           },
           onNavigateToRegister: () => setState(() => _currentRoute = 'register'),
-          onNavigateToForgotPassword: () => setState(() => _currentRoute = 'forget-password'),
+          onNavigateToForgotPassword: () =>
+              setState(() => _currentRoute = 'forget-password'),
+          onContinueAsGuest: () => setState(() => _currentRoute = 'feed'),
         );
 
       case 'register':
@@ -60,6 +93,7 @@ class _MyAppState extends State<MyApp> {
             setState(() => _currentRoute = 'feed');
           },
           onNavigateToLogin: () => setState(() => _currentRoute = 'login'),
+          onContinueAsGuest: () => setState(() => _currentRoute = 'feed'),
         );
 
       case 'forget-password':
@@ -70,7 +104,16 @@ class _MyAppState extends State<MyApp> {
 
       case 'feed':
       default:
-        return const MainFeedScreen();
+        return MainFeedScreen(
+          onRequireLogin: () => setState(() => _currentRoute = 'login'),
+          onNavigateToRegister: () => setState(() => _currentRoute = 'register'),
+          onLogout: () async {
+            await _authRepository.logout();
+            if (mounted) {
+              setState(() => _currentRoute = 'login');
+            }
+          },
+        );
     }
   }
 }

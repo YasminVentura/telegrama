@@ -7,6 +7,7 @@ class LoginScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess;
   final VoidCallback onNavigateToRegister;
   final VoidCallback onNavigateToForgotPassword;
+  final VoidCallback? onContinueAsGuest;
 
   const LoginScreen({
     super.key,
@@ -14,6 +15,7 @@ class LoginScreen extends StatefulWidget {
     required this.onLoginSuccess,
     required this.onNavigateToRegister,
     required this.onNavigateToForgotPassword,
+    this.onContinueAsGuest,
   });
 
   @override
@@ -368,6 +370,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (widget.onContinueAsGuest != null) ...[
+                      const SizedBox(height: 14),
+                      GestureDetector(
+                        onTap: widget.onContinueAsGuest,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: Text(
+                            'Voltar para o Feed público (sem login)',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: widget.currentTheme.textColor.withOpacity(0.65),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
