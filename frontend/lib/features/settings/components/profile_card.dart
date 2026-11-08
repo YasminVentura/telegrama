@@ -11,6 +11,7 @@ class ProfileCard extends StatelessWidget {
   final String bio;
   final String? location;
   final String? avatarUrl;
+  final String? bannerColor;
   final String followingCount;
   final String followersCount;
   final String artifactsCount;
@@ -32,6 +33,7 @@ class ProfileCard extends StatelessWidget {
     required this.bio,
     this.location,
     this.avatarUrl,
+    this.bannerColor,
     required this.followingCount,
     required this.followersCount,
     required this.artifactsCount,
@@ -191,17 +193,28 @@ class ProfileCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: currentTheme.secondaryColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              border: Border(bottom: BorderSide(color: currentTheme.shadowColor, width: 2)),
-              image: const DecorationImage(
-                image: AssetImage('lib/assets/images/signal_artwork.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+          ValueListenableBuilder<String>(
+            valueListenable: UserRepositoryImpl.currentBannerColorNotifier,
+            builder: (context, myCurrentBannerColor, _) {
+              final String effectiveBannerHex = isOwner
+                  ? myCurrentBannerColor
+                  : (bannerColor ?? UserPreferences.defaultBannerColor);
+              final Color resolvedBannerColor = UserPreferences.parseBannerColor(
+                effectiveBannerHex,
+                fallback: currentTheme.secondaryColor,
+              );
+
+              return Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  color: resolvedBannerColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  border: Border(
+                    bottom: BorderSide(color: currentTheme.shadowColor, width: 2),
+                  ),
+                ),
+              );
+            },
           ),
 
           Padding(

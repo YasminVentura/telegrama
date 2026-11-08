@@ -76,5 +76,9 @@ public class UsuarioPreferencias {
     @Column(name = "avatar_url")
     @Builder.Default
     private String avatarUrl = "lib/assets/images/avatars/avatar_1.webp";
+
+    @Column(name = "banner_color")
+    @Builder.Default
+    private String bannerColor = "#2E4F3E";
 }
 

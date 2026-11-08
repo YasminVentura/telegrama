@@ -14,6 +14,7 @@ class PerfilRespostaDto {
   final String? bio;
   final String? localizacao;
   final String? avatarUrl;
+  final String? bannerColor;
   final String perfil;
   final int seguidoresCount;
   final int seguindoCount;
@@ -29,6 +30,7 @@ class PerfilRespostaDto {
     this.bio,
     this.localizacao,
     this.avatarUrl,
+    this.bannerColor,
     this.perfil = 'USER',
     this.seguidoresCount = 0,
     this.seguindoCount = 0,
@@ -40,6 +42,7 @@ class PerfilRespostaDto {
   factory PerfilRespostaDto.fromJson(
     Map<String, dynamic> json, {
     String? fallbackAvatar,
+    String? fallbackBannerColor,
   }) {
     final Map<String, dynamic>? prefsMap = json['preferencias'] != null
         ? Map<String, dynamic>.from(json['preferencias'])
@@ -48,18 +51,38 @@ class PerfilRespostaDto {
     final String? rawServerAvatar = UserPreferences.extractRawAvatar(json) ??
         UserPreferences.extractRawAvatar(prefsMap);
 
+    final String? rawServerBanner = UserPreferences.extractRawBannerColor(json) ??
+        UserPreferences.extractRawBannerColor(prefsMap);
+
     final String effectiveFallback =
         fallbackAvatar ?? UserRepositoryImpl.selectedAvatarOrDefault;
+
+    final String effectiveBannerFallback =
+        fallbackBannerColor ?? UserRepositoryImpl.selectedBannerColorOrDefault;
 
     final String resolvedAvatar = UserAvatar.resolvePresetAsset(rawServerAvatar) ??
         ((rawServerAvatar != null && rawServerAvatar.isNotEmpty)
             ? rawServerAvatar
             : effectiveFallback);
 
+    final String resolvedBannerColor =
+        (rawServerBanner != null && rawServerBanner.isNotEmpty)
+            ? rawServerBanner
+            : effectiveBannerFallback;
+
     final UserPreferences prefs = prefsMap != null
-        ? UserPreferences.fromJson(prefsMap, fallbackAvatar: resolvedAvatar)
-            .copyWith(avatarUrl: resolvedAvatar)
-        : UserPreferences(avatarUrl: resolvedAvatar);
+        ? UserPreferences.fromJson(
+            prefsMap,
+            fallbackAvatar: resolvedAvatar,
+            fallbackBannerColor: resolvedBannerColor,
+          ).copyWith(
+            avatarUrl: resolvedAvatar,
+            bannerColor: resolvedBannerColor,
+          )
+        : UserPreferences(
+            avatarUrl: resolvedAvatar,
+            bannerColor: resolvedBannerColor,
+          );
 
     return PerfilRespostaDto(
       id: json['id']?.toString() ?? '',
@@ -69,6 +92,7 @@ class PerfilRespostaDto {
       bio: json['bio'],
       localizacao: json['localizacao'] ?? json['location'],
       avatarUrl: resolvedAvatar,
+      bannerColor: resolvedBannerColor,
       perfil: (json['perfil'] ?? json['role'] ?? 'USER').toString().toUpperCase(),
       seguidoresCount: (json['quantidadeSeguidores'] ?? json['seguidoresCount'] ?? 0) as int,
       seguindoCount: (json['quantidadeSeguindo'] ?? json['seguindoCount'] ?? 0) as int,
@@ -127,9 +151,11 @@ abstract class UserRepository {
 }
 
 class UserRepositoryImpl implements UserRepository {
-  /// Notificador global para manter a foto do perfil sincronizada entre Header, Perfil e Posts
+  /// Notificador global para manter a foto e a cor do banner sincronizadas entre Header, Perfil e Posts
   static final ValueNotifier<String> currentAvatarNotifier =
       ValueNotifier<String>(UserPreferences.defaultAvatar);
+  static final ValueNotifier<String> currentBannerColorNotifier =
+      ValueNotifier<String>(UserPreferences.defaultBannerColor);
   static final ValueNotifier<String> currentUserNameNotifier =
       ValueNotifier<String>('User');
   static final ValueNotifier<String> currentUserRoleNotifier =
@@ -148,12 +174,16 @@ class UserRepositoryImpl implements UserRepository {
   static bool get isCurrentUserAdmin =>
       isLoggedIn && currentUserRoleNotifier.value.toUpperCase() == 'ADMIN';
 
-  /// Guarda a foto escolhida pelo usuário para não perder mesmo se o container ainda não tiver reiniciado
+  /// Guarda a foto e a cor de fundo escolhidas pelo usuário na sessão atual
   static String? _userExplicitlyChosenAvatar;
+  static String? _userExplicitlyChosenBannerColor;
   static final Map<String, String> _avatarByNodeId = {};
 
   static String get selectedAvatarOrDefault =>
       _userExplicitlyChosenAvatar ?? currentAvatarNotifier.value;
+
+  static String get selectedBannerColorOrDefault =>
+      _userExplicitlyChosenBannerColor ?? currentBannerColorNotifier.value;
 
   static void setExplicitAvatarChoice(String avatarUrl) {
     final resolved = UserAvatar.resolvePresetAsset(avatarUrl) ?? avatarUrl.trim();
@@ -167,8 +197,18 @@ class UserRepositoryImpl implements UserRepository {
     }
   }
 
+  static void setExplicitBannerColorChoice(String bannerColor) {
+    final resolved = bannerColor.trim();
+    if (resolved.isEmpty) return;
+    _userExplicitlyChosenBannerColor = resolved;
+    if (currentBannerColorNotifier.value != resolved) {
+      currentBannerColorNotifier.value = resolved;
+    }
+  }
+
   static void syncUserSession({
     String? avatarUrl,
+    String? bannerColor,
     String? nome,
     String? nodeId,
     String? email,
@@ -182,6 +222,7 @@ class UserRepositoryImpl implements UserRepository {
           currentUserNodeId!.toLowerCase() != incomingCleanNodeId.toLowerCase()) {
         // Se trocou de usuário logado, limpa a escolha anterior em memória
         _userExplicitlyChosenAvatar = null;
+        _userExplicitlyChosenBannerColor = null;
       }
       currentUserNodeId = incomingCleanNodeId;
     }
@@ -203,9 +244,26 @@ class UserRepositoryImpl implements UserRepository {
       }
     }
 
-    if (fromExplicitUserSelection && avatarUrl != null && avatarUrl.trim().isNotEmpty) {
-      setExplicitAvatarChoice(avatarUrl);
+    if (fromExplicitUserSelection) {
+      if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
+        setExplicitAvatarChoice(avatarUrl);
+      }
+      if (bannerColor != null && bannerColor.trim().isNotEmpty) {
+        setExplicitBannerColorChoice(bannerColor);
+      }
       return;
+    }
+
+    if (_userExplicitlyChosenBannerColor != null &&
+        _userExplicitlyChosenBannerColor!.isNotEmpty) {
+      if (currentBannerColorNotifier.value != _userExplicitlyChosenBannerColor!) {
+        currentBannerColorNotifier.value = _userExplicitlyChosenBannerColor!;
+      }
+    } else if (bannerColor != null && bannerColor.trim().isNotEmpty) {
+      final resolvedBanner = bannerColor.trim();
+      if (currentBannerColorNotifier.value != resolvedBanner) {
+        currentBannerColorNotifier.value = resolvedBanner;
+      }
     }
 
     // Se o usuário já escolheu uma foto na sessão, preserva a escolha dele
@@ -213,10 +271,7 @@ class UserRepositoryImpl implements UserRepository {
       if (currentAvatarNotifier.value != _userExplicitlyChosenAvatar!) {
         currentAvatarNotifier.value = _userExplicitlyChosenAvatar!;
       }
-      return;
-    }
-
-    if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
+    } else if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
       final resolved = UserAvatar.resolvePresetAsset(avatarUrl) ?? avatarUrl.trim();
       if (currentAvatarNotifier.value != resolved) {
         currentAvatarNotifier.value = resolved;
@@ -234,6 +289,7 @@ class UserRepositoryImpl implements UserRepository {
         'email': currentUserEmail,
         'role': currentUserRoleNotifier.value,
         'avatarUrl': currentAvatarNotifier.value,
+        'bannerColor': currentBannerColorNotifier.value,
       });
     }
   }
@@ -248,6 +304,7 @@ class UserRepositoryImpl implements UserRepository {
       email: cached['email']?.toString(),
       role: cached['role']?.toString(),
       avatarUrl: cached['avatarUrl']?.toString(),
+      bannerColor: cached['bannerColor']?.toString(),
     );
   }
 
@@ -256,9 +313,11 @@ class UserRepositoryImpl implements UserRepository {
     currentUserEmail = null;
     currentUserId = null;
     _userExplicitlyChosenAvatar = null;
+    _userExplicitlyChosenBannerColor = null;
     currentUserNameNotifier.value = 'User';
     currentUserRoleNotifier.value = 'USER';
     currentAvatarNotifier.value = UserPreferences.defaultAvatar;
+    currentBannerColorNotifier.value = UserPreferences.defaultBannerColor;
     isLoggedInNotifier.value = false;
     SessionStorage.clearAll();
   }
@@ -314,10 +373,14 @@ class UserRepositoryImpl implements UserRepository {
     final response = await _apiClient.get('/usuarios/me');
     final map = Map<String, dynamic>.from(response);
 
-    // Se o servidor retornou um avatar explícito diferente do default, e o usuário ainda não trocou manualmente nesta sessão:
     final rawServerAvatar = UserPreferences.extractRawAvatar(map) ??
         (map['preferencias'] is Map
             ? UserPreferences.extractRawAvatar(Map<String, dynamic>.from(map['preferencias']))
+            : null);
+
+    final rawServerBanner = UserPreferences.extractRawBannerColor(map) ??
+        (map['preferencias'] is Map
+            ? UserPreferences.extractRawBannerColor(Map<String, dynamic>.from(map['preferencias']))
             : null);
 
     final String effectiveAvatar = _userExplicitlyChosenAvatar ??
@@ -325,9 +388,18 @@ class UserRepositoryImpl implements UserRepository {
         rawServerAvatar ??
         currentAvatarNotifier.value;
 
-    final dto = PerfilRespostaDto.fromJson(map, fallbackAvatar: effectiveAvatar);
+    final String effectiveBannerColor = _userExplicitlyChosenBannerColor ??
+        rawServerBanner ??
+        currentBannerColorNotifier.value;
+
+    final dto = PerfilRespostaDto.fromJson(
+      map,
+      fallbackAvatar: effectiveAvatar,
+      fallbackBannerColor: effectiveBannerColor,
+    );
     syncUserSession(
       avatarUrl: effectiveAvatar,
+      bannerColor: effectiveBannerColor,
       nome: dto.nome,
       nodeId: dto.nodeId,
       email: dto.email,
@@ -349,10 +421,15 @@ class UserRepositoryImpl implements UserRepository {
     final dto = PerfilRespostaDto.fromJson(
       map,
       fallbackAvatar: isMe ? selectedAvatarOrDefault : UserPreferences.defaultAvatar,
+      fallbackBannerColor:
+          isMe ? selectedBannerColorOrDefault : UserPreferences.defaultBannerColor,
     );
     if (dto.isMe || isMe) {
       syncUserSession(
         avatarUrl: _userExplicitlyChosenAvatar ?? dto.preferencias?.avatarUrl ?? dto.avatarUrl,
+        bannerColor: _userExplicitlyChosenBannerColor ??
+            dto.preferencias?.bannerColor ??
+            dto.bannerColor,
         nome: dto.nome,
         nodeId: dto.nodeId,
         email: dto.email,
@@ -374,6 +451,17 @@ class UserRepositoryImpl implements UserRepository {
     if (chosenAvatar != null) {
       setExplicitAvatarChoice(chosenAvatar);
     }
+
+    String? chosenBanner = UserPreferences.extractRawBannerColor(data);
+    if (chosenBanner == null && data['preferencias'] is Map) {
+      chosenBanner = UserPreferences.extractRawBannerColor(
+        Map<String, dynamic>.from(data['preferencias']),
+      );
+    }
+    if (chosenBanner != null) {
+      setExplicitBannerColorChoice(chosenBanner);
+    }
+
     if (data['nome'] != null) {
       syncUserSession(nome: data['nome'].toString());
     }
@@ -383,9 +471,11 @@ class UserRepositoryImpl implements UserRepository {
     final dto = PerfilRespostaDto.fromJson(
       map,
       fallbackAvatar: selectedAvatarOrDefault,
+      fallbackBannerColor: selectedBannerColorOrDefault,
     );
     syncUserSession(
       avatarUrl: selectedAvatarOrDefault,
+      bannerColor: selectedBannerColorOrDefault,
       nome: dto.nome,
       nodeId: dto.nodeId,
       email: dto.email,
@@ -402,6 +492,7 @@ class UserRepositoryImpl implements UserRepository {
     final prefs = UserPreferences.fromJson(
       map,
       fallbackAvatar: selectedAvatarOrDefault,
+      fallbackBannerColor: selectedBannerColorOrDefault,
     );
     if (_userExplicitlyChosenAvatar == null) {
       final rawServerAvatar = UserPreferences.extractRawAvatar(map);
@@ -409,7 +500,16 @@ class UserRepositoryImpl implements UserRepository {
         syncUserSession(avatarUrl: rawServerAvatar);
       }
     }
-    return prefs.copyWith(avatarUrl: selectedAvatarOrDefault);
+    if (_userExplicitlyChosenBannerColor == null) {
+      final rawServerBanner = UserPreferences.extractRawBannerColor(map);
+      if (rawServerBanner != null) {
+        syncUserSession(bannerColor: rawServerBanner);
+      }
+    }
+    return prefs.copyWith(
+      avatarUrl: selectedAvatarOrDefault,
+      bannerColor: selectedBannerColorOrDefault,
+    );
   }
 
   @override
@@ -418,13 +518,21 @@ class UserRepositoryImpl implements UserRepository {
     if (chosenAvatar != null) {
       setExplicitAvatarChoice(chosenAvatar);
     }
+    final chosenBanner = UserPreferences.extractRawBannerColor(prefs);
+    if (chosenBanner != null) {
+      setExplicitBannerColorChoice(chosenBanner);
+    }
     final response = await _apiClient.put('/usuarios/me/preferences', body: prefs);
     final map = Map<String, dynamic>.from(response);
     final updated = UserPreferences.fromJson(
       map,
       fallbackAvatar: selectedAvatarOrDefault,
+      fallbackBannerColor: selectedBannerColorOrDefault,
     );
-    return updated.copyWith(avatarUrl: selectedAvatarOrDefault);
+    return updated.copyWith(
+      avatarUrl: selectedAvatarOrDefault,
+      bannerColor: selectedBannerColorOrDefault,
+    );
   }
 
   @override

@@ -39,6 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int _followingCount = 0;
   bool _isLoadingFollow = false;
   String? _selectedAvatarUrl;
+  String? _selectedBannerColor;
 
   @override
   void initState() {
@@ -72,6 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _followersCount = profile.seguidoresCount;
           _followingCount = profile.seguindoCount;
           _selectedAvatarUrl = profile.preferencias?.avatarUrl ?? profile.avatarUrl;
+          _selectedBannerColor =
+              profile.preferencias?.bannerColor ?? profile.bannerColor;
           _refreshPostsLists(profile.nodeId);
         });
       }
@@ -104,7 +107,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _showEditProfileDialog(PerfilRespostaDto profile, String currentEffectiveAvatar) async {
+  Future<void> _showEditProfileDialog(
+    PerfilRespostaDto profile,
+    String currentEffectiveAvatar,
+    String currentEffectiveBannerColor,
+  ) async {
     final nameController = TextEditingController(text: profile.nome);
     final bioController = TextEditingController(text: profile.bio ?? '');
     final locationController = TextEditingController(
@@ -115,6 +122,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String tempSelectedAvatar =
         UserAvatar.resolvePresetAsset(currentEffectiveAvatar) ??
             currentEffectiveAvatar;
+    String tempSelectedBannerColor = currentEffectiveBannerColor.isNotEmpty
+        ? currentEffectiveBannerColor
+        : UserPreferences.defaultBannerColor;
     bool isSaving = false;
 
     await showDialog(
@@ -125,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Dialog(
               backgroundColor: Colors.transparent,
               child: Container(
-                width: 520,
+                width: 540,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: widget.currentTheme.backgroundColor,
@@ -173,6 +183,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
+
+                      // Preview ao vivo do fundo + avatar
+                      Container(
+                        height: 90,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: UserPreferences.parseBannerColor(
+                            tempSelectedBannerColor,
+                            fallback: widget.currentTheme.secondaryColor,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: widget.currentTheme.shadowColor,
+                            width: 2,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: widget.currentTheme.backgroundColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: widget.currentTheme.shadowColor,
+                              width: 2,
+                            ),
+                          ),
+                          child: UserAvatar(
+                            imageUrl: tempSelectedAvatar,
+                            name: nameController.text.isNotEmpty
+                                ? nameController.text
+                                : profile.nome,
+                            radius: 28,
+                            showShadow: false,
+                            borderWidth: 1.5,
+                            borderColor: widget.currentTheme.shadowColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'COR DE FUNDO DA CAPA',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                          color: widget.currentTheme.textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: UserPreferences.fixedBannerColors.map((hexColor) {
+                          final bool isSelected =
+                              tempSelectedBannerColor.toUpperCase() ==
+                                  hexColor.toUpperCase();
+                          final Color swatchColor =
+                              UserPreferences.parseBannerColor(hexColor);
+                          return GestureDetector(
+                            onTap: () {
+                              setDialogState(() {
+                                tempSelectedBannerColor = hexColor;
+                              });
+                            },
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: swatchColor,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? widget.currentTheme.primaryColor
+                                        : widget.currentTheme.shadowColor,
+                                    width: isSelected ? 3 : 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: widget.currentTheme.shadowColor,
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                child: isSelected
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 20,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 18),
+
                       Text(
                         'FOTO DO PERFIL',
                         style: TextStyle(
@@ -313,8 +425,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       UserRepositoryImpl.setExplicitAvatarChoice(
                                         tempSelectedAvatar,
                                       );
+                                      UserRepositoryImpl
+                                          .setExplicitBannerColorChoice(
+                                        tempSelectedBannerColor,
+                                      );
                                       await _userRepository.updatePreferences({
                                         'avatarUrl': tempSelectedAvatar,
+                                        'bannerColor': tempSelectedBannerColor,
                                       });
                                       await _userRepository.updateProfile({
                                         'nome': nameController.text.trim(),
@@ -322,8 +439,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         'localizacao':
                                             locationController.text.trim(),
                                         'avatarUrl': tempSelectedAvatar,
+                                        'bannerColor': tempSelectedBannerColor,
                                         'preferencias': {
                                           'avatarUrl': tempSelectedAvatar,
+                                          'bannerColor':
+                                              tempSelectedBannerColor,
                                         },
                                       });
                                       if (dialogContext.mounted) {
@@ -332,6 +452,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (mounted) {
                                         setState(() {
                                           _selectedAvatarUrl = tempSelectedAvatar;
+                                          _selectedBannerColor =
+                                              tempSelectedBannerColor;
                                           _fetchProfileData();
                                         });
                                         ScaffoldMessenger.of(context).showSnackBar(
@@ -618,6 +740,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             profile.preferencias?.avatarUrl ??
             profile.avatarUrl ??
             UserRepositoryImpl.currentAvatarNotifier.value;
+        final String effectiveBannerColor = _selectedBannerColor ??
+            profile.preferencias?.bannerColor ??
+            profile.bannerColor ??
+            (isOwner
+                ? UserRepositoryImpl.currentBannerColorNotifier.value
+                : UserPreferences.defaultBannerColor);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -636,6 +764,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? profile.localizacao!
                         : 'Penedo, Brasil',
                     avatarUrl: effectiveAvatar,
+                    bannerColor: effectiveBannerColor,
                     followingCount: _formatCount(_followingCount),
                     followersCount: _formatCount(_followersCount),
                     artifactsCount: '0',
@@ -647,7 +776,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onFollowPressed: _toggleFollow,
                     onMessagePressed: () {},
                     onEditProfilePressed: isOwner
-                        ? () => _showEditProfileDialog(profile, effectiveAvatar)
+                        ? () => _showEditProfileDialog(
+                              profile,
+                              effectiveAvatar,
+                              effectiveBannerColor,
+                            )
                         : null,
                     onAvatarSelected: isOwner ? _updateAvatarPreference : null,
                   ),

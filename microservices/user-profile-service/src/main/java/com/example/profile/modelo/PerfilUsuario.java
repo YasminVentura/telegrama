@@ -53,6 +53,10 @@ public class PerfilUsuario {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "banner_color")
+    @Builder.Default
+    private String bannerColor = "#2E4F3E";
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

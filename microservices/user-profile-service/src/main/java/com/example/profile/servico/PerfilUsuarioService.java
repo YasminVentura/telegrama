@@ -34,6 +34,7 @@ import java.util.UUID;
 public class PerfilUsuarioService {
 
     public static final String AVATAR_PADRAO = "lib/assets/images/avatars/avatar_1.webp";
+    public static final String BANNER_COR_PADRAO = "#2E4F3E";
 
     private final PerfilUsuarioRepository perfilUsuarioRepository;
     private final SeguidorRepository seguidorRepository;
@@ -65,6 +66,10 @@ public class PerfilUsuarioService {
                 }
                 alterou = true;
             }
+            if (atual.getBannerColor() == null || atual.getBannerColor().isBlank()) {
+                atual.setBannerColor(BANNER_COR_PADRAO);
+                alterou = true;
+            }
             if (alterou) {
                 atual = perfilUsuarioRepository.save(atual);
             }
@@ -81,6 +86,7 @@ public class PerfilUsuarioService {
                 .nodeId(dto.getNodeId())
                 .email(dto.getEmail())
                 .avatarUrl(avatar)
+                .bannerColor(BANNER_COR_PADRAO)
                 .perfil(dto.getPerfil() != null ? dto.getPerfil() : Role.USER)
                 .build();
 
@@ -95,6 +101,7 @@ public class PerfilUsuarioService {
                 .twoFactorAuth(false)
                 .theme(TemaVisual.RETRO_GREEN)
                 .avatarUrl(avatar)
+                .bannerColor(BANNER_COR_PADRAO)
                 .build();
         novo.setPreferencias(preferenciasPadrao);
 
@@ -129,8 +136,17 @@ public class PerfilUsuarioService {
             usuario.setAvatarUrl(avatarEfetivo);
         }
 
+        String bannerEfetivo = resolverBannerColor(usuario, preferencias);
+        if (preferencias.getBannerColor() == null || preferencias.getBannerColor().isBlank()) {
+            preferencias.setBannerColor(bannerEfetivo);
+        }
+        if (usuario.getBannerColor() == null || usuario.getBannerColor().isBlank()) {
+            usuario.setBannerColor(bannerEfetivo);
+        }
+
         PerfilRespostaDto perfilDto = perfilUsuarioMapper.paraPerfilDto(usuario);
         perfilDto.setAvatarUrl(avatarEfetivo);
+        perfilDto.setBannerColor(bannerEfetivo);
 
         long seguidores = seguidorRepository.countBySeguido(usuario);
         long seguindo = seguidorRepository.countBySeguidor(usuario);
@@ -159,6 +175,7 @@ public class PerfilUsuarioService {
             UsuarioPreferenciasDto prefsDto = perfilUsuarioMapper.paraPreferenciasDto(preferencias);
             if (prefsDto != null) {
                 prefsDto.setAvatarUrl(avatarEfetivo);
+                prefsDto.setBannerColor(bannerEfetivo);
             }
             perfilDto.setPreferencias(prefsDto);
         }
@@ -178,10 +195,15 @@ public class PerfilUsuarioService {
         if (preferencias.getAvatarUrl() == null || preferencias.getAvatarUrl().isBlank()) {
             preferencias.setAvatarUrl(avatarEfetivo);
         }
+        String bannerEfetivo = resolverBannerColor(usuario, preferencias);
+        if (preferencias.getBannerColor() == null || preferencias.getBannerColor().isBlank()) {
+            preferencias.setBannerColor(bannerEfetivo);
+        }
 
         UsuarioPreferenciasDto prefsDto = perfilUsuarioMapper.paraPreferenciasDto(preferencias);
         if (prefsDto != null) {
             prefsDto.setAvatarUrl(avatarEfetivo);
+            prefsDto.setBannerColor(bannerEfetivo);
         }
         return prefsDto;
     }
@@ -211,10 +233,19 @@ public class PerfilUsuarioService {
             prefs.setAvatarUrl(novoAvatar);
         }
 
+        if (dto.getBannerColor() != null && !dto.getBannerColor().isBlank()) {
+            String novaCor = dto.getBannerColor().trim();
+            usuario.setBannerColor(novaCor);
+            prefs.setBannerColor(novaCor);
+        }
+
         if (dto.getPreferencias() != null) {
             atualizarCamposPreferencias(prefs, dto.getPreferencias());
             if (dto.getPreferencias().getAvatarUrl() != null && !dto.getPreferencias().getAvatarUrl().isBlank()) {
                 usuario.setAvatarUrl(dto.getPreferencias().getAvatarUrl().trim());
+            }
+            if (dto.getPreferencias().getBannerColor() != null && !dto.getPreferencias().getBannerColor().isBlank()) {
+                usuario.setBannerColor(dto.getPreferencias().getBannerColor().trim());
             }
         }
         usuarioPreferenciasRepository.save(prefs);
@@ -222,8 +253,10 @@ public class PerfilUsuarioService {
 
         PerfilUsuario salvo = perfilUsuarioRepository.save(usuario);
         String avatarEfetivo = resolverAvatar(salvo, salvo.getPreferencias());
+        String bannerEfetivo = resolverBannerColor(salvo, salvo.getPreferencias());
         PerfilRespostaDto resposta = perfilUsuarioMapper.paraPerfilDto(salvo);
         resposta.setAvatarUrl(avatarEfetivo);
+        resposta.setBannerColor(bannerEfetivo);
 
         long seguidores = seguidorRepository.countBySeguido(salvo);
         long seguindo = seguidorRepository.countBySeguidor(salvo);
@@ -234,6 +267,7 @@ public class PerfilUsuarioService {
             UsuarioPreferenciasDto prefsDto = perfilUsuarioMapper.paraPreferenciasDto(salvo.getPreferencias());
             if (prefsDto != null) {
                 prefsDto.setAvatarUrl(avatarEfetivo);
+                prefsDto.setBannerColor(bannerEfetivo);
             }
             resposta.setPreferencias(prefsDto);
         }
@@ -251,16 +285,27 @@ public class PerfilUsuarioService {
         }
 
         atualizarCamposPreferencias(prefs, dto);
+        boolean alterouUsuario = false;
         if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
             String novoAvatar = dto.getAvatarUrl().trim();
             prefs.setAvatarUrl(novoAvatar);
             usuario.setAvatarUrl(novoAvatar);
+            alterouUsuario = true;
+        }
+        if (dto.getBannerColor() != null && !dto.getBannerColor().isBlank()) {
+            String novaCor = dto.getBannerColor().trim();
+            prefs.setBannerColor(novaCor);
+            usuario.setBannerColor(novaCor);
+            alterouUsuario = true;
+        }
+        if (alterouUsuario) {
             perfilUsuarioRepository.save(usuario);
         }
         UsuarioPreferencias salva = usuarioPreferenciasRepository.save(prefs);
         UsuarioPreferenciasDto respostaDto = perfilUsuarioMapper.paraPreferenciasDto(salva);
         if (respostaDto != null) {
             respostaDto.setAvatarUrl(resolverAvatar(usuario, salva));
+            respostaDto.setBannerColor(resolverBannerColor(usuario, salva));
         }
         return respostaDto;
     }
@@ -489,6 +534,7 @@ public class PerfilUsuarioService {
                 .nodeId(nodeIdFormatado)
                 .email(emailFallback)
                 .avatarUrl(AVATAR_PADRAO)
+                .bannerColor(BANNER_COR_PADRAO)
                 .perfil(auth.isAdmin() ? Role.ADMIN : Role.USER)
                 .build();
 
@@ -496,6 +542,7 @@ public class PerfilUsuarioService {
                 .usuario(novo)
                 .theme(TemaVisual.RETRO_GREEN)
                 .avatarUrl(AVATAR_PADRAO)
+                .bannerColor(BANNER_COR_PADRAO)
                 .build();
         novo.setPreferencias(prefs);
 
@@ -530,6 +577,9 @@ public class PerfilUsuarioService {
         if (dto.getAvatarUrl() != null && !dto.getAvatarUrl().isBlank()) {
             prefs.setAvatarUrl(dto.getAvatarUrl().trim());
         }
+        if (dto.getBannerColor() != null && !dto.getBannerColor().isBlank()) {
+            prefs.setBannerColor(dto.getBannerColor().trim());
+        }
     }
 
     private String resolverAvatar(PerfilUsuario usuario, UsuarioPreferencias prefs) {
@@ -542,12 +592,25 @@ public class PerfilUsuarioService {
         return AVATAR_PADRAO;
     }
 
+    private String resolverBannerColor(PerfilUsuario usuario, UsuarioPreferencias prefs) {
+        if (prefs != null && prefs.getBannerColor() != null && !prefs.getBannerColor().isBlank()) {
+            return prefs.getBannerColor();
+        }
+        if (usuario.getBannerColor() != null && !usuario.getBannerColor().isBlank()) {
+            return usuario.getBannerColor();
+        }
+        return BANNER_COR_PADRAO;
+    }
+
     private UsuarioPreferencias obterOuCriarPreferencias(PerfilUsuario usuario) {
         return usuarioPreferenciasRepository.findByUsuario(usuario)
                 .orElseGet(() -> {
                     String avatarInicial = (usuario.getAvatarUrl() != null && !usuario.getAvatarUrl().isBlank())
                             ? usuario.getAvatarUrl()
                             : AVATAR_PADRAO;
+                    String bannerInicial = (usuario.getBannerColor() != null && !usuario.getBannerColor().isBlank())
+                            ? usuario.getBannerColor()
+                            : BANNER_COR_PADRAO;
                     UsuarioPreferencias nova = UsuarioPreferencias.builder()
                             .usuario(usuario)
                             .privateFrequencyMode(false)
@@ -559,9 +622,9 @@ public class PerfilUsuarioService {
                             .twoFactorAuth(false)
                             .theme(TemaVisual.RETRO_GREEN)
                             .avatarUrl(avatarInicial)
+                            .bannerColor(bannerInicial)
                             .build();
                     return usuarioPreferenciasRepository.save(nova);
                 });
     }
 }
-

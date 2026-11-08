@@ -21,6 +21,7 @@ public class PerfilRespostaDto {
     private String bio;
     private String localizacao;
     private String avatarUrl;
+    private String bannerColor;
     private Role perfil;
     private long quantidadeSeguidores;
     private long quantidadeSeguindo;

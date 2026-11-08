@@ -23,5 +23,8 @@ public class UsuarioPreferenciasDto {
 
     @JsonAlias({"fotoPerfil", "profilePhoto", "avatar", "avatar_url"})
     private String avatarUrl;
+
+    @JsonAlias({"corCapa", "banner_color"})
+    private String bannerColor;
 }
 
