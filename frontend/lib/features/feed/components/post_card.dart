@@ -274,21 +274,7 @@ class _PostCardState extends State<PostCard> {
 
                   Row(
                     children: [
-                      if (widget.frequencyTag != null && widget.frequencyTag!.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: widget.currentTheme.secondaryColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-                          ),
-                          child: Text(
-                            widget.frequencyTag!,
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.currentTheme.shadowColor),
-                          ),
-                        ),
                       if (widget.canDelete && widget.onDeletePressed != null) ...[
-                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: widget.onDeletePressed,
                           child: MouseRegion(

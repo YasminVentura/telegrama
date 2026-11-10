@@ -114,11 +114,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ) async {
     final nameController = TextEditingController(text: profile.nome);
     final bioController = TextEditingController(text: profile.bio ?? '');
-    final locationController = TextEditingController(
-      text: (profile.localizacao != null && profile.localizacao!.isNotEmpty)
-          ? profile.localizacao!
-          : 'Penedo, Brasil',
-    );
     String tempSelectedAvatar =
         UserAvatar.resolvePresetAsset(currentEffectiveAvatar) ??
             currentEffectiveAvatar;
@@ -370,12 +365,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 14),
                       _buildDialogField(
-                        label: 'LOCALIZAÇÃO',
-                        controller: locationController,
-                        hintText: 'Ex: Penedo, Brasil',
-                      ),
-                      const SizedBox(height: 14),
-                      _buildDialogField(
                         label: 'BIOGRAFIA',
                         controller: bioController,
                         hintText: 'Conte um pouco sobre seu nó...',
@@ -436,8 +425,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       await _userRepository.updateProfile({
                                         'nome': nameController.text.trim(),
                                         'bio': bioController.text.trim(),
-                                        'localizacao':
-                                            locationController.text.trim(),
                                         'avatarUrl': tempSelectedAvatar,
                                         'bannerColor': tempSelectedBannerColor,
                                         'preferencias': {
@@ -900,9 +887,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isSaved: post.salvoPeloUsuario,
                 isReposted: post.repostadoPeloUsuario,
                 showRepostBadge: isRepostInProfilePostsTab,
-                repostedByLabel: isOwner
-                    ? 'REPOSTADO POR VOCÊ'
-                    : 'REPOSTADO POR @${profile.nodeId.replaceAll('@', '').toUpperCase()}',
+                repostedByLabel: 'REPOSTADO',
                 canDelete: canDeletePost && post.id.isNotEmpty,
                 onDeletePressed: () => _deletePost(post.id, profile.nodeId),
                 onLikePressed: () async {

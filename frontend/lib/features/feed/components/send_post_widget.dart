@@ -146,22 +146,6 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
               Row(
                 children: [
                   PostAttachmentButton(
-                    icon: Icons.image_outlined,
-                    onTap: () {},
-                    primaryColor: widget.currentTheme.primaryColor,
-                    shadowColor: widget.currentTheme.shadowColor,
-                    backgroundColor: widget.currentTheme.backgroundColor,
-                  ),
-                  const SizedBox(width: 8),
-                  PostAttachmentButton(
-                    icon: Icons.videocam_outlined,
-                    onTap: () {},
-                    primaryColor: widget.currentTheme.primaryColor,
-                    shadowColor: widget.currentTheme.shadowColor,
-                    backgroundColor: widget.currentTheme.backgroundColor,
-                  ),
-                  const SizedBox(width: 8),
-                  PostAttachmentButton(
                     icon: Icons.sentiment_satisfied_outlined,
                     onTap: () {},
                     primaryColor: widget.currentTheme.primaryColor,

@@ -387,8 +387,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                     _buildTextField('NODE ID', _nodeIdController, subtitle: 'telegrama.zone/${_nodeIdController.text}', readOnly: true),
                     const SizedBox(height: 16),
                     _buildTextField('BIO', _bioController, maxLines: 2, hintText: 'Exploring high-contrast textures...'),
-                    const SizedBox(height: 16),
-                    _buildTextField('LOCATION', _locationController, hintText: 'ex: Penedo, Brasil'),
                   ],
                 ),
               ),

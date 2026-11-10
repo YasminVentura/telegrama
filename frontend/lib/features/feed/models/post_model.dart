@@ -107,7 +107,7 @@ class PostModel {
       content: json['content'] ?? json['conteudo'] ?? '',
       createdAt: data,
       timeAgo: json['timeAgo'] ?? _calcularTempoAtras(data),
-      frequencyTag: json['frequencyTag'] ?? 'GENERAL_SIGNAL',
+      frequencyTag: json['frequencyTag'],
       likes: (json['likesCount'] ?? json['likes'] ?? json['quantidadeCurtidas'] ?? 0) as int,
       comments: (json['commentsCount'] ?? json['comments'] ?? json['quantidadeComentarios'] ?? 0) as int,
       reposts: (json['repostsCount'] ?? json['reposts'] ?? json['quantidadeReposts'] ?? 0) as int,

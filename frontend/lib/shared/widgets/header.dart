@@ -4,7 +4,6 @@ import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/shared/components/hover_icon_button.dart';
 import 'package:frontend/shared/components/global_search_modal.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
-import 'package:frontend/shared/repositories/notification_repository.dart';
 
 class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
   final AppTheme currentTheme;
@@ -32,14 +31,11 @@ class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _HeaderWidgetState extends State<HeaderWidget> {
-  final NotificationRepository _notificationRepository = NotificationRepository();
   final UserRepository _userRepository = UserRepositoryImpl();
-  int _unreadNotificationsCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _unreadNotificationsCount = _notificationRepository.unreadCount;
     if (UserRepositoryImpl.isLoggedIn && UserRepositoryImpl.currentUserNodeId == null) {
       _userRepository.getMyProfile().catchError((_) => PerfilRespostaDto(
             id: '',
@@ -128,23 +124,6 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                           color: widget.currentTheme.textColor.withValues(alpha: 0.6),
                         ),
                         prefixIcon: Icon(Icons.search, color: widget.currentTheme.textColor, size: 20),
-                        suffixIcon: Container(
-                          margin: const EdgeInsets.all(8),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: widget.currentTheme.backgroundColor,
-                            border: Border.all(color: widget.currentTheme.shadowColor, width: 1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '⌘K',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: widget.currentTheme.textColor,
-                            ),
-                          ),
-                        ),
                         filled: true,
                         fillColor: widget.currentTheme.backgroundColor,
                         contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -164,34 +143,6 @@ class _HeaderWidgetState extends State<HeaderWidget> {
               if (autenticado)
                 Row(
                   children: [
-                    HoverIconButton(
-                      icon: Icon(
-                        Icons.notifications_outlined,
-                        color: widget.currentTheme.shadowColor,
-                        size: 20,
-                      ),
-                      hasNotification: _unreadNotificationsCount > 0,
-                      notificationCount: _unreadNotificationsCount > 0 ? _unreadNotificationsCount : null,
-                      primaryColor: widget.currentTheme.primaryColor,
-                      shadowColor: widget.currentTheme.shadowColor,
-                      backgroundColor: widget.currentTheme.backgroundColor,
-                      destinationRoute: 'Notifications',
-                      onNavigate: widget.onNavigate,
-                    ),
-                    const SizedBox(width: 12),
-                    HoverIconButton(
-                      icon: Icon(
-                        Icons.mail_outline,
-                        color: widget.currentTheme.shadowColor,
-                        size: 20,
-                      ),
-                      primaryColor: widget.currentTheme.primaryColor,
-                      shadowColor: widget.currentTheme.shadowColor,
-                      backgroundColor: widget.currentTheme.backgroundColor,
-                      destinationRoute: 'Wave Chats',
-                      onNavigate: widget.onNavigate,
-                    ),
-                    const SizedBox(width: 12),
                     HoverIconButton(
                       icon: Icon(
                         Icons.settings_outlined,

@@ -239,15 +239,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  '• Transmissão & Respostas',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: widget.currentTheme.textColor.withValues(alpha: 0.6),
-                  ),
-                ),
               ],
             ),
           ),
@@ -267,8 +258,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         content: _postData!.content,
                         authorAvatarUrl: _postData!.authorAvatarUrl,
                         imageUrl: _postData!.imageUrl,
-                        frequencyTag:
-                            _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
+                        frequencyTag: _postData!.frequencyTag,
                         exactTime: _postData!.timeAgo,
                         likesCount: _postData!.likesCount,
                         commentsCount: _postData!.commentsCount,

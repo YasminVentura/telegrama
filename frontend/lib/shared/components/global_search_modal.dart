@@ -116,8 +116,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
         _results.where((r) => r.category == SearchCategory.users).toList();
     final postResults =
         _results.where((r) => r.category == SearchCategory.posts).toList();
-    final zoneResults =
-        _results.where((r) => r.category == SearchCategory.zones).toList();
 
     return Container(
       width: 640,
@@ -186,37 +184,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                       color: widget.currentTheme.primaryColor,
                     ),
                   ),
-                const SizedBox(width: 16),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: widget.currentTheme.shadowColor.withValues(
-                          alpha: 0.1,
-                        ),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: widget.currentTheme.shadowColor,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        'ESC',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: widget.currentTheme.textColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -240,8 +207,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                 _buildFilterChip('Perfis', SearchCategory.users, Icons.person_outline),
                 const SizedBox(width: 8),
                 _buildFilterChip('Posts', SearchCategory.posts, Icons.article_outlined),
-                const SizedBox(width: 8),
-                _buildFilterChip('Zonas', SearchCategory.zones, Icons.grid_view_rounded),
               ],
             ),
           ),
@@ -296,26 +261,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                           Icons.article_outlined,
                         ),
                         ...postResults.map(_buildPostResultItem),
-                      ],
-                      if (zoneResults.isNotEmpty) ...[
-                        if (userResults.isNotEmpty || postResults.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 6,
-                            ),
-                            child: Divider(
-                              color: widget.currentTheme.shadowColor.withValues(
-                                alpha: 0.25,
-                              ),
-                              thickness: 1.5,
-                            ),
-                          ),
-                        _buildSectionHeader(
-                          'ZONAS',
-                          Icons.grid_view_rounded,
-                        ),
-                        ...zoneResults.map(_buildZoneResultItem),
                       ],
                     ],
                   ),
@@ -613,78 +558,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                   size: 15,
                   color: widget.currentTheme.textColor.withValues(alpha: 0.5),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Item de Zona
-  Widget _buildZoneResultItem(SearchResult item) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: InkWell(
-        onTap: () => _onItemTapped(item),
-        hoverColor: widget.currentTheme.primaryColor.withValues(alpha: 0.1),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: widget.currentTheme.secondaryColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: widget.currentTheme.shadowColor,
-                    width: 1.5,
-                  ),
-                ),
-                child: Icon(
-                  Icons.grid_view_rounded,
-                  size: 20,
-                  color: widget.currentTheme.textColor,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: widget.currentTheme.textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: widget.currentTheme.textColor.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildTypeBadge(
-                label: 'ZONA',
-                icon: Icons.hub_outlined,
-                badgeColor: widget.currentTheme.secondaryColor,
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: widget.currentTheme.textColor.withValues(alpha: 0.5),
               ),
             ],
           ),

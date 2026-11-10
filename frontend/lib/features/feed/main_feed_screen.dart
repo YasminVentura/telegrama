@@ -5,8 +5,6 @@ import 'package:frontend/features/feed/components/send_post_widget.dart';
 import 'package:frontend/features/feed/components/post_card.dart';
 import 'package:frontend/features/feed/post_detail_screen.dart';
 import 'package:frontend/features/settings/profile_screen.dart';
-import 'package:frontend/features/zones/explore_zones_screen.dart';
-import 'package:frontend/features/chats/wave_chats_screen.dart';
 import 'package:frontend/features/settings/settings_screen.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
@@ -187,7 +185,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Conecte-se à sua conta para publicar transmissões, comentar, curtir e explorar perfis e zonas.',
+                  'Conecte-se à sua conta para publicar transmissões, comentar, curtir e explorar perfis.',
                   style: TextStyle(
                     fontSize: 13.5,
                     color: _currentTheme.textColor.withValues(alpha: 0.8),
@@ -273,15 +271,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                             }
                           },
                         )
-                      : rotaEfetiva == 'Explore Zones'
-                          ? ExploreZonesScreen(
-                              currentTheme: _currentTheme,
-                            )
-                          : rotaEfetiva == 'Wave Chats'
-                              ? WaveChatsScreen(
-                                  currentTheme: _currentTheme,
-                                )
-                              : rotaEfetiva == 'Settings'
+                      : rotaEfetiva == 'Settings'
                                   ? SettingsScreen(
                                       currentTheme: _currentTheme,
                                       onThemeChanged: (newTheme) {
