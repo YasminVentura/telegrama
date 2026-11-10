@@ -872,6 +872,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: posts.map((post) {
             final bool isPostFromProfileOwner = post.authorHandle.replaceAll('@', '').toLowerCase() ==
                 profile.nodeId.replaceAll('@', '').toLowerCase();
+            final bool isRepostInProfilePostsTab =
+                _selectedTab == 0 && (!isPostFromProfileOwner || post.repostadoNoPerfil);
             final bool canDeletePost = UserRepositoryImpl.isCurrentUserAdmin ||
                 UserRepositoryImpl.isCurrentUser(
                   post.authorHandle,
@@ -896,6 +898,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 repostsCount: post.repostsCount,
                 isLiked: post.curtidoPeloUsuario,
                 isSaved: post.salvoPeloUsuario,
+                isReposted: post.repostadoPeloUsuario,
+                showRepostBadge: isRepostInProfilePostsTab,
+                repostedByLabel: isOwner
+                    ? 'REPOSTADO POR VOCÊ'
+                    : 'REPOSTADO POR @${profile.nodeId.replaceAll('@', '').toUpperCase()}',
                 canDelete: canDeletePost && post.id.isNotEmpty,
                 onDeletePressed: () => _deletePost(post.id, profile.nodeId),
                 onLikePressed: () async {
@@ -920,7 +927,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 },
                 onCommentPressed: () => _openPostDetails(post, profile.nodeId),
                 onTap: () => _openPostDetails(post, profile.nodeId),
-                onRepostPressed: () {},
+                onRepostPressed: () async {
+                  if (post.id.isNotEmpty) {
+                    final atualizado = await _postRepository.repost(post.id);
+                    if (mounted) {
+                      setState(() {
+                        _refreshPostsLists(profile.nodeId);
+                      });
+                      if (atualizado != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              atualizado.repostadoPeloUsuario
+                                  ? 'Transmissão repostada no seu perfil!'
+                                  : 'Repost removido do seu perfil.',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
               ),
             );
           }).toList(),

@@ -42,6 +42,9 @@ public class Postagem {
     private Set<String> salvos = new HashSet<>();
 
     @Builder.Default
+    private Set<String> reposts = new HashSet<>();
+
+    @Builder.Default
     private List<ComentarioPostagem> comentarios = new ArrayList<>();
 
     @Builder.Default
@@ -49,6 +52,9 @@ public class Postagem {
 
     @Builder.Default
     private int quantidadeComentarios = 0;
+
+    @Builder.Default
+    private int quantidadeReposts = 0;
 
     @CreatedDate
     private LocalDateTime criadoEm;

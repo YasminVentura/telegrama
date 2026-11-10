@@ -388,6 +388,7 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                     repostsCount: post.repostsCount,
                                                     isLiked: post.curtidoPeloUsuario,
                                                     isSaved: post.salvoPeloUsuario,
+                                                    isReposted: post.repostadoPeloUsuario,
                                                     canDelete: canDeletePost && post.id.isNotEmpty,
                                                     onDeletePressed: () => _excluirPostagem(post.id),
                                                     onProfileTap: autenticado
@@ -433,10 +434,32 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                                                     },
                                                     onCommentPressed: () => _abrirDetalhesPost(post),
                                                     onTap: () => _abrirDetalhesPost(post),
-                                                    onRepostPressed: () {
-                                                      _exigirAutenticacao(
-                                                        mensagem: 'Faça login para interagir com transmissões.',
-                                                      );
+                                                    onRepostPressed: () async {
+                                                      if (!_exigirAutenticacao(
+                                                        mensagem: 'Faça login para repostar transmissões.',
+                                                      )) {
+                                                        return;
+                                                      }
+                                                      if (post.id.isNotEmpty) {
+                                                        final atualizado = await _postRepository.repost(post.id);
+                                                        if (atualizado != null && mounted) {
+                                                          setState(() {
+                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
+                                                            if (idx != -1) {
+                                                              _posts[idx] = atualizado;
+                                                            }
+                                                          });
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                atualizado.repostadoPeloUsuario
+                                                                    ? 'Transmissão repostada no seu perfil!'
+                                                                    : 'Repost removido do seu perfil.',
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+                                                      }
                                                     },
                                                   );
                                                 }),

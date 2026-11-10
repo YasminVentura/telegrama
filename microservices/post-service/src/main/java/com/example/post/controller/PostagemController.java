@@ -139,6 +139,17 @@ public class PostagemController {
         return new RespostaEnvelopeDto<>(postagem);
     }
 
+    @PostMapping(path = {"/{id}/repostar", "/{id}/repost"})
+    @ResponseStatus(HttpStatus.OK)
+    public RespostaEnvelopeDto<PostagemRespostaDto> alternarRepost(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
+        UsuarioAutenticado usuarioLogado = extrairUsuario(authentication);
+        PostagemRespostaDto postagem = postagemService.alternarRepost(id, usuarioLogado);
+        return new RespostaEnvelopeDto<>(postagem);
+    }
+
     @GetMapping(path = {"/{id}/comentarios", "/{id}/comments"})
     @ResponseStatus(HttpStatus.OK)
     public RespostaEnvelopeDto<List<ComentarioRespostaDto>> listarComentarios(

@@ -18,8 +18,10 @@ class PostDetailCard extends StatelessWidget {
   final int repostsCount;
   final bool isLiked;
   final bool isSaved;
+  final bool isReposted;
   final VoidCallback? onLikePressed;
   final VoidCallback? onSavePressed;
+  final VoidCallback? onRepostPressed;
   final VoidCallback? onCommentPressed;
 
   const PostDetailCard({
@@ -37,8 +39,10 @@ class PostDetailCard extends StatelessWidget {
     required this.repostsCount,
     this.isLiked = false,
     this.isSaved = false,
+    this.isReposted = false,
     this.onLikePressed,
     this.onSavePressed,
+    this.onRepostPressed,
     this.onCommentPressed,
   });
 
@@ -238,6 +242,12 @@ class PostDetailCard extends StatelessWidget {
                 Icons.chat_bubble_outline,
                 onTap: onCommentPressed,
                 isActive: false,
+                activeColor: currentTheme.primaryColor,
+              ),
+              _buildActionIcon(
+                Icons.repeat,
+                onTap: onRepostPressed,
+                isActive: isReposted,
                 activeColor: currentTheme.primaryColor,
               ),
               _buildActionIcon(

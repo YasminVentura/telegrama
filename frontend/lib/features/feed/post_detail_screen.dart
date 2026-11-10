@@ -108,6 +108,25 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
+  Future<void> _togglePostRepost() async {
+    if (_postData == null) return;
+    final atualizado = await _postRepository.repost(widget.postId);
+    if (atualizado != null && mounted) {
+      setState(() {
+        _postData = atualizado;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            atualizado.repostadoPeloUsuario
+                ? 'Transmissão repostada no seu perfil!'
+                : 'Repost removido do seu perfil.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _toggleCommentLike(String commentId) async {
     await _postRepository.likeComment(widget.postId, commentId);
     final comments = await _postRepository.getCommentsForPost(widget.postId);
@@ -256,8 +275,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         repostsCount: _postData!.repostsCount,
                         isLiked: _postData!.curtidoPeloUsuario,
                         isSaved: _postData!.salvoPeloUsuario,
+                        isReposted: _postData!.repostadoPeloUsuario,
                         onLikePressed: _togglePostLike,
                         onSavePressed: _togglePostSave,
+                        onRepostPressed: _togglePostRepost,
                         onCommentPressed: () {
                           _cancelReplyToComment();
                           _replyFocusNode.requestFocus();

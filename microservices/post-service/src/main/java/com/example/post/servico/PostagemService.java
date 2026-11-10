@@ -53,8 +53,10 @@ public class PostagemService {
                 .conteudo(requisicao.getContent())
                 .curtidas(new HashSet<>())
                 .salvos(new HashSet<>())
+                .reposts(new HashSet<>())
                 .quantidadeCurtidas(0)
                 .quantidadeComentarios(0)
+                .quantidadeReposts(0)
                 .criadoEm(agora)
                 .atualizadoEm(agora)
                 .build();
@@ -79,25 +81,57 @@ public class PostagemService {
     }
 
     public List<PostagemRespostaDto> listarPostagensPorUsuario(String autorNodeId, UsuarioAutenticado usuarioLogado) {
-        if (autorNodeId == null || autorNodeId.isBlank()) {
+        List<String> variacoes = construirVariacoesNodeId(autorNodeId);
+        if (variacoes.isEmpty()) {
             return Collections.emptyList();
         }
-        String limpo = autorNodeId.trim();
-        List<String> nodeIds = new ArrayList<>();
-        nodeIds.add(limpo);
-        if (limpo.startsWith("@")) {
-            nodeIds.add(limpo.substring(1));
-        } else {
-            nodeIds.add("@" + limpo);
+
+        List<Postagem> proprias = postagemRepository.findByAutorNodeIdInOrderByCriadoEmDesc(variacoes);
+        List<Postagem> repostadas = postagemRepository.findByRepostsInOrderByCriadoEmDesc(variacoes);
+
+        Map<String, Postagem> unificadas = new LinkedHashMap<>();
+        Set<String> idsRepostadosPeloPerfil = new HashSet<>();
+
+        for (Postagem p : repostadas) {
+            if (p.getId() != null) {
+                unificadas.put(p.getId(), p);
+                idsRepostadosPeloPerfil.add(p.getId());
+            }
+        }
+        for (Postagem p : proprias) {
+            if (p.getId() != null) {
+                unificadas.put(p.getId(), p);
+            }
         }
 
-        List<Postagem> postagens = postagemRepository.findByAutorNodeIdInOrderByCriadoEmDesc(nodeIds);
+        List<Postagem> postagens = new ArrayList<>(unificadas.values());
+        postagens.sort((a, b) -> {
+            LocalDateTime da = a.getCriadoEm() != null ? a.getCriadoEm() : LocalDateTime.MIN;
+            LocalDateTime db = b.getCriadoEm() != null ? b.getCriadoEm() : LocalDateTime.MIN;
+            return db.compareTo(da);
+        });
 
         List<String> identificadores = extrairIdentificadores(postagens);
         Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
 
+        String cleanPerfilAlvo = autorNodeId.trim().replaceAll("@", "");
+        String handlePerfilAlvo = "@" + cleanPerfilAlvo;
+
         return postagens.stream()
-                .map(p -> mapearParaRespostaDto(p, usuarioLogado, obterPerfilDoMap(p, perfisMap)))
+                .map(p -> {
+                    PostagemRespostaDto dto = mapearParaRespostaDto(p, usuarioLogado, obterPerfilDoMap(p, perfisMap));
+                    String autorPostClean = p.getAutorNodeId() != null
+                            ? p.getAutorNodeId().trim().replaceAll("@", "")
+                            : "";
+                    boolean naoEhAutorDoPerfil = !autorPostClean.equalsIgnoreCase(cleanPerfilAlvo);
+                    boolean foiRepostadoPeloPerfil = (p.getId() != null && idsRepostadosPeloPerfil.contains(p.getId()))
+                            || naoEhAutorDoPerfil;
+                    if (foiRepostadoPeloPerfil) {
+                        dto.setRepostadoNoPerfil(true);
+                        dto.setRepostadoPor(handlePerfilAlvo);
+                    }
+                    return dto;
+                })
                 .toList();
     }
 
@@ -177,7 +211,6 @@ public class PostagemService {
         String handleNodeId = "@" + cleanNodeId;
         String userId = usuarioLogado.getId();
 
-        // Verifica se este usuário já curtiu por qualquer variação do seu identificador (@nodeId, nodeId ou UUID)
         boolean jaCurtiu = postagem.getCurtidas().removeIf(c ->
                 c.equalsIgnoreCase(rawNodeId)
                 || c.equalsIgnoreCase(cleanNodeId)
@@ -193,7 +226,7 @@ public class PostagemService {
         postagem.setAtualizadoEm(LocalDateTime.now());
 
         Postagem atualizada = postagemRepository.save(postagem);
-        
+
         List<String> identificadores = extrairIdentificadores(List.of(atualizada));
         Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
 
@@ -223,6 +256,41 @@ public class PostagemService {
         if (!jaSalvo && !handleNodeId.equals("@")) {
             postagem.getSalvos().add(handleNodeId);
         }
+
+        Postagem atualizada = postagemRepository.save(postagem);
+
+        List<String> identificadores = extrairIdentificadores(List.of(atualizada));
+        Map<String, PerfilResumidoDto> perfisMap = buscarPerfisEmLote(identificadores);
+
+        return mapearParaRespostaDto(atualizada, usuarioLogado, obterPerfilDoMap(atualizada, perfisMap));
+    }
+
+    public PostagemRespostaDto alternarRepost(String id, UsuarioAutenticado usuarioLogado) {
+        Postagem postagem = postagemRepository.findById(id)
+                .orElseThrow(() -> new PostagemNaoEncontradaException("Publicação não encontrada com id: " + id));
+
+        if (postagem.getReposts() == null) {
+            postagem.setReposts(new HashSet<>());
+        }
+
+        String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
+        String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
+        String handleNodeId = "@" + cleanNodeId;
+        String userId = usuarioLogado.getId();
+
+        boolean jaRepostou = postagem.getReposts().removeIf(r ->
+                r.equalsIgnoreCase(rawNodeId)
+                || r.equalsIgnoreCase(cleanNodeId)
+                || r.equalsIgnoreCase(handleNodeId)
+                || (userId != null && r.equalsIgnoreCase(userId))
+        );
+
+        if (!jaRepostou && !handleNodeId.equals("@")) {
+            postagem.getReposts().add(handleNodeId);
+        }
+
+        postagem.setQuantidadeReposts(postagem.getReposts().size());
+        postagem.setAtualizadoEm(LocalDateTime.now());
 
         Postagem atualizada = postagemRepository.save(postagem);
 
@@ -503,6 +571,7 @@ public class PostagemService {
     private PostagemRespostaDto mapearParaRespostaDto(Postagem postagem, UsuarioAutenticado usuarioLogado, PerfilResumidoDto perfilAtual) {
         boolean curtido = false;
         boolean salvo = false;
+        boolean repostado = false;
         if (usuarioLogado != null) {
             String rawNodeId = usuarioLogado.getNodeId() != null ? usuarioLogado.getNodeId().trim() : "";
             String cleanNodeId = rawNodeId.startsWith("@") ? rawNodeId.substring(1) : rawNodeId;
@@ -525,6 +594,14 @@ public class PostagemService {
                         || (userId != null && s.equalsIgnoreCase(userId))
                 );
             }
+            if (postagem.getReposts() != null) {
+                repostado = postagem.getReposts().stream().anyMatch(r ->
+                        r.equalsIgnoreCase(rawNodeId)
+                        || r.equalsIgnoreCase(cleanNodeId)
+                        || r.equalsIgnoreCase(handleNodeId)
+                        || (userId != null && r.equalsIgnoreCase(userId))
+                );
+            }
         }
 
         int totalCurtidas = postagem.getCurtidas() != null
@@ -534,6 +611,10 @@ public class PostagemService {
         int totalComentarios = (postagem.getComentarios() != null && !postagem.getComentarios().isEmpty())
                 ? postagem.getComentarios().size()
                 : postagem.getQuantidadeComentarios();
+
+        int totalReposts = postagem.getReposts() != null
+                ? postagem.getReposts().size()
+                : postagem.getQuantidadeReposts();
 
         String dataCriacaoFormatada = formatarDataIso(postagem.getCriadoEm());
         String dataAtualizacaoFormatada = formatarDataIso(postagem.getAtualizadoEm());
@@ -555,8 +636,10 @@ public class PostagemService {
                 .updatedAt(dataAtualizacaoFormatada)
                 .likes(totalCurtidas)
                 .comments(totalComentarios)
+                .reposts(totalReposts)
                 .curtidoPeloUsuario(curtido)
                 .salvoPeloUsuario(salvo)
+                .repostadoPeloUsuario(repostado)
                 .build();
     }
 

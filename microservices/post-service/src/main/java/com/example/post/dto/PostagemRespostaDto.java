@@ -6,9 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -38,6 +35,8 @@ public class PostagemRespostaDto {
 
     private int comments;
 
+    private int reposts;
+
     @JsonProperty("likesCount")
     public int getLikesCount() {
         return likes;
@@ -46,6 +45,11 @@ public class PostagemRespostaDto {
     @JsonProperty("commentsCount")
     public int getCommentsCount() {
         return comments;
+    }
+
+    @JsonProperty("repostsCount")
+    public int getRepostsCount() {
+        return reposts;
     }
 
     @JsonProperty("authorName")
@@ -78,4 +82,13 @@ public class PostagemRespostaDto {
 
     @JsonProperty("salvoPeloUsuario")
     private boolean salvoPeloUsuario;
+
+    @JsonProperty("repostadoPeloUsuario")
+    private boolean repostadoPeloUsuario;
+
+    @JsonProperty("repostadoNoPerfil")
+    private boolean repostadoNoPerfil;
+
+    @JsonProperty("repostadoPor")
+    private String repostadoPor;
 }
