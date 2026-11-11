@@ -108,6 +108,25 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
+  Future<void> _togglePostRepost() async {
+    if (_postData == null) return;
+    final atualizado = await _postRepository.repost(widget.postId);
+    if (atualizado != null && mounted) {
+      setState(() {
+        _postData = atualizado;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            atualizado.repostadoPeloUsuario
+                ? 'Transmissão repostada no seu perfil!'
+                : 'Repost removido do seu perfil.',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _toggleCommentLike(String commentId) async {
     await _postRepository.likeComment(widget.postId, commentId);
     final comments = await _postRepository.getCommentsForPost(widget.postId);
@@ -220,15 +239,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  '• Transmissão & Respostas',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: widget.currentTheme.textColor.withValues(alpha: 0.6),
-                  ),
-                ),
               ],
             ),
           ),
@@ -248,16 +258,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         content: _postData!.content,
                         authorAvatarUrl: _postData!.authorAvatarUrl,
                         imageUrl: _postData!.imageUrl,
-                        frequencyTag:
-                            _postData!.frequencyTag ?? 'GENERAL_SIGNAL',
+                        frequencyTag: _postData!.frequencyTag,
                         exactTime: _postData!.timeAgo,
                         likesCount: _postData!.likesCount,
                         commentsCount: _postData!.commentsCount,
                         repostsCount: _postData!.repostsCount,
                         isLiked: _postData!.curtidoPeloUsuario,
                         isSaved: _postData!.salvoPeloUsuario,
+                        isReposted: _postData!.repostadoPeloUsuario,
                         onLikePressed: _togglePostLike,
                         onSavePressed: _togglePostSave,
+                        onRepostPressed: _togglePostRepost,
                         onCommentPressed: () {
                           _cancelReplyToComment();
                           _replyFocusNode.requestFocus();

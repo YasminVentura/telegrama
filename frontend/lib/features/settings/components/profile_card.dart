@@ -179,8 +179,6 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String displayLocation = (location != null && location!.isNotEmpty) ? location! : 'Penedo, Brasil';
-
     return Container(
       decoration: BoxDecoration(
         color: currentTheme.backgroundColor,
@@ -356,8 +354,6 @@ class ProfileCard extends StatelessWidget {
                                 onTap: onFollowPressed,
                                 isLoading: isLoadingFollow,
                               ),
-                              const SizedBox(width: 10),
-                              _buildActionButton('MESSAGE', isPrimary: false, onTap: onMessagePressed),
                               if (canDeleteUser && onDeleteUserPressed != null) ...[
                                 const SizedBox(width: 10),
                                 GestureDetector(
@@ -398,18 +394,6 @@ class ProfileCard extends StatelessWidget {
                     Text(
                       bio,
                       style: TextStyle(fontSize: 13.5, height: 1.4, color: currentTheme.textColor.withOpacity(0.8)),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Icon(Icons.location_on_outlined, size: 16, color: currentTheme.primaryColor),
-                        const SizedBox(width: 6),
-                        Text(
-                          displayLocation,
-                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: currentTheme.textColor.withOpacity(0.7)),
-                        ),
-                      ],
                     ),
                     const SizedBox(height: 20),
 

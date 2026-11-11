@@ -23,7 +23,7 @@ class GlobalSearchModal extends StatefulWidget {
         return Align(
           alignment: Alignment.topCenter,
           child: Padding(
-            padding: const EdgeInsets.only(top: 100),
+            padding: const EdgeInsets.only(top: 90),
             child: Material(
               color: Colors.transparent,
               child: GlobalSearchModal(currentTheme: theme),
@@ -35,7 +35,9 @@ class GlobalSearchModal extends StatefulWidget {
         return FadeTransition(
           opacity: animation,
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.0).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            scale: Tween<double>(begin: 0.95, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
             child: child,
           ),
         );
@@ -50,7 +52,7 @@ class GlobalSearchModal extends StatefulWidget {
 class _GlobalSearchModalState extends State<GlobalSearchModal> {
   final TextEditingController _searchController = TextEditingController();
   final SearchRepository _searchRepository = SearchRepository();
-  
+
   List<SearchResult> _results = [];
   bool _isLoading = false;
   SearchCategory _selectedFilter = SearchCategory.all;
@@ -88,7 +90,10 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
       _isLoading = true;
     });
 
-    final results = await _searchRepository.searchGlobal(query, filter: _selectedFilter);
+    final results = await _searchRepository.searchGlobal(
+      query,
+      filter: _selectedFilter,
+    );
 
     if (mounted && _searchController.text.trim() == query) {
       setState(() {
@@ -107,9 +112,14 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
 
   @override
   Widget build(BuildContext context) {
+    final userResults =
+        _results.where((r) => r.category == SearchCategory.users).toList();
+    final postResults =
+        _results.where((r) => r.category == SearchCategory.posts).toList();
+
     return Container(
-      width: 600,
-      constraints: const BoxConstraints(maxHeight: 500),
+      width: 640,
+      constraints: const BoxConstraints(maxHeight: 560),
       decoration: BoxDecoration(
         color: widget.currentTheme.backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -129,20 +139,38 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: widget.currentTheme.shadowColor, width: 2)),
+              border: Border(
+                bottom: BorderSide(
+                  color: widget.currentTheme.shadowColor,
+                  width: 2,
+                ),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.search, size: 24, color: widget.currentTheme.textColor),
+                Icon(
+                  Icons.search,
+                  size: 24,
+                  color: widget.currentTheme.textColor,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: widget.currentTheme.textColor),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: widget.currentTheme.textColor,
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'Search for anything...',
-                      hintStyle: TextStyle(fontSize: 18, color: widget.currentTheme.textColor.withValues(alpha: 0.4)),
+                      hintText: 'Buscar perfis (@node) ou posts...',
+                      hintStyle: TextStyle(
+                        fontSize: 17,
+                        color: widget.currentTheme.textColor.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
                       border: InputBorder.none,
                     ),
                   ),
@@ -156,16 +184,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                       color: widget.currentTheme.primaryColor,
                     ),
                   ),
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: widget.currentTheme.shadowColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-                  ),
-                  child: Text('ESC', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
-                ),
               ],
             ),
           ),
@@ -175,37 +193,76 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
               color: widget.currentTheme.backgroundColor,
-              border: Border(bottom: BorderSide(color: widget.currentTheme.shadowColor, width: 2)),
+              border: Border(
+                bottom: BorderSide(
+                  color: widget.currentTheme.shadowColor,
+                  width: 2,
+                ),
+              ),
             ),
             child: Row(
               children: [
-                _buildFilterChip('All', SearchCategory.all),
+                _buildFilterChip('Todos', SearchCategory.all, Icons.all_inclusive),
                 const SizedBox(width: 8),
-                _buildFilterChip('Posts', SearchCategory.posts),
+                _buildFilterChip('Perfis', SearchCategory.users, Icons.person_outline),
                 const SizedBox(width: 8),
-                _buildFilterChip('Zones', SearchCategory.zones),
-                const SizedBox(width: 8),
-                _buildFilterChip('Users', SearchCategory.users),
+                _buildFilterChip('Posts', SearchCategory.posts, Icons.article_outlined),
               ],
             ),
           ),
 
           // Results
-          Expanded(
-            child: _results.isEmpty && _searchController.text.isNotEmpty && !_isLoading
-                ? Center(
-                    child: Text(
-                      'No signal found.',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: widget.currentTheme.textColor.withValues(alpha: 0.5)),
+          Flexible(
+            child: _results.isEmpty &&
+                    _searchController.text.isNotEmpty &&
+                    !_isLoading
+                ? Padding(
+                    padding: const EdgeInsets.all(40.0),
+                    child: Center(
+                      child: Text(
+                        'Nenhum resultado encontrado.',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: widget.currentTheme.textColor.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      ),
                     ),
                   )
-                : ListView.builder(
+                : ListView(
+                    shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _results.length,
-                    itemBuilder: (context, index) {
-                      final item = _results[index];
-                      return _buildResultItem(item);
-                    },
+                    children: [
+                      if (userResults.isNotEmpty) ...[
+                        _buildSectionHeader(
+                          'PERFIS DE USUÁRIOS',
+                          Icons.person_outline,
+                        ),
+                        ...userResults.map(_buildUserResultItem),
+                      ],
+                      if (postResults.isNotEmpty) ...[
+                        if (userResults.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 6,
+                            ),
+                            child: Divider(
+                              color: widget.currentTheme.shadowColor.withValues(
+                                alpha: 0.25,
+                              ),
+                              thickness: 1.5,
+                            ),
+                          ),
+                        _buildSectionHeader(
+                          'POSTAGENS',
+                          Icons.article_outlined,
+                        ),
+                        ...postResults.map(_buildPostResultItem),
+                      ],
+                    ],
                   ),
           ),
         ],
@@ -213,29 +270,84 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     );
   }
 
-  Widget _buildFilterChip(String label, SearchCategory category) {
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: widget.currentTheme.primaryColor,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+              color: widget.currentTheme.textColor.withValues(alpha: 0.65),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(
+    String label,
+    SearchCategory category,
+    IconData icon,
+  ) {
     final isSelected = _selectedFilter == category;
     return GestureDetector(
       onTap: () => _setFilter(category),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected ? widget.currentTheme.shadowColor : widget.currentTheme.backgroundColor,
+            color: isSelected
+                ? widget.currentTheme.shadowColor
+                : widget.currentTheme.backgroundColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-            boxShadow: isSelected ? [] : [
-              BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
-            ],
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: isSelected ? widget.currentTheme.backgroundColor : widget.currentTheme.textColor,
+            border: Border.all(
+              color: widget.currentTheme.shadowColor,
+              width: 1.5,
             ),
+            boxShadow: isSelected
+                ? []
+                : [
+                    BoxShadow(
+                      color: widget.currentTheme.shadowColor,
+                      offset: const Offset(2, 2),
+                      blurRadius: 0,
+                    ),
+                  ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: isSelected
+                    ? widget.currentTheme.backgroundColor
+                    : widget.currentTheme.textColor,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  color: isSelected
+                      ? widget.currentTheme.backgroundColor
+                      : widget.currentTheme.textColor,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -245,6 +357,10 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
   void _onItemTapped(SearchResult item) {
     Navigator.of(context).pop();
     if (item.category == SearchCategory.users) {
+      final bool isMe = UserRepositoryImpl.isCurrentUser(
+        item.id,
+        authorName: item.title,
+      );
       final nodeId = item.id.replaceAll('@', '');
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -254,11 +370,17 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
               backgroundColor: widget.currentTheme.backgroundColor,
               elevation: 0,
               iconTheme: IconThemeData(color: widget.currentTheme.textColor),
-              title: Text(item.title, style: TextStyle(color: widget.currentTheme.textColor, fontWeight: FontWeight.bold)),
+              title: Text(
+                item.title,
+                style: TextStyle(
+                  color: widget.currentTheme.textColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             body: ProfileScreen(
               currentTheme: widget.currentTheme,
-              nodeId: nodeId,
+              nodeId: isMe ? null : nodeId,
             ),
           ),
         ),
@@ -269,7 +391,9 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
           builder: (ctx) => PostDetailScreen(
             currentTheme: widget.currentTheme,
             postId: item.id,
-            initialPost: item.originalData is PostModel ? item.originalData as PostModel : null,
+            initialPost: item.originalData is PostModel
+                ? item.originalData as PostModel
+                : null,
             onBack: () => Navigator.of(ctx).pop(),
           ),
         ),
@@ -277,77 +401,42 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     }
   }
 
-  Widget _buildResultItem(SearchResult item) {
-    IconData icon;
-    Color color;
-
-    switch (item.category) {
-      case SearchCategory.posts:
-        icon = Icons.article_outlined;
-        color = widget.currentTheme.primaryColor;
-        break;
-      case SearchCategory.zones:
-        icon = Icons.grid_view_rounded;
-        color = widget.currentTheme.secondaryColor;
-        break;
-      case SearchCategory.users:
-        icon = Icons.person_outline;
-        color = Colors.blueAccent;
-        break;
-      default:
-        icon = Icons.search;
-        color = widget.currentTheme.shadowColor;
-    }
-
+  /// Item de Perfil de Usuário (com foto de perfil e badge PERFIL)
+  Widget _buildUserResultItem(SearchResult item) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: InkWell(
         onTap: () => _onItemTapped(item),
         hoverColor: widget.currentTheme.primaryColor.withValues(alpha: 0.1),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             children: [
-              if (item.category == SearchCategory.users ||
-                  item.category == SearchCategory.posts)
-                ValueListenableBuilder<String>(
-                  valueListenable: UserRepositoryImpl.currentAvatarNotifier,
-                  builder: (context, currentMyAvatar, _) {
-                    final String targetHandle = item.category == SearchCategory.users
-                        ? item.id
-                        : item.subtitle;
-                    final bool isMe = UserRepositoryImpl.isCurrentUser(
-                      targetHandle,
-                      authorName: item.category == SearchCategory.users ? item.title : null,
-                    );
-                    final String effectiveAvatar = isMe
-                        ? currentMyAvatar
-                        : ((item.avatarOrImageUrl != null &&
-                                item.avatarOrImageUrl!.isNotEmpty)
-                            ? item.avatarOrImageUrl!
-                            : UserAvatar.defaultAvatar);
+              ValueListenableBuilder<String>(
+                valueListenable: UserRepositoryImpl.currentAvatarNotifier,
+                builder: (context, currentMyAvatar, _) {
+                  final bool isMe = UserRepositoryImpl.isCurrentUser(
+                    item.id,
+                    authorName: item.title,
+                  );
+                  final String effectiveAvatar = isMe
+                      ? currentMyAvatar
+                      : ((item.avatarOrImageUrl != null &&
+                              item.avatarOrImageUrl!.isNotEmpty)
+                          ? item.avatarOrImageUrl!
+                          : UserAvatar.defaultAvatar);
 
-                    return UserAvatar(
-                      imageUrl: effectiveAvatar,
-                      name: item.title,
-                      radius: 19,
-                      borderColor: widget.currentTheme.shadowColor,
-                      borderWidth: 2,
-                      backgroundColor: color,
-                    );
-                  },
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: color, width: 2),
-                  ),
-                  child: Icon(icon, size: 20, color: color),
-                ),
-              const SizedBox(width: 16),
+                  return UserAvatar(
+                    imageUrl: effectiveAvatar,
+                    name: item.title,
+                    radius: 20,
+                    borderColor: widget.currentTheme.shadowColor,
+                    borderWidth: 2,
+                    backgroundColor: widget.currentTheme.primaryColor,
+                  );
+                },
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +446,7 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w900,
                         color: widget.currentTheme.textColor,
                       ),
@@ -366,18 +455,147 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
                     Text(
                       item.subtitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.bold,
-                        color: widget.currentTheme.textColor.withValues(alpha: 0.6),
+                        color: widget.currentTheme.primaryColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, size: 16, color: widget.currentTheme.textColor.withValues(alpha: 0.5)),
+              _buildTypeBadge(
+                label: 'PERFIL',
+                icon: Icons.person,
+                badgeColor: Colors.blueAccent,
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: widget.currentTheme.textColor.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Item de Post / Transmissão (SEM foto de perfil ao lado, com ícone de transmissão e badge POST)
+  Widget _buildPostResultItem(SearchResult item) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        onTap: () => _onItemTapped(item),
+        hoverColor: widget.currentTheme.primaryColor.withValues(alpha: 0.1),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: widget.currentTheme.backgroundColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: widget.currentTheme.shadowColor.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: widget.currentTheme.primaryColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.article_outlined,
+                  size: 18,
+                  color: widget.currentTheme.primaryColor,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                        color: widget.currentTheme.textColor.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.35,
+                        fontWeight: FontWeight.w700,
+                        color: widget.currentTheme.textColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Icon(
+                  Icons.open_in_new,
+                  size: 15,
+                  color: widget.currentTheme.textColor.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeBadge({
+    required String label,
+    required IconData icon,
+    required Color badgeColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: badgeColor,
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: badgeColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+              color: badgeColor,
+            ),
+          ),
+        ],
       ),
     );
   }

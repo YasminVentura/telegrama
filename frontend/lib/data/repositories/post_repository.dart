@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:frontend/core/network/api_client.dart';
+import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
 
@@ -13,7 +14,7 @@ abstract class PostRepository {
   Future<PostModel?> likePost(String postId);
   Future<PostModel?> savePost(String postId);
   Future<void> deletePost(String postId);
-  Future<void> repost(String postId);
+  Future<PostModel?> repost(String postId);
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId);
   Future<Map<String, dynamic>> addCommentToPost(
     String postId,
@@ -27,6 +28,11 @@ abstract class PostRepository {
 class PostRepositoryImpl implements PostRepository {
   final ApiClient _apiClient;
 
+  /// Cache em memória de postagens repostadas na sessão para sincronia imediata
+  static final Map<String, PostModel> _sessionRepostedPosts = {};
+  static final Set<String> _sessionUnrepostedIds = {};
+  static final Map<String, PostModel> _knownPostsCache = {};
+
   PostRepositoryImpl({ApiClient? apiClient})
       : _apiClient = apiClient ??
             ApiClient(
@@ -36,6 +42,33 @@ class PostRepositoryImpl implements PostRepository {
                       ? 'http://10.0.2.2:8080'
                       : 'http://localhost:8080'),
             );
+
+  PostModel _applySessionRepostState(PostModel post) {
+    _knownPostsCache[post.id] = post;
+    if (_sessionRepostedPosts.containsKey(post.id)) {
+      final int effectiveCount =
+          post.repostadoPeloUsuario ? post.reposts : (post.reposts + 1);
+      final updated = post.copyWith(
+        repostadoPeloUsuario: true,
+        reposts: effectiveCount,
+      );
+      _sessionRepostedPosts[post.id] = updated;
+      return updated;
+    }
+    if (_sessionUnrepostedIds.contains(post.id)) {
+      final int effectiveCount = post.repostadoPeloUsuario
+          ? (post.reposts > 0 ? post.reposts - 1 : 0)
+          : post.reposts;
+      return post.copyWith(
+        repostadoPeloUsuario: false,
+        reposts: effectiveCount,
+      );
+    }
+    if (post.repostadoPeloUsuario) {
+      _sessionRepostedPosts[post.id] = post;
+    }
+    return post;
+  }
 
   @override
   Future<List<PostModel>> getFeedPosts({int page = 1, int limit = 10}) async {
@@ -47,7 +80,9 @@ class PostRepositoryImpl implements PostRepository {
             : response;
         if (rawData is List) {
           return rawData
-              .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) => _applySessionRepostState(
+                    PostModel.fromJson(Map<String, dynamic>.from(item)),
+                  ))
               .toList();
         }
       }
@@ -66,17 +101,20 @@ class PostRepositoryImpl implements PostRepository {
             ? response['data']
             : response;
         if (rawData is Map) {
-          return PostModel.fromJson(Map<String, dynamic>.from(rawData));
+          return _applySessionRepostState(
+            PostModel.fromJson(Map<String, dynamic>.from(rawData)),
+          );
         }
       }
     } catch (e) {
       debugPrint('Erro ao carregar post $postId: $e');
     }
-    return null;
+    return _knownPostsCache[postId];
   }
 
   @override
   Future<List<PostModel>> getUserPosts(String nodeId) async {
+    final List<PostModel> posts = [];
     try {
       final response = await _apiClient.get('/posts/usuario/$nodeId');
       if (response != null) {
@@ -84,15 +122,57 @@ class PostRepositoryImpl implements PostRepository {
             ? response['data']
             : response;
         if (rawData is List) {
-          return rawData
-              .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
-              .toList();
+          posts.addAll(
+            rawData.map((item) => _applySessionRepostState(
+                  PostModel.fromJson(Map<String, dynamic>.from(item)),
+                )),
+          );
         }
       }
     } catch (e) {
       debugPrint('Erro ao carregar posts do usuario $nodeId: $e');
     }
-    return [];
+
+    final bool isTargetCurrentUser = UserRepositoryImpl.isCurrentUser(nodeId);
+    final String cleanTargetNodeId = nodeId.trim().replaceAll('@', '');
+    final String formattedTargetHandle = '@$cleanTargetNodeId';
+
+    if (isTargetCurrentUser) {
+      // Remove posts que o usuário desfez o repost nesta sessão (e que não são de autoria dele)
+      posts.removeWhere((p) {
+        final isOwnAuthor = p.authorHandle.replaceAll('@', '').toLowerCase() ==
+            cleanTargetNodeId.toLowerCase();
+        return !isOwnAuthor && _sessionUnrepostedIds.contains(p.id);
+      });
+
+      final existingIds = posts.map((p) => p.id).toSet();
+      for (final reposted in _sessionRepostedPosts.values) {
+        if (!existingIds.contains(reposted.id)) {
+          posts.insert(
+            0,
+            reposted.copyWith(
+              repostadoPeloUsuario: true,
+              repostadoNoPerfil: true,
+              repostadoPor: formattedTargetHandle,
+            ),
+          );
+        }
+      }
+    }
+
+    // Marca qualquer post na aba "Posts" cujo autor seja diferente do dono do perfil como repostado
+    return posts.map((p) {
+      final bool isPostAuthorDifferent =
+          p.authorHandle.replaceAll('@', '').toLowerCase() !=
+              cleanTargetNodeId.toLowerCase();
+      if (isPostAuthorDifferent || p.repostadoNoPerfil) {
+        return p.copyWith(
+          repostadoNoPerfil: true,
+          repostadoPor: p.repostadoPor ?? formattedTargetHandle,
+        );
+      }
+      return p;
+    }).toList();
   }
 
   @override
@@ -105,7 +185,9 @@ class PostRepositoryImpl implements PostRepository {
             : response;
         if (rawData is List) {
           return rawData
-              .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) => _applySessionRepostState(
+                    PostModel.fromJson(Map<String, dynamic>.from(item)),
+                  ))
               .toList();
         }
       }
@@ -125,7 +207,9 @@ class PostRepositoryImpl implements PostRepository {
             : response;
         if (rawData is List) {
           return rawData
-              .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) => _applySessionRepostState(
+                    PostModel.fromJson(Map<String, dynamic>.from(item)),
+                  ))
               .toList();
         }
       }
@@ -152,7 +236,9 @@ class PostRepositoryImpl implements PostRepository {
           ? response['data']
           : response;
       if (rawData is Map) {
-        return PostModel.fromJson(Map<String, dynamic>.from(rawData));
+        return _applySessionRepostState(
+          PostModel.fromJson(Map<String, dynamic>.from(rawData)),
+        );
       }
     }
     return null;
@@ -166,7 +252,9 @@ class PostRepositoryImpl implements PostRepository {
           ? response['data']
           : response;
       if (rawData is Map) {
-        return PostModel.fromJson(Map<String, dynamic>.from(rawData));
+        return _applySessionRepostState(
+          PostModel.fromJson(Map<String, dynamic>.from(rawData)),
+        );
       }
     }
     return null;
@@ -174,11 +262,57 @@ class PostRepositoryImpl implements PostRepository {
 
   @override
   Future<void> deletePost(String postId) async {
+    _sessionRepostedPosts.remove(postId);
+    _knownPostsCache.remove(postId);
     await _apiClient.delete('/posts/$postId');
   }
 
   @override
-  Future<void> repost(String postId) async {}
+  Future<PostModel?> repost(String postId) async {
+    try {
+      final response = await _apiClient.post('/posts/$postId/repostar');
+      if (response != null) {
+        final rawData = response is Map && response.containsKey('data')
+            ? response['data']
+            : response;
+        if (rawData is Map) {
+          final updated = PostModel.fromJson(Map<String, dynamic>.from(rawData));
+          _knownPostsCache[postId] = updated;
+          if (updated.repostadoPeloUsuario) {
+            _sessionRepostedPosts[postId] = updated;
+            _sessionUnrepostedIds.remove(postId);
+          } else {
+            _sessionRepostedPosts.remove(postId);
+            _sessionUnrepostedIds.add(postId);
+          }
+          return updated;
+        }
+      }
+    } catch (e) {
+      debugPrint('Fallback de repost em memória para o post $postId: $e');
+      final existing = _knownPostsCache[postId] ?? _sessionRepostedPosts[postId];
+      if (existing != null) {
+        final bool novoEstado = !existing.repostadoPeloUsuario;
+        final int novaContagem = novoEstado
+            ? existing.reposts + 1
+            : (existing.reposts > 0 ? existing.reposts - 1 : 0);
+        final updated = existing.copyWith(
+          repostadoPeloUsuario: novoEstado,
+          reposts: novaContagem,
+        );
+        _knownPostsCache[postId] = updated;
+        if (novoEstado) {
+          _sessionRepostedPosts[postId] = updated;
+          _sessionUnrepostedIds.remove(postId);
+        } else {
+          _sessionRepostedPosts.remove(postId);
+          _sessionUnrepostedIds.add(postId);
+        }
+        return updated;
+      }
+    }
+    return null;
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getCommentsForPost(String postId) async {
@@ -303,7 +437,9 @@ class PostRepositoryImpl implements PostRepository {
             : response;
         if (rawData is List) {
           return rawData
-              .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
+              .map((item) => _applySessionRepostState(
+                    PostModel.fromJson(Map<String, dynamic>.from(item)),
+                  ))
               .toList();
         }
       }

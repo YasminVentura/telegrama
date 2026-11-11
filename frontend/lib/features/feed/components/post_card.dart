@@ -18,6 +18,9 @@ class PostCard extends StatefulWidget {
   final int repostsCount;
   final bool isLiked;
   final bool isSaved;
+  final bool isReposted;
+  final bool showRepostBadge;
+  final String? repostedByLabel;
   final VoidCallback? onLikePressed;
   final VoidCallback? onSavePressed;
   final VoidCallback? onCommentPressed;
@@ -42,6 +45,9 @@ class PostCard extends StatefulWidget {
     required this.repostsCount,
     this.isLiked = false,
     this.isSaved = false,
+    this.isReposted = false,
+    this.showRepostBadge = false,
+    this.repostedByLabel,
     this.onLikePressed,
     this.onSavePressed,
     this.onCommentPressed,
@@ -60,7 +66,8 @@ class _PostCardState extends State<PostCard> {
   late bool _isLiked;
   late int _likesCount;
   late bool _isSaved;
-  bool _isReposted = false;
+  late bool _isReposted;
+  late int _repostsCount;
 
   @override
   void initState() {
@@ -68,6 +75,8 @@ class _PostCardState extends State<PostCard> {
     _isLiked = widget.isLiked;
     _likesCount = widget.likesCount;
     _isSaved = widget.isSaved;
+    _isReposted = widget.isReposted;
+    _repostsCount = widget.repostsCount;
   }
 
   @override
@@ -79,6 +88,11 @@ class _PostCardState extends State<PostCard> {
     }
     if (oldWidget.isSaved != widget.isSaved) {
       _isSaved = widget.isSaved;
+    }
+    if (oldWidget.isReposted != widget.isReposted ||
+        oldWidget.repostsCount != widget.repostsCount) {
+      _isReposted = widget.isReposted;
+      _repostsCount = widget.repostsCount;
     }
   }
 
@@ -121,8 +135,8 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    int currentLikes = _likesCount;
-    int currentReposts = widget.repostsCount + (_isReposted ? 1 : 0);
+    final int currentLikes = _likesCount;
+    final int currentReposts = _repostsCount;
     final VoidCallback? cardTapAction = widget.onTap ?? widget.onCommentPressed;
 
     return GestureDetector(
@@ -150,6 +164,40 @@ class _PostCardState extends State<PostCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.showRepostBadge) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: widget.currentTheme.primaryColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: widget.currentTheme.primaryColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.repeat,
+                        size: 14,
+                        color: widget.currentTheme.primaryColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        widget.repostedByLabel ?? 'REPOSTADO',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.8,
+                          color: widget.currentTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -226,21 +274,7 @@ class _PostCardState extends State<PostCard> {
 
                   Row(
                     children: [
-                      if (widget.frequencyTag != null && widget.frequencyTag!.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: widget.currentTheme.secondaryColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: widget.currentTheme.shadowColor, width: 1.5),
-                          ),
-                          child: Text(
-                            widget.frequencyTag!,
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: widget.currentTheme.shadowColor),
-                          ),
-                        ),
                       if (widget.canDelete && widget.onDeletePressed != null) ...[
-                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: widget.onDeletePressed,
                           child: MouseRegion(
@@ -355,6 +389,8 @@ class _PostCardState extends State<PostCard> {
                           }
                           setState(() {
                             _isReposted = !_isReposted;
+                            _repostsCount += _isReposted ? 1 : -1;
+                            if (_repostsCount < 0) _repostsCount = 0;
                           });
                           if (widget.onRepostPressed != null) widget.onRepostPressed!();
                         },

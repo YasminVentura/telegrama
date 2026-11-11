@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
 
-enum SearchCategory { all, posts, zones, users }
+enum SearchCategory { all, posts, users }
 
 class SearchResult {
   final String id;
@@ -32,15 +32,19 @@ class SearchRepository {
   })  : _userRepository = userRepository ?? UserRepositoryImpl(),
         _postRepository = postRepository ?? PostRepositoryImpl();
 
-  Future<List<SearchResult>> searchGlobal(String query, {SearchCategory filter = SearchCategory.all}) async {
+  Future<List<SearchResult>> searchGlobal(
+    String query, {
+    SearchCategory filter = SearchCategory.all,
+  }) async {
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) return [];
 
     final results = <SearchResult>[];
 
-    final shouldSearchUsers = filter == SearchCategory.all || filter == SearchCategory.users;
-    final shouldSearchPosts = filter == SearchCategory.all || filter == SearchCategory.posts;
-    final shouldSearchZones = filter == SearchCategory.all || filter == SearchCategory.zones;
+    final shouldSearchUsers =
+        filter == SearchCategory.all || filter == SearchCategory.users;
+    final shouldSearchPosts =
+        filter == SearchCategory.all || filter == SearchCategory.posts;
 
     try {
       final futures = <Future>[];
@@ -77,20 +81,6 @@ class SearchRepository {
             }
           }).catchError((_) {}),
         );
-      }
-
-      if (shouldSearchZones) {
-        final mockZones = [
-          SearchResult(id: 'z1', title: 'BAUHAUS_GRID_04', subtitle: 'Public Zone • 14k members', category: SearchCategory.zones),
-          SearchResult(id: 'z2', title: 'RETRO_AUDIO_BBS', subtitle: 'Public Zone • 3k members', category: SearchCategory.zones),
-          SearchResult(id: 'z3', title: 'CYBERPUNK_LOUNGE', subtitle: 'Public Zone • 8.5k members', category: SearchCategory.zones),
-        ];
-        final q = cleanQuery.toLowerCase();
-        for (var z in mockZones) {
-          if (z.title.toLowerCase().contains(q) || z.subtitle.toLowerCase().contains(q)) {
-            results.add(z);
-          }
-        }
       }
 
       await Future.wait(futures);

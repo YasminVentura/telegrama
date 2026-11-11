@@ -11,15 +11,17 @@ class PostDetailCard extends StatelessWidget {
   final String content;
   final String? authorAvatarUrl;
   final String? imageUrl;
-  final String frequencyTag;
+  final String? frequencyTag;
   final String exactTime;
   final int likesCount;
   final int commentsCount;
   final int repostsCount;
   final bool isLiked;
   final bool isSaved;
+  final bool isReposted;
   final VoidCallback? onLikePressed;
   final VoidCallback? onSavePressed;
+  final VoidCallback? onRepostPressed;
   final VoidCallback? onCommentPressed;
 
   const PostDetailCard({
@@ -30,15 +32,17 @@ class PostDetailCard extends StatelessWidget {
     required this.content,
     this.authorAvatarUrl,
     this.imageUrl,
-    required this.frequencyTag,
+    this.frequencyTag,
     required this.exactTime,
     required this.likesCount,
     required this.commentsCount,
     required this.repostsCount,
     this.isLiked = false,
     this.isSaved = false,
+    this.isReposted = false,
     this.onLikePressed,
     this.onSavePressed,
+    this.onRepostPressed,
     this.onCommentPressed,
   });
 
@@ -149,29 +153,6 @@ class PostDetailCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: currentTheme.backgroundColor,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: currentTheme.shadowColor, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: currentTheme.shadowColor,
-                      offset: const Offset(2, 2),
-                      blurRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Text(
-                  frequencyTag,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: currentTheme.primaryColor,
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -238,6 +219,12 @@ class PostDetailCard extends StatelessWidget {
                 Icons.chat_bubble_outline,
                 onTap: onCommentPressed,
                 isActive: false,
+                activeColor: currentTheme.primaryColor,
+              ),
+              _buildActionIcon(
+                Icons.repeat,
+                onTap: onRepostPressed,
+                isActive: isReposted,
                 activeColor: currentTheme.primaryColor,
               ),
               _buildActionIcon(

@@ -53,18 +53,6 @@ class _MenuWidgetState extends State<MenuWidget> {
                 activeIcon: Icons.home,
                 title: 'Home Feed',
               ),
-              const SizedBox(height: 8),
-              _buildMenuItem(
-                icon: Icons.explore_outlined,
-                activeIcon: Icons.explore,
-                title: 'Explore Zones',
-              ),
-              const SizedBox(height: 8),
-              _buildMenuItem(
-                icon: Icons.chat_bubble_outline,
-                activeIcon: Icons.chat_bubble,
-                title: 'Wave Chats',
-              ),
               const SizedBox(height: 16),
               Divider(color: widget.currentTheme.shadowColor, thickness: 2, height: 24),
               const SizedBox(height: 8),

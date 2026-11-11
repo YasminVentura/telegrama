@@ -15,6 +15,9 @@ class PostModel {
   final int reposts;
   final bool curtidoPeloUsuario;
   final bool salvoPeloUsuario;
+  final bool repostadoPeloUsuario;
+  final bool repostadoNoPerfil;
+  final String? repostadoPor;
 
   PostModel({
     required this.id,
@@ -31,6 +34,9 @@ class PostModel {
     this.reposts = 0,
     this.curtidoPeloUsuario = false,
     this.salvoPeloUsuario = false,
+    this.repostadoPeloUsuario = false,
+    this.repostadoNoPerfil = false,
+    this.repostadoPor,
   });
 
   int get likesCount => likes;
@@ -55,6 +61,9 @@ class PostModel {
     int? reposts,
     bool? curtidoPeloUsuario,
     bool? salvoPeloUsuario,
+    bool? repostadoPeloUsuario,
+    bool? repostadoNoPerfil,
+    String? repostadoPor,
   }) {
     return PostModel(
       id: id ?? this.id,
@@ -71,6 +80,9 @@ class PostModel {
       reposts: reposts ?? this.reposts,
       curtidoPeloUsuario: curtidoPeloUsuario ?? this.curtidoPeloUsuario,
       salvoPeloUsuario: salvoPeloUsuario ?? this.salvoPeloUsuario,
+      repostadoPeloUsuario: repostadoPeloUsuario ?? this.repostadoPeloUsuario,
+      repostadoNoPerfil: repostadoNoPerfil ?? this.repostadoNoPerfil,
+      repostadoPor: repostadoPor ?? this.repostadoPor,
     );
   }
 
@@ -95,12 +107,15 @@ class PostModel {
       content: json['content'] ?? json['conteudo'] ?? '',
       createdAt: data,
       timeAgo: json['timeAgo'] ?? _calcularTempoAtras(data),
-      frequencyTag: json['frequencyTag'] ?? 'GENERAL_SIGNAL',
+      frequencyTag: json['frequencyTag'],
       likes: (json['likesCount'] ?? json['likes'] ?? json['quantidadeCurtidas'] ?? 0) as int,
       comments: (json['commentsCount'] ?? json['comments'] ?? json['quantidadeComentarios'] ?? 0) as int,
-      reposts: (json['repostsCount'] ?? json['reposts'] ?? 0) as int,
+      reposts: (json['repostsCount'] ?? json['reposts'] ?? json['quantidadeReposts'] ?? 0) as int,
       curtidoPeloUsuario: json['curtidoPeloUsuario'] == true,
       salvoPeloUsuario: json['salvoPeloUsuario'] == true,
+      repostadoPeloUsuario: json['repostadoPeloUsuario'] == true,
+      repostadoNoPerfil: json['repostadoNoPerfil'] == true,
+      repostadoPor: json['repostadoPor']?.toString(),
     );
   }
 
@@ -134,6 +149,9 @@ class PostModel {
       'repostsCount': reposts,
       'curtidoPeloUsuario': curtidoPeloUsuario,
       'salvoPeloUsuario': salvoPeloUsuario,
+      'repostadoPeloUsuario': repostadoPeloUsuario,
+      'repostadoNoPerfil': repostadoNoPerfil,
+      'repostadoPor': repostadoPor,
     };
   }
 
@@ -173,6 +191,12 @@ class PostModel {
         return curtidoPeloUsuario;
       case 'salvoPeloUsuario':
         return salvoPeloUsuario;
+      case 'repostadoPeloUsuario':
+        return repostadoPeloUsuario;
+      case 'repostadoNoPerfil':
+        return repostadoNoPerfil;
+      case 'repostadoPor':
+        return repostadoPor;
       default:
         return null;
     }
