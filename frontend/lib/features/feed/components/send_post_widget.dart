@@ -22,27 +22,37 @@ class SendPostWidget extends StatefulWidget {
   State<SendPostWidget> createState() => _SendPostWidgetState();
 }
 
-class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStateMixin {
+class _SendPostWidgetState extends State<SendPostWidget>
+    with TickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   bool _isHoveredSend = false;
   bool _isSending = false;
 
   late final AnimationController _planeController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 500), 
+    duration: const Duration(milliseconds: 500),
   );
 
-  late final Animation<double> _slideAnimation = Tween<double>(begin: 0.0, end: 120.0).animate(
-    CurvedAnimation(parent: _planeController, curve: Curves.easeInOut),
-  );
+  late final Animation<double> _slideAnimation = Tween<double>(
+    begin: 0.0,
+    end: 120.0,
+  ).animate(CurvedAnimation(parent: _planeController, curve: Curves.easeInOut));
 
-  late final Animation<double> _planeFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-    CurvedAnimation(parent: _planeController, curve: const Interval(0.7, 1.0, curve: Curves.easeOut)),
-  );
+  late final Animation<double> _planeFadeAnimation =
+      Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(
+          parent: _planeController,
+          curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
+        ),
+      );
 
-  late final Animation<double> _textFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-    CurvedAnimation(parent: _planeController, curve: const Interval(0.0, 0.3, curve: Curves.easeIn)),
-  );
+  late final Animation<double> _textFadeAnimation =
+      Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(
+          parent: _planeController,
+          curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+        ),
+      );
 
   @override
   void dispose() {
@@ -96,10 +106,12 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
               ValueListenableBuilder<String>(
                 valueListenable: UserRepositoryImpl.currentAvatarNotifier,
                 builder: (context, currentAvatar, _) {
-                  final effectiveAvatar = (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
+                  final effectiveAvatar =
+                      (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
                       ? widget.avatarUrl!
                       : currentAvatar;
-                  final effectiveName = (widget.userName != null && widget.userName!.isNotEmpty)
+                  final effectiveName =
+                      (widget.userName != null && widget.userName!.isNotEmpty)
                       ? widget.userName!
                       : UserRepositoryImpl.currentUserNameNotifier.value;
 
@@ -119,20 +131,35 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
                   controller: _textController,
                   maxLines: 2,
                   minLines: 1,
-                  style: TextStyle(color: widget.currentTheme.textColor, fontSize: 14),
+                  style: TextStyle(
+                    color: widget.currentTheme.textColor,
+                    fontSize: 14,
+                  ),
                   decoration: InputDecoration(
-                    hintText: 'Post a new wave into the retroverse...',
-                    hintStyle: TextStyle(fontSize: 14, color: widget.currentTheme.textColor.withOpacity(0.6)),
+                    hintText: 'Poste alguma novidade no universo retro...',
+                    hintStyle: TextStyle(
+                      fontSize: 14,
+                      color: widget.currentTheme.textColor.withOpacity(0.6),
+                    ),
                     filled: true,
                     fillColor: widget.currentTheme.backgroundColor,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: widget.currentTheme.primaryColor, width: 2),
+                      borderSide: BorderSide(
+                        color: widget.currentTheme.primaryColor,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -161,15 +188,23 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
                   onTap: _handleSend,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: widget.currentTheme.primaryColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                      border: Border.all(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: widget.currentTheme.shadowColor,
-                          offset: _isHoveredSend ? const Offset(1, 1) : const Offset(3, 3),
+                          offset: _isHoveredSend
+                              ? const Offset(1, 1)
+                              : const Offset(3, 3),
                           blurRadius: 0,
                         ),
                       ],
@@ -200,7 +235,7 @@ class _SendPostWidgetState extends State<SendPostWidget> with TickerProviderStat
                             return Opacity(
                               opacity: _textFadeAnimation.value,
                               child: Text(
-                                'SEND POST',
+                                'ENVIAR POST',
                                 style: TextStyle(
                                   color: widget.currentTheme.backgroundColor,
                                   fontWeight: FontWeight.bold,

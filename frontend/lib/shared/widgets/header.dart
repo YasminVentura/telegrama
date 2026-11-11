@@ -36,20 +36,20 @@ class _HeaderWidgetState extends State<HeaderWidget> {
   @override
   void initState() {
     super.initState();
-    if (UserRepositoryImpl.isLoggedIn && UserRepositoryImpl.currentUserNodeId == null) {
-      _userRepository.getMyProfile().catchError((_) => PerfilRespostaDto(
-            id: '',
-            nome: 'User',
-            email: '',
-            nodeId: '',
-          ));
+    if (UserRepositoryImpl.isLoggedIn &&
+        UserRepositoryImpl.currentUserNodeId == null) {
+      _userRepository.getMyProfile().catchError(
+        (_) => PerfilRespostaDto(id: '', nome: 'User', email: '', nodeId: ''),
+      );
     }
   }
 
   void _handleSearchTap(BuildContext context, bool isLoggedIn) {
     if (!isLoggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Faça login para pesquisar perfis e transmissões.')),
+        const SnackBar(
+          content: Text('Faça login para pesquisar perfis e transmissões.'),
+        ),
       );
       widget.onRequireLogin?.call();
       return;
@@ -70,7 +70,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
           decoration: BoxDecoration(
             color: widget.currentTheme.backgroundColor,
             border: Border(
-              bottom: BorderSide(color: widget.currentTheme.shadowColor, width: 2.0),
+              bottom: BorderSide(
+                color: widget.currentTheme.shadowColor,
+                width: 2.0,
+              ),
             ),
           ),
           child: Row(
@@ -82,7 +85,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: widget.currentTheme.primaryColor,
-                      border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                      border: Border.all(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
@@ -92,7 +98,11 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.waves, color: widget.currentTheme.backgroundColor, size: 20),
+                    child: Icon(
+                      Icons.waves,
+                      color: widget.currentTheme.backgroundColor,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -116,24 +126,39 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     child: TextField(
                       readOnly: true,
                       onTap: () => _handleSearchTap(context, autenticado),
-                      style: TextStyle(color: widget.currentTheme.textColor, fontSize: 14),
+                      style: TextStyle(
+                        color: widget.currentTheme.textColor,
+                        fontSize: 14,
+                      ),
                       decoration: InputDecoration(
-                        hintText: 'Search channels, radio stations, waves...',
+                        hintText: 'Procure transmissões, usuários...',
                         hintStyle: TextStyle(
                           fontSize: 14,
-                          color: widget.currentTheme.textColor.withValues(alpha: 0.6),
+                          color: widget.currentTheme.textColor.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
-                        prefixIcon: Icon(Icons.search, color: widget.currentTheme.textColor, size: 20),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: widget.currentTheme.textColor,
+                          size: 20,
+                        ),
                         filled: true,
                         fillColor: widget.currentTheme.backgroundColor,
                         contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
+                          borderSide: BorderSide(
+                            color: widget.currentTheme.shadowColor,
+                            width: 2,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: widget.currentTheme.primaryColor, width: 2),
+                          borderSide: BorderSide(
+                            color: widget.currentTheme.primaryColor,
+                            width: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -159,10 +184,14 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     ValueListenableBuilder<String>(
                       valueListenable: UserRepositoryImpl.currentAvatarNotifier,
                       builder: (context, currentAvatar, _) {
-                        final effectiveAvatar = (widget.avatarUrl != null && widget.avatarUrl!.isNotEmpty)
+                        final effectiveAvatar =
+                            (widget.avatarUrl != null &&
+                                widget.avatarUrl!.isNotEmpty)
                             ? widget.avatarUrl!
                             : currentAvatar;
-                        final effectiveName = (widget.userName != null && widget.userName!.isNotEmpty)
+                        final effectiveName =
+                            (widget.userName != null &&
+                                widget.userName!.isNotEmpty)
                             ? widget.userName!
                             : UserRepositoryImpl.currentUserNameNotifier.value;
 
@@ -176,7 +205,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                               radius: 20,
                               borderColor: widget.currentTheme.shadowColor,
                               borderWidth: 2,
-                              backgroundColor: widget.currentTheme.secondaryColor,
+                              backgroundColor:
+                                  widget.currentTheme.secondaryColor,
                             ),
                           ),
                         );
@@ -192,11 +222,17 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                       child: MouseRegion(
                         cursor: SystemMouseCursors.click,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: widget.currentTheme.primaryColor,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                            border: Border.all(
+                              color: widget.currentTheme.shadowColor,
+                              width: 2,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 color: widget.currentTheme.shadowColor,
@@ -223,11 +259,17 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                         child: MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: widget.currentTheme.backgroundColor,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                              border: Border.all(
+                                color: widget.currentTheme.shadowColor,
+                                width: 2,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: widget.currentTheme.shadowColor,

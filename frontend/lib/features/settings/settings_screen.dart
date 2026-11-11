@@ -38,19 +38,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _loadUserNodeId() {
-    _userRepository.getMyProfile().then((profile) {
-      if (mounted) {
-        setState(() {
-          _userNodeId = profile.nodeId.toUpperCase();
+    _userRepository
+        .getMyProfile()
+        .then((profile) {
+          if (mounted) {
+            setState(() {
+              _userNodeId = profile.nodeId.toUpperCase();
+            });
+          }
+        })
+        .catchError((_) {
+          if (mounted) {
+            setState(() {
+              _userNodeId = 'DESCONHECIDO';
+            });
+          }
         });
-      }
-    }).catchError((_) {
-      if (mounted) {
-        setState(() {
-          _userNodeId = 'DESCONHECIDO';
-        });
-      }
-    });
   }
 
   @override
@@ -68,10 +71,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.arrow_back, size: 16, color: widget.currentTheme.textColor),
+                    Icon(
+                      Icons.arrow_back,
+                      size: 16,
+                      color: widget.currentTheme.textColor,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      'Back to Feed',
+                      'Voltar para o Feed',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -84,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
 
               Text(
-                'CONTROL ROOM',
+                'SALA DE CONTROLE',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
@@ -97,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'User settings',
+                    'Configurações de Usuário',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w900,
@@ -109,21 +116,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: widget.currentTheme.textColor.withValues(alpha: 0.5),
+                      color: widget.currentTheme.textColor.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                'Edit your identity, node coordinates and account frequency.',
+                'Edite informações importantes do seu perfil.',
                 style: TextStyle(
                   fontSize: 13.5,
                   color: widget.currentTheme.textColor.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -140,10 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(width: 24),
-                  
-                  Expanded(
-                    child: _buildSelectedContent(),
-                  ),
+
+                  Expanded(child: _buildSelectedContent()),
                 ],
               ),
             ],
@@ -155,44 +162,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSelectedContent() {
     switch (_activeSettingsRoute) {
-      case 'Appearance':
+      case 'Aparência':
         return AppearanceSettingsContent(
           currentTheme: widget.currentTheme,
           onThemeChanged: widget.onThemeChanged,
         );
-      case 'Privacy':
+      case 'Privacidade':
         return PrivacySettingsContent(currentTheme: widget.currentTheme);
-      case 'Security':
+      case 'Segurança':
         return SecuritySettingsContent(currentTheme: widget.currentTheme);
-      case 'Notifications':
+      case 'Notificações':
         return NotificationsSettingsContent(currentTheme: widget.currentTheme);
-      case 'Help center':
+      case 'Ajuda':
         return Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: widget.currentTheme.backgroundColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+            border: Border.all(
+              color: widget.currentTheme.shadowColor,
+              width: 2,
+            ),
             boxShadow: [
-              BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+              BoxShadow(
+                color: widget.currentTheme.shadowColor,
+                offset: const Offset(4, 4),
+                blurRadius: 0,
+              ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Help & Terminal Manual',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
+                'Ajuda',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: widget.currentTheme.textColor,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
-                'For signal troubleshooting and frequency calibration support, contact terminal command at support@telegrama.zone.',
-                style: TextStyle(fontSize: 13, color: widget.currentTheme.textColor.withValues(alpha: 0.7)),
+                'Para resolução de bugs ou problemas relacionados ao ecossistema, favor entrar em contato via support@telegrama.zone',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: widget.currentTheme.textColor.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ),
         );
-      case 'Profile & Account':
+      case 'Perfil & Conta':
       default:
         return ProfileSettingsContent(
           currentTheme: widget.currentTheme,

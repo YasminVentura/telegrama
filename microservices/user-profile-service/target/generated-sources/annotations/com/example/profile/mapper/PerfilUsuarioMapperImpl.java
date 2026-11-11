@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-11-08T17:36:46-0300",
+    date = "2026-11-11T19:12:13-0300",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.46.200.v20261008-1115, environment: Java 25.0.4.1 (Eclipse Adoptium)"
 )
 @Component
@@ -44,16 +44,16 @@ public class PerfilUsuarioMapperImpl implements PerfilUsuarioMapper {
 
         UsuarioPreferenciasDto.UsuarioPreferenciasDtoBuilder usuarioPreferenciasDto = UsuarioPreferenciasDto.builder();
 
-        usuarioPreferenciasDto.privateFrequencyMode( preferencias.isPrivateFrequencyMode() );
-        usuarioPreferenciasDto.directTransmissions( preferencias.isDirectTransmissions() );
-        usuarioPreferenciasDto.broadcastNodeActivity( preferencias.isBroadcastNodeActivity() );
-        usuarioPreferenciasDto.pushTransmissions( preferencias.isPushTransmissions() );
         usuarioPreferenciasDto.acousticEchos( preferencias.isAcousticEchos() );
-        usuarioPreferenciasDto.zoneBroadcastAlerts( preferencias.isZoneBroadcastAlerts() );
-        usuarioPreferenciasDto.twoFactorAuth( preferencias.isTwoFactorAuth() );
-        usuarioPreferenciasDto.theme( preferencias.getTheme() );
         usuarioPreferenciasDto.avatarUrl( preferencias.getAvatarUrl() );
         usuarioPreferenciasDto.bannerColor( preferencias.getBannerColor() );
+        usuarioPreferenciasDto.broadcastNodeActivity( preferencias.isBroadcastNodeActivity() );
+        usuarioPreferenciasDto.directTransmissions( preferencias.isDirectTransmissions() );
+        usuarioPreferenciasDto.privateFrequencyMode( preferencias.isPrivateFrequencyMode() );
+        usuarioPreferenciasDto.pushTransmissions( preferencias.isPushTransmissions() );
+        usuarioPreferenciasDto.theme( preferencias.getTheme() );
+        usuarioPreferenciasDto.twoFactorAuth( preferencias.isTwoFactorAuth() );
+        usuarioPreferenciasDto.zoneBroadcastAlerts( preferencias.isZoneBroadcastAlerts() );
 
         return usuarioPreferenciasDto.build();
     }

@@ -30,7 +30,7 @@ class MainFeedScreen extends StatefulWidget {
 
 class _MainFeedScreenState extends State<MainFeedScreen> {
   AppTheme _currentTheme = AppTheme.retroGreen;
-  String _currentRoute = 'Home Feed';
+  String _currentRoute = 'Feed Inicial';
 
   final PostRepositoryImpl _postRepository = PostRepositoryImpl();
   final UserRepository _userRepository = UserRepositoryImpl();
@@ -46,23 +46,26 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
     _carregarPostagens();
   }
 
-  bool _exigirAutenticacao({String mensagem = 'Faça login para acessar esta área.'}) {
+  bool _exigirAutenticacao({
+    String mensagem = 'Faça login para acessar esta área.',
+  }) {
     if (UserRepositoryImpl.isLoggedIn) {
       return true;
     }
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensagem)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(mensagem)));
     }
     widget.onRequireLogin?.call();
     return false;
   }
 
   void _navegarParaRota(String route) {
-    if (route != 'Home Feed' && !UserRepositoryImpl.isLoggedIn) {
+    if (route != 'Feed Inicial' && !UserRepositoryImpl.isLoggedIn) {
       _exigirAutenticacao(
-        mensagem: 'Usuários não logados podem acessar apenas o Feed. Faça login para continuar.',
+        mensagem:
+            'Usuários não logados podem acessar apenas o Feed. Faça login para continuar.',
       );
       return;
     }
@@ -112,7 +115,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
   }
 
   Future<void> _publicarPostagem(String conteudo) async {
-    if (!_exigirAutenticacao(mensagem: 'Faça login para publicar uma transmissão.')) {
+    if (!_exigirAutenticacao(
+      mensagem: 'Faça login para publicar uma transmissão.',
+    )) {
       return;
     }
     try {
@@ -125,9 +130,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao publicar post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao publicar post: $e')));
       }
     }
   }
@@ -144,9 +149,9 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Falha ao excluir post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha ao excluir post: $e')));
       }
     }
   }
@@ -200,11 +205,17 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: _currentTheme.primaryColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _currentTheme.shadowColor, width: 2),
+                  border: Border.all(
+                    color: _currentTheme.shadowColor,
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: _currentTheme.shadowColor,
@@ -261,203 +272,243 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
                   ),
 
                 Expanded(
-                  child: rotaEfetiva == 'My Profile'
+                  child: rotaEfetiva == 'Meu Perfil'
                       ? ProfileScreen(
                           currentTheme: _currentTheme,
                           onNavigate: (route) {
                             _navegarParaRota(route);
-                            if (route == 'Home Feed') {
+                            if (route == 'Feed inicial') {
                               _carregarPostagens();
                             }
                           },
                         )
                       : rotaEfetiva == 'Settings'
-                                  ? SettingsScreen(
+                      ? SettingsScreen(
+                          currentTheme: _currentTheme,
+                          onThemeChanged: (newTheme) {
+                            setState(() {
+                              _currentTheme = newTheme;
+                            });
+                          },
+                          onBack: () {
+                            setState(() {
+                              _currentRoute = 'Feed Inicial';
+                            });
+                            _carregarPerfilUsuario();
+                            _carregarPostagens();
+                          },
+                          onProfileUpdated: () {
+                            _carregarPerfilUsuario();
+                            _carregarPostagens();
+                          },
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 900),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 24),
+                                  if (autenticado)
+                                    SendPostWidget(
                                       currentTheme: _currentTheme,
-                                      onThemeChanged: (newTheme) {
-                                        setState(() {
-                                          _currentTheme = newTheme;
-                                        });
-                                      },
-                                      onBack: () {
-                                        setState(() {
-                                          _currentRoute = 'Home Feed';
-                                        });
-                                        _carregarPerfilUsuario();
-                                        _carregarPostagens();
-                                      },
-                                      onProfileUpdated: () {
-                                        _carregarPerfilUsuario();
-                                        _carregarPostagens();
-                                      },
+                                      onPostSubmitted: (post) =>
+                                          _publicarPostagem(post),
                                     )
-                                  : SingleChildScrollView(
-                                      padding: const EdgeInsets.all(24.0),
-                                      child: Center(
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(maxWidth: 900),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const SizedBox(height: 24),
-                                              if (autenticado)
-                                                SendPostWidget(
-                                                  currentTheme: _currentTheme,
-                                                  onPostSubmitted: (post) => _publicarPostagem(post),
-                                                )
-                                              else
-                                                _buildGuestFeedBanner(),
-                                              const SizedBox(height: 24),
-                                              if (_isLoadingPosts)
-                                                Center(
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(40.0),
-                                                    child: CircularProgressIndicator(
-                                                      color: _currentTheme.primaryColor,
-                                                    ),
-                                                  ),
-                                                )
-                                              else if (_posts.isEmpty)
-                                                Container(
-                                                  width: double.infinity,
-                                                  padding: const EdgeInsets.all(32),
-                                                  decoration: BoxDecoration(
-                                                    color: _currentTheme.backgroundColor,
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(color: _currentTheme.shadowColor, width: 2),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: _currentTheme.shadowColor,
-                                                        offset: const Offset(4, 4),
-                                                        blurRadius: 0,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  child: Column(
-                                                    children: [
-                                                      Icon(Icons.satellite_alt_outlined, size: 48, color: _currentTheme.primaryColor),
-                                                      const SizedBox(height: 12),
-                                                      Text(
-                                                        'Nenhuma transmissão no sinal ainda.',
-                                                        style: TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: _currentTheme.textColor,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 6),
-                                                      Text(
-                                                        'Seja o primeiro nó a transmitir uma mensagem no retroverse!',
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          color: _currentTheme.textColor.withValues(alpha: 0.6),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                )
-                                              else
-                                                ..._posts.map((post) {
-                                                  final bool canDeletePost = autenticado &&
-                                                      (UserRepositoryImpl.isCurrentUserAdmin ||
-                                                          UserRepositoryImpl.isCurrentUser(
-                                                            post.authorHandle,
-                                                            authorName: post.authorName,
-                                                          ));
-                                                  return PostCard(
-                                                    key: ValueKey(post.id.isNotEmpty ? post.id : UniqueKey().toString()),
-                                                    currentTheme: _currentTheme,
-                                                    name: post.authorName,
-                                                    handle: post.authorHandle,
-                                                    timeAgo: post.timeAgo,
-                                                    content: post.content,
-                                                    authorAvatarUrl: post.authorAvatarUrl,
-                                                    imageUrl: post.imageUrl,
-                                                    likesCount: post.likesCount,
-                                                    commentsCount: post.commentsCount,
-                                                    repostsCount: post.repostsCount,
-                                                    isLiked: post.curtidoPeloUsuario,
-                                                    isSaved: post.salvoPeloUsuario,
-                                                    isReposted: post.repostadoPeloUsuario,
-                                                    canDelete: canDeletePost && post.id.isNotEmpty,
-                                                    onDeletePressed: () => _excluirPostagem(post.id),
-                                                    onProfileTap: autenticado
-                                                        ? null
-                                                        : () => _exigirAutenticacao(
-                                                              mensagem: 'Faça login para visualizar perfis de usuários.',
-                                                            ),
-                                                    onLikePressed: () async {
-                                                      if (!_exigirAutenticacao(
-                                                        mensagem: 'Faça login para curtir transmissões.',
-                                                      )) {
-                                                        return;
-                                                      }
-                                                      if (post.id.isNotEmpty) {
-                                                        final atualizado = await _postRepository.likePost(post.id);
-                                                        if (atualizado != null && mounted) {
-                                                          setState(() {
-                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
-                                                            if (idx != -1) {
-                                                              _posts[idx] = atualizado;
-                                                            }
-                                                          });
-                                                        }
-                                                      }
-                                                    },
-                                                    onSavePressed: () async {
-                                                      if (!_exigirAutenticacao(
-                                                        mensagem: 'Faça login para salvar transmissões.',
-                                                      )) {
-                                                        return;
-                                                      }
-                                                      if (post.id.isNotEmpty) {
-                                                        final atualizado = await _postRepository.savePost(post.id);
-                                                        if (atualizado != null && mounted) {
-                                                          setState(() {
-                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
-                                                            if (idx != -1) {
-                                                              _posts[idx] = atualizado;
-                                                            }
-                                                          });
-                                                        }
-                                                      }
-                                                    },
-                                                    onCommentPressed: () => _abrirDetalhesPost(post),
-                                                    onTap: () => _abrirDetalhesPost(post),
-                                                    onRepostPressed: () async {
-                                                      if (!_exigirAutenticacao(
-                                                        mensagem: 'Faça login para repostar transmissões.',
-                                                      )) {
-                                                        return;
-                                                      }
-                                                      if (post.id.isNotEmpty) {
-                                                        final atualizado = await _postRepository.repost(post.id);
-                                                        if (atualizado != null && mounted) {
-                                                          setState(() {
-                                                            final idx = _posts.indexWhere((p) => p.id == post.id);
-                                                            if (idx != -1) {
-                                                              _posts[idx] = atualizado;
-                                                            }
-                                                          });
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            SnackBar(
-                                                              content: Text(
-                                                                atualizado.repostadoPeloUsuario
-                                                                    ? 'Transmissão repostada no seu perfil!'
-                                                                    : 'Repost removido do seu perfil.',
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }
-                                                      }
-                                                    },
-                                                  );
-                                                }),
-                                            ],
-                                          ),
+                                  else
+                                    _buildGuestFeedBanner(),
+                                  const SizedBox(height: 24),
+                                  if (_isLoadingPosts)
+                                    Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(40.0),
+                                        child: CircularProgressIndicator(
+                                          color: _currentTheme.primaryColor,
                                         ),
                                       ),
-                                    ),
+                                    )
+                                  else if (_posts.isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(32),
+                                      decoration: BoxDecoration(
+                                        color: _currentTheme.backgroundColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: _currentTheme.shadowColor,
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: _currentTheme.shadowColor,
+                                            offset: const Offset(4, 4),
+                                            blurRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.satellite_alt_outlined,
+                                            size: 48,
+                                            color: _currentTheme.primaryColor,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'Nenhuma transmissão no sinal ainda.',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: _currentTheme.textColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Seja o primeiro nó a transmitir uma mensagem no retroverse!',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: _currentTheme.textColor
+                                                  .withValues(alpha: 0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  else
+                                    ..._posts.map((post) {
+                                      final bool canDeletePost =
+                                          autenticado &&
+                                          (UserRepositoryImpl
+                                                  .isCurrentUserAdmin ||
+                                              UserRepositoryImpl.isCurrentUser(
+                                                post.authorHandle,
+                                                authorName: post.authorName,
+                                              ));
+                                      return PostCard(
+                                        key: ValueKey(
+                                          post.id.isNotEmpty
+                                              ? post.id
+                                              : UniqueKey().toString(),
+                                        ),
+                                        currentTheme: _currentTheme,
+                                        name: post.authorName,
+                                        handle: post.authorHandle,
+                                        timeAgo: post.timeAgo,
+                                        content: post.content,
+                                        authorAvatarUrl: post.authorAvatarUrl,
+                                        imageUrl: post.imageUrl,
+                                        likesCount: post.likesCount,
+                                        commentsCount: post.commentsCount,
+                                        repostsCount: post.repostsCount,
+                                        isLiked: post.curtidoPeloUsuario,
+                                        isSaved: post.salvoPeloUsuario,
+                                        isReposted: post.repostadoPeloUsuario,
+                                        canDelete:
+                                            canDeletePost && post.id.isNotEmpty,
+                                        onDeletePressed: () =>
+                                            _excluirPostagem(post.id),
+                                        onProfileTap: autenticado
+                                            ? null
+                                            : () => _exigirAutenticacao(
+                                                mensagem:
+                                                    'Faça login para visualizar perfis de usuários.',
+                                              ),
+                                        onLikePressed: () async {
+                                          if (!_exigirAutenticacao(
+                                            mensagem:
+                                                'Faça login para curtir transmissões.',
+                                          )) {
+                                            return;
+                                          }
+                                          if (post.id.isNotEmpty) {
+                                            final atualizado =
+                                                await _postRepository.likePost(
+                                                  post.id,
+                                                );
+                                            if (atualizado != null && mounted) {
+                                              setState(() {
+                                                final idx = _posts.indexWhere(
+                                                  (p) => p.id == post.id,
+                                                );
+                                                if (idx != -1) {
+                                                  _posts[idx] = atualizado;
+                                                }
+                                              });
+                                            }
+                                          }
+                                        },
+                                        onSavePressed: () async {
+                                          if (!_exigirAutenticacao(
+                                            mensagem:
+                                                'Faça login para salvar transmissões.',
+                                          )) {
+                                            return;
+                                          }
+                                          if (post.id.isNotEmpty) {
+                                            final atualizado =
+                                                await _postRepository.savePost(
+                                                  post.id,
+                                                );
+                                            if (atualizado != null && mounted) {
+                                              setState(() {
+                                                final idx = _posts.indexWhere(
+                                                  (p) => p.id == post.id,
+                                                );
+                                                if (idx != -1) {
+                                                  _posts[idx] = atualizado;
+                                                }
+                                              });
+                                            }
+                                          }
+                                        },
+                                        onCommentPressed: () =>
+                                            _abrirDetalhesPost(post),
+                                        onTap: () => _abrirDetalhesPost(post),
+                                        onRepostPressed: () async {
+                                          if (!_exigirAutenticacao(
+                                            mensagem:
+                                                'Faça login para repostar transmissões.',
+                                          )) {
+                                            return;
+                                          }
+                                          if (post.id.isNotEmpty) {
+                                            final atualizado =
+                                                await _postRepository.repost(
+                                                  post.id,
+                                                );
+                                            if (atualizado != null && mounted) {
+                                              setState(() {
+                                                final idx = _posts.indexWhere(
+                                                  (p) => p.id == post.id,
+                                                );
+                                                if (idx != -1) {
+                                                  _posts[idx] = atualizado;
+                                                }
+                                              });
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    atualizado
+                                                            .repostadoPeloUsuario
+                                                        ? 'Transmissão repostada no seu perfil!'
+                                                        : 'Repost removido do seu perfil.',
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                      );
+                                    }),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ],
             ),
@@ -469,7 +520,8 @@ class _MainFeedScreenState extends State<MainFeedScreen> {
 
   Future<void> _abrirDetalhesPost(PostModel post) async {
     if (!_exigirAutenticacao(
-      mensagem: 'Usuários não logados podem acessar apenas o Feed. Faça login para abrir e comentar na transmissão.',
+      mensagem:
+          'Usuários não logados podem acessar apenas o Feed. Faça login para abrir e comentar na transmissão.',
     )) {
       return;
     }

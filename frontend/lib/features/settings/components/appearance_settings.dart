@@ -39,20 +39,31 @@ class AppearanceSettingsContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: currentTheme.shadowColor, width: 2),
         boxShadow: [
-          BoxShadow(color: currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+          BoxShadow(
+            color: currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Appearance & Frequencies',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: currentTheme.textColor),
+            'Aparência',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: currentTheme.textColor,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Tune the visual color palette and vibe of your retroverse interface.',
-            style: TextStyle(fontSize: 12.5, color: currentTheme.textColor.withOpacity(0.6)),
+            'Escolha a palheta de cores que mais se encaixa na sua vibe',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: currentTheme.textColor.withOpacity(0.6),
+            ),
           ),
           const SizedBox(height: 24),
           Wrap(
@@ -65,7 +76,9 @@ class AppearanceSettingsContent extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () {
                     onThemeChanged(theme);
-                    userRepository.updatePreferences({'theme': _mapThemeToEnum(theme)});
+                    userRepository.updatePreferences({
+                      'theme': _mapThemeToEnum(theme),
+                    });
                   },
                   child: Container(
                     width: 200,
@@ -74,7 +87,9 @@ class AppearanceSettingsContent extends StatelessWidget {
                       color: theme.backgroundColor,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isSelected ? theme.primaryColor : currentTheme.shadowColor,
+                        color: isSelected
+                            ? theme.primaryColor
+                            : currentTheme.shadowColor,
                         width: isSelected ? 3 : 2,
                       ),
                       boxShadow: [
@@ -106,16 +121,42 @@ class AppearanceSettingsContent extends StatelessWidget {
                                   color: theme.primaryColor,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(Icons.check, size: 10, color: theme.backgroundColor),
+                                child: Icon(
+                                  Icons.check,
+                                  size: 10,
+                                  color: theme.backgroundColor,
+                                ),
                               ),
                           ],
                         ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Container(width: 24, height: 24, decoration: BoxDecoration(color: theme.primaryColor, shape: BoxShape.circle, border: Border.all(color: currentTheme.shadowColor, width: 1.5))),
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: theme.primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: currentTheme.shadowColor,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 8),
-                            Container(width: 24, height: 24, decoration: BoxDecoration(color: theme.secondaryColor, shape: BoxShape.circle, border: Border.all(color: currentTheme.shadowColor, width: 1.5))),
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: theme.secondaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: currentTheme.shadowColor,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ],

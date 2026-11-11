@@ -47,12 +47,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await _authRepository.login(_emailController.text, _passwordController.text);
+      await _authRepository.login(
+        _emailController.text,
+        _passwordController.text,
+      );
       widget.onLoginSuccess();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha no login: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Falha no login: $e')));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -99,7 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
           right: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
         ),
         image: const DecorationImage(
-          image: AssetImage('lib/assets/images/signal_artwork.png'), // Substitua pelo caminho do seu asset/imagem
+          image: AssetImage(
+            'lib/assets/images/signal_artwork.png',
+          ), // Substitua pelo caminho do seu asset/imagem
           fit: BoxFit.cover,
         ),
       ),
@@ -113,7 +118,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: widget.currentTheme.primaryColor,
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
@@ -123,7 +131,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-                child: Icon(Icons.waves, color: widget.currentTheme.backgroundColor, size: 20),
+                child: Icon(
+                  Icons.waves,
+                  color: widget.currentTheme.backgroundColor,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -144,11 +156,17 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: widget.currentTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: widget.currentTheme.shadowColor,
@@ -158,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 child: Text(
-                  'RETURN TRANSMISSION',
+                  'RETORNE A TRANSMITIR',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -169,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Tune back into\nyour frequencies.',
+                'Conecte-se novamente nas\nsuas frequências',
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
@@ -179,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Your zones, waves and saved reels are waiting on the other side of the signal..',
+                'Seus canais, zonas e mensagens salvas estão esperando do outro lado do sinal.',
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.4,
@@ -188,7 +206,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-
         ],
       ),
     );
@@ -206,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'NODE ACCESS',
+                'ACESSO AO NÓ',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -216,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Welcome back, traveler',
+                'Bem-vindo de volta, viajante',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
@@ -225,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Enter your credentials to reconnect with the retroverse.',
+                'Insira suas credenciais para se reconectar ao retroverso.',
                 style: TextStyle(
                   fontSize: 14,
                   color: widget.currentTheme.textColor.withOpacity(0.7),
@@ -233,11 +250,14 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 36),
 
-              _buildFieldLabel('EMAIL OR NODE ID'),
+              _buildFieldLabel('E-MAIL OU ID DO NÓ'),
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
-                style: TextStyle(color: widget.currentTheme.textColor, fontSize: 14),
+                style: TextStyle(
+                  color: widget.currentTheme.textColor,
+                  fontSize: 14,
+                ),
                 decoration: _inputDecoration(
                   hintText: 'you@frequency.net',
                   prefixIcon: Icons.alternate_email,
@@ -245,12 +265,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              _buildFieldLabel('PASSWORD'),
+              _buildFieldLabel('SENHA'),
               const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                style: TextStyle(color: widget.currentTheme.textColor, fontSize: 14),
+                style: TextStyle(
+                  color: widget.currentTheme.textColor,
+                  fontSize: 14,
+                ),
                 decoration: _inputDecoration(
                   hintText: '••••••••••••',
                   prefixIcon: Icons.lock_outline,
@@ -270,22 +293,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           value: _rememberMe,
                           activeColor: widget.currentTheme.primaryColor,
                           checkColor: widget.currentTheme.backgroundColor,
-                          side: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          onChanged: (val) => setState(() => _rememberMe = val ?? true),
+                          side: BorderSide(
+                            color: widget.currentTheme.shadowColor,
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          onChanged: (val) =>
+                              setState(() => _rememberMe = val ?? true),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Keep this node connected',
-                        style: TextStyle(fontSize: 13, color: widget.currentTheme.textColor),
+                        'Manter este nó conectado',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: widget.currentTheme.textColor,
+                        ),
                       ),
                     ],
                   ),
                   TextButton(
-                    onPressed: () {widget.onNavigateToForgotPassword();},
+                    onPressed: () {
+                      widget.onNavigateToForgotPassword();
+                    },
                     child: Text(
-                      'Forgot password?',
+                      'Esqueceu a senha?',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -309,11 +343,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: BoxDecoration(
                       color: widget.currentTheme.primaryColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                      border: Border.all(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: widget.currentTheme.shadowColor,
-                          offset: _isHoveredButton ? const Offset(1, 1) : const Offset(4, 4),
+                          offset: _isHoveredButton
+                              ? const Offset(1, 1)
+                              : const Offset(4, 4),
                           blurRadius: 0,
                         ),
                       ],
@@ -331,10 +370,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           )
                         else ...[
-                          Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
+                          Icon(
+                            Icons.wifi,
+                            color: widget.currentTheme.backgroundColor,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            'ENTER THE RETROVERSE',
+                            'ENTRE NO UNIVERSO RETRO',
                             style: TextStyle(
                               color: widget.currentTheme.backgroundColor,
                               fontWeight: FontWeight.bold,
@@ -342,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               letterSpacing: 1.1,
                             ),
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -354,14 +397,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'New frequency?',
-                      style: TextStyle(fontSize: 13, color: widget.currentTheme.textColor.withOpacity(0.6)),
+                      'Nova frequência?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: widget.currentTheme.textColor.withOpacity(0.6),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     GestureDetector(
                       onTap: widget.onNavigateToRegister,
                       child: Text(
-                        'Create your Telegrama node',
+                        'Crie o seu nó no Telegrama',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -381,7 +427,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.bold,
-                              color: widget.currentTheme.textColor.withOpacity(0.65),
+                              color: widget.currentTheme.textColor.withOpacity(
+                                0.65,
+                              ),
                               decoration: TextDecoration.underline,
                             ),
                           ),
@@ -410,21 +458,37 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hintText, required IconData prefixIcon}) {
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required IconData prefixIcon,
+  }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(fontSize: 14, color: widget.currentTheme.textColor.withOpacity(0.4)),
-      prefixIcon: Icon(prefixIcon, color: widget.currentTheme.textColor, size: 20),
+      hintStyle: TextStyle(
+        fontSize: 14,
+        color: widget.currentTheme.textColor.withOpacity(0.4),
+      ),
+      prefixIcon: Icon(
+        prefixIcon,
+        color: widget.currentTheme.textColor,
+        size: 20,
+      ),
       filled: true,
       fillColor: widget.currentTheme.backgroundColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
+        borderSide: BorderSide(
+          color: widget.currentTheme.shadowColor,
+          width: 2,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: widget.currentTheme.primaryColor, width: 2),
+        borderSide: BorderSide(
+          color: widget.currentTheme.primaryColor,
+          width: 2,
+        ),
       ),
     );
   }

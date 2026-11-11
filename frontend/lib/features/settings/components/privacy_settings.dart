@@ -60,7 +60,9 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
-          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+          child: CircularProgressIndicator(
+            color: widget.currentTheme.primaryColor,
+          ),
         ),
       );
     }
@@ -72,26 +74,37 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
         boxShadow: [
-          BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+          BoxShadow(
+            color: widget.currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Privacy & Frequencies',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
+            'Configurações de Privacidade',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: widget.currentTheme.textColor,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Control who can intercept your transmissions and see your node status.',
-            style: TextStyle(fontSize: 12.5, color: widget.currentTheme.textColor.withOpacity(0.6)),
+            'Controle quem pode interceptar suas transmissões e ver o status do seu terminal.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: widget.currentTheme.textColor.withOpacity(0.6),
+            ),
           ),
           const SizedBox(height: 24),
 
           _buildToggleItem(
-            title: 'Private frequency mode',
-            subtitle: 'Only approved nodes can tune into your broadcasted waves.',
+            title: 'Modo de Posts Privados',
+            subtitle: 'Somente seguidores poderão visualizar seus Posts',
             value: _privateFrequency,
             onChanged: (val) {
               setState(() => _privateFrequency = val);
@@ -100,8 +113,8 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
-            title: 'Direct transmissions (DMs)',
-            subtitle: 'Allow other nodes to send direct private signals to your terminal.',
+            title: 'Mensagens Privadas',
+            subtitle: 'Ativar mensagens privadas entre nós',
             value: _allowDirectTransmissions,
             onChanged: (val) {
               setState(() => _allowDirectTransmissions = val);
@@ -110,8 +123,9 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
-            title: 'Broadcast node activity',
-            subtitle: 'Display your online status and active zones in the retroverse.',
+            title: 'Status de Atividade Público',
+            subtitle:
+                'Exibir o status de online do seu terminal para outros usuários.',
             value: _showNodeActivity,
             onChanged: (val) {
               setState(() => _showNodeActivity = val);
@@ -145,12 +159,19 @@ class _PrivacySettingsContentState extends State<PrivacySettingsContent> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: widget.currentTheme.textColor,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.6)),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: widget.currentTheme.textColor.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
