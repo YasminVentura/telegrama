@@ -55,7 +55,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (_selectedAvatarUrl == null || _selectedAvatarUrl!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, escolha uma foto de perfil para o seu nó.')),
+        const SnackBar(
+          content: Text('Por favor, escolha uma foto de perfil para o seu nó.'),
+        ),
       );
       return;
     }
@@ -77,15 +79,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _acceptTerms,
         avatarUrl: _selectedAvatarUrl,
       );
-      
+
       // Se for bem sucedido, chamamos o callback de sucesso (que provavelmente redireciona)
       // Note que o registro no backend também pode precisar que você faça o login em seguida,
       // ou se o seu backend já retorna os cookies de login no registro, já estaria logado.
       widget.onRegisterSuccess();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha no cadastro: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Falha no cadastro: $e')));
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -146,7 +148,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: widget.currentTheme.primaryColor,
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
@@ -156,7 +161,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ],
                 ),
-                child: Icon(Icons.waves, color: widget.currentTheme.backgroundColor, size: 20),
+                child: Icon(
+                  Icons.waves,
+                  color: widget.currentTheme.backgroundColor,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Text(
@@ -173,16 +182,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           const SizedBox(height: 200),
 
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: widget.currentTheme.backgroundColor,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                  border: Border.all(
+                    color: widget.currentTheme.shadowColor,
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: widget.currentTheme.shadowColor,
@@ -192,7 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                 ),
                 child: Text(
-                  'NEW TRANSMISSION',
+                  'NOVA TRANSMISSÃO',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -203,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Claim your corner\nof the retroverse.',
+                'Reivindique seu canto\ndo retroverso.',
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
@@ -213,7 +227,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Broadcast ideas, discover strange frequencies and find the nodes that make your signal stronger.',
+                'Transmita ideias, descubra frequências estranhas e encontre os nós que tornam seu sinal mais forte.',
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.4,
@@ -242,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'NODE REGISTRATION',
+                'REGISTRO DE NÓ',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -252,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Create your frequency',
+                'Crie sua frequência',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
@@ -261,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'A few coordinates and your Telegrama node will be ready to transmit.',
+                'Algumas coordenadas e seu nó do Telegrama estará pronto para transmitir.',
                 style: TextStyle(
                   fontSize: 13.5,
                   color: widget.currentTheme.textColor.withOpacity(0.7),
@@ -269,7 +283,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              _buildFieldLabel('CHOOSE YOUR NODE AVATAR'),
+              _buildFieldLabel('ESCOLHA O AVATAR DO SEU NÓ'),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 12,
@@ -351,12 +365,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildFieldLabel('DISPLAY NAME'),
+                        _buildFieldLabel('NOME DE EXIBIÇÃO'),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _displayNameController,
-                          style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                          decoration: _inputDecoration(hintText: 'Saskia Vance', prefixIcon: Icons.person_outline),
+                          style: TextStyle(
+                            color: widget.currentTheme.textColor,
+                            fontSize: 13.5,
+                          ),
+                          decoration: _inputDecoration(
+                            hintText: 'Saskia Vance',
+                            prefixIcon: Icons.person_outline,
+                          ),
                         ),
                       ],
                     ),
@@ -366,12 +386,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildFieldLabel('NODE ID'),
+                        _buildFieldLabel('ID DE NÓ'),
                         const SizedBox(height: 6),
                         TextField(
                           controller: _nodeIdController,
-                          style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                          decoration: _inputDecoration(hintText: 'sas_vance', prefixIcon: Icons.alternate_email),
+                          style: TextStyle(
+                            color: widget.currentTheme.textColor,
+                            fontSize: 13.5,
+                          ),
+                          decoration: _inputDecoration(
+                            hintText: 'sas_vance',
+                            prefixIcon: Icons.alternate_email,
+                          ),
                         ),
                       ],
                     ),
@@ -385,24 +411,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 6),
               TextField(
                 controller: _emailController,
-                style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                decoration: _inputDecoration(hintText: 'saskia@frequency.net', prefixIcon: Icons.mail_outline),
+                style: TextStyle(
+                  color: widget.currentTheme.textColor,
+                  fontSize: 13.5,
+                ),
+                decoration: _inputDecoration(
+                  hintText: 'saskia@frequency.net',
+                  prefixIcon: Icons.mail_outline,
+                ),
               ),
               const SizedBox(height: 16),
 
               // Campo Password[cite: 4]
-              _buildFieldLabel('PASSWORD'),
+              _buildFieldLabel('SENHA'),
               const SizedBox(height: 6),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                style: TextStyle(color: widget.currentTheme.textColor, fontSize: 13.5),
-                decoration: _inputDecoration(hintText: 'Choose 8+ characters', prefixIcon: Icons.lock_outline),
+                style: TextStyle(
+                  color: widget.currentTheme.textColor,
+                  fontSize: 13.5,
+                ),
+                decoration: _inputDecoration(
+                  hintText: 'Insira +8 caracteres',
+                  prefixIcon: Icons.lock_outline,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 'Signal strength: waiting for input',
-                style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.5)),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: widget.currentTheme.textColor.withOpacity(0.5),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -416,15 +457,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       value: _acceptTerms,
                       activeColor: widget.currentTheme.primaryColor,
                       checkColor: widget.currentTheme.backgroundColor,
-                      side: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                      onChanged: (val) => setState(() => _acceptTerms = val ?? true),
+                      side: BorderSide(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      onChanged: (val) =>
+                          setState(() => _acceptTerms = val ?? true),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'I accept the Terms of Waves and Privacy Frequency.',
-                    style: TextStyle(fontSize: 12.5, color: widget.currentTheme.textColor),
+                    'Eu aceito os Termos de Uso',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: widget.currentTheme.textColor,
+                    ),
                   ),
                 ],
               ),
@@ -443,11 +493,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: BoxDecoration(
                       color: widget.currentTheme.primaryColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+                      border: Border.all(
+                        color: widget.currentTheme.shadowColor,
+                        width: 2,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: widget.currentTheme.shadowColor,
-                          offset: _isHoveredButton ? const Offset(1, 1) : const Offset(4, 4),
+                          offset: _isHoveredButton
+                              ? const Offset(1, 1)
+                              : const Offset(4, 4),
                           blurRadius: 0,
                         ),
                       ],
@@ -465,10 +520,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           )
                         else ...[
-                          Icon(Icons.wifi, color: widget.currentTheme.backgroundColor, size: 18),
+                          Icon(
+                            Icons.wifi,
+                            color: widget.currentTheme.backgroundColor,
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            'CREATE MY NODE',
+                            'CRIE MEU NÓ',
                             style: TextStyle(
                               color: widget.currentTheme.backgroundColor,
                               fontWeight: FontWeight.bold,
@@ -476,7 +535,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               letterSpacing: 1.1,
                             ),
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -489,14 +548,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Already broadcasting?',
-                      style: TextStyle(fontSize: 12.5, color: widget.currentTheme.textColor.withOpacity(0.6)),
+                      'Já tem uma conta criada?',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: widget.currentTheme.textColor.withOpacity(0.6),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     GestureDetector(
                       onTap: widget.onNavigateToLogin,
                       child: Text(
-                        'Sign in',
+                        'Entre no seu nó',
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.bold,
@@ -516,7 +578,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: widget.currentTheme.textColor.withOpacity(0.65),
+                              color: widget.currentTheme.textColor.withOpacity(
+                                0.65,
+                              ),
                               decoration: TextDecoration.underline,
                             ),
                           ),
@@ -527,19 +591,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Nota de rodapé da rede[cite: 4]
-              Center(
-                child: Text(
-                  'BY JOINING YOU AGREE TO THE COMMUNITY FREQUENCY CODE',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    letterSpacing: 0.8,
-                    color: widget.currentTheme.textColor.withOpacity(0.4),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -559,21 +610,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  InputDecoration _inputDecoration({required String hintText, required IconData prefixIcon}) {
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required IconData prefixIcon,
+  }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(fontSize: 13, color: widget.currentTheme.textColor.withOpacity(0.4)),
-      prefixIcon: Icon(prefixIcon, color: widget.currentTheme.textColor, size: 18),
+      hintStyle: TextStyle(
+        fontSize: 13,
+        color: widget.currentTheme.textColor.withOpacity(0.4),
+      ),
+      prefixIcon: Icon(
+        prefixIcon,
+        color: widget.currentTheme.textColor,
+        size: 18,
+      ),
       filled: true,
       fillColor: widget.currentTheme.backgroundColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: widget.currentTheme.shadowColor, width: 2),
+        borderSide: BorderSide(
+          color: widget.currentTheme.shadowColor,
+          width: 2,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: widget.currentTheme.primaryColor, width: 2),
+        borderSide: BorderSide(
+          color: widget.currentTheme.primaryColor,
+          width: 2,
+        ),
       ),
     );
   }

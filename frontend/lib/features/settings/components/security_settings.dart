@@ -8,7 +8,8 @@ class SecuritySettingsContent extends StatefulWidget {
   const SecuritySettingsContent({super.key, required this.currentTheme});
 
   @override
-  State<SecuritySettingsContent> createState() => _SecuritySettingsContentState();
+  State<SecuritySettingsContent> createState() =>
+      _SecuritySettingsContentState();
 }
 
 class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
@@ -44,7 +45,9 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar preferência de segurança: $e')),
+          SnackBar(
+            content: Text('Erro ao salvar preferência de segurança: $e'),
+          ),
         );
       }
     }
@@ -56,7 +59,9 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
-          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+          child: CircularProgressIndicator(
+            color: widget.currentTheme.primaryColor,
+          ),
         ),
       );
     }
@@ -68,26 +73,38 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
         boxShadow: [
-          BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+          BoxShadow(
+            color: widget.currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Security & Access Keys',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
+            'Segurança e chaves de acesso',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: widget.currentTheme.textColor,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Protect your terminal against unauthorized interception.',
-            style: TextStyle(fontSize: 12.5, color: widget.currentTheme.textColor.withOpacity(0.6)),
+            'Proteja o seu terminal contra interceptações não autorizadas.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: widget.currentTheme.textColor.withOpacity(0.6),
+            ),
           ),
           const SizedBox(height: 24),
 
           _buildToggleItem(
-            title: 'Two-Factor Authentication (2FA)',
-            subtitle: 'Require security key verification on new terminal log-ins.',
+            title: 'Autenticação de Dois Fatores(2FA)',
+            subtitle:
+                'Requerir uma chave de verificação ao logar em novo dispositivo',
             value: _twoFactorAuth,
             onChanged: (val) {
               setState(() => _twoFactorAuth = val);
@@ -98,18 +115,18 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
 
           _buildActionCard(
             icon: Icons.vpn_key_outlined,
-            title: 'Terminal Access Tokens',
-            subtitle: 'Manage active CLI keys and authorized web sessions.',
-            actionText: 'MANAGE KEYS',
+            title: 'Terminal de Tokens de Acesso',
+            subtitle: 'Gerencie as chaves CLI ativas',
+            actionText: 'GERENCIAR CHAVES',
             onTap: () {},
           ),
           const SizedBox(height: 16),
 
           _buildActionCard(
             icon: Icons.devices_outlined,
-            title: 'Active Retro Terminals',
-            subtitle: '2 active sessions connected from Berlin and Penedo.',
-            actionText: 'REVOKE ALL',
+            title: 'Sessões ativas',
+            subtitle: '2 sessões ativas conectadas de Berlim e Penedo.',
+            actionText: 'DESCONECTAR TODOS',
             isDestructive: true,
             onTap: () {},
           ),
@@ -138,9 +155,22 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: widget.currentTheme.textColor,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.6))),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: widget.currentTheme.textColor.withOpacity(0.6),
+                  ),
+                ),
               ],
             ),
           ),
@@ -178,17 +208,23 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDestructive ? const Color(0xFFFF4D4D).withOpacity(0.15) : widget.currentTheme.primaryColor.withOpacity(0.15),
+              color: isDestructive
+                  ? const Color(0xFFFF4D4D).withOpacity(0.15)
+                  : widget.currentTheme.primaryColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.primaryColor, 
-                width: 1.5
+                color: isDestructive
+                    ? const Color(0xFFFF4D4D)
+                    : widget.currentTheme.primaryColor,
+                width: 1.5,
               ),
             ),
             child: Icon(
-              icon, 
-              size: 20, 
-              color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.primaryColor
+              icon,
+              size: 20,
+              color: isDestructive
+                  ? const Color(0xFFFF4D4D)
+                  : widget.currentTheme.primaryColor,
             ),
           ),
           const SizedBox(width: 16),
@@ -197,15 +233,23 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title, 
+                  title,
                   style: TextStyle(
-                    fontSize: 14, 
-                    fontWeight: FontWeight.w900, 
-                    color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.textColor
-                  )
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: isDestructive
+                        ? const Color(0xFFFF4D4D)
+                        : widget.currentTheme.textColor,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.6))),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: widget.currentTheme.textColor.withOpacity(0.6),
+                  ),
+                ),
               ],
             ),
           ),
@@ -218,11 +262,17 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
                 color: widget.currentTheme.backgroundColor,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.shadowColor, 
-                  width: 1.5
+                  color: isDestructive
+                      ? const Color(0xFFFF4D4D)
+                      : widget.currentTheme.shadowColor,
+                  width: 1.5,
                 ),
                 boxShadow: [
-                  BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                  BoxShadow(
+                    color: widget.currentTheme.shadowColor,
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
+                  ),
                 ],
               ),
               child: Text(
@@ -231,7 +281,9 @@ class _SecuritySettingsContentState extends State<SecuritySettingsContent> {
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
-                  color: isDestructive ? const Color(0xFFFF4D4D) : widget.currentTheme.textColor,
+                  color: isDestructive
+                      ? const Color(0xFFFF4D4D)
+                      : widget.currentTheme.textColor,
                 ),
               ),
             ),

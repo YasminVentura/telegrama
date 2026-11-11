@@ -12,7 +12,8 @@ import 'package:frontend/shared/components/user_avatar.dart';
 class ProfileScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final Function(String route)? onNavigate;
-  final String? nodeId; // Opcional: Se nulo, busca o perfil do usuário logado via GET /usuarios/me
+  final String?
+  nodeId; // Opcional: Se nulo, busca o perfil do usuário logado via GET /usuarios/me
 
   const ProfileScreen({
     super.key,
@@ -66,19 +67,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
 
-    _profileFuture.then((profile) {
-      if (mounted) {
-        setState(() {
-          _isFollowing = profile.isFollowing;
-          _followersCount = profile.seguidoresCount;
-          _followingCount = profile.seguindoCount;
-          _selectedAvatarUrl = profile.preferencias?.avatarUrl ?? profile.avatarUrl;
-          _selectedBannerColor =
-              profile.preferencias?.bannerColor ?? profile.bannerColor;
-          _refreshPostsLists(profile.nodeId);
-        });
-      }
-    }).catchError((_) {});
+    _profileFuture
+        .then((profile) {
+          if (mounted) {
+            setState(() {
+              _isFollowing = profile.isFollowing;
+              _followersCount = profile.seguidoresCount;
+              _followingCount = profile.seguindoCount;
+              _selectedAvatarUrl =
+                  profile.preferencias?.avatarUrl ?? profile.avatarUrl;
+              _selectedBannerColor =
+                  profile.preferencias?.bannerColor ?? profile.bannerColor;
+              _refreshPostsLists(profile.nodeId);
+            });
+          }
+        })
+        .catchError((_) {});
   }
 
   Future<void> _updateAvatarPreference(String newAvatarUrl) async {
@@ -95,7 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Foto de perfil atualizada com sucesso!')),
+          const SnackBar(
+            content: Text('Foto de perfil atualizada com sucesso!'),
+          ),
         );
       }
     } catch (e) {
@@ -116,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bioController = TextEditingController(text: profile.bio ?? '');
     String tempSelectedAvatar =
         UserAvatar.resolvePresetAsset(currentEffectiveAvatar) ??
-            currentEffectiveAvatar;
+        currentEffectiveAvatar;
     String tempSelectedBannerColor = currentEffectiveBannerColor.isNotEmpty
         ? currentEffectiveBannerColor
         : UserPreferences.defaultBannerColor;
@@ -232,10 +238,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Wrap(
                         spacing: 12,
                         runSpacing: 12,
-                        children: UserPreferences.fixedBannerColors.map((hexColor) {
+                        children: UserPreferences.fixedBannerColors.map((
+                          hexColor,
+                        ) {
                           final bool isSelected =
                               tempSelectedBannerColor.toUpperCase() ==
-                                  hexColor.toUpperCase();
+                              hexColor.toUpperCase();
                           final Color swatchColor =
                               UserPreferences.parseBannerColor(hexColor);
                           return GestureDetector(
@@ -327,7 +335,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       radius: 26,
                                       showShadow: false,
                                       borderWidth: 1.5,
-                                      borderColor: widget.currentTheme.shadowColor,
+                                      borderColor:
+                                          widget.currentTheme.shadowColor,
                                     ),
                                   ),
                                   if (isSelected)
@@ -337,17 +346,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       child: Container(
                                         padding: const EdgeInsets.all(3),
                                         decoration: BoxDecoration(
-                                          color: widget.currentTheme.primaryColor,
+                                          color:
+                                              widget.currentTheme.primaryColor,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: widget.currentTheme.shadowColor,
+                                            color:
+                                                widget.currentTheme.shadowColor,
                                             width: 1.5,
                                           ),
                                         ),
                                         child: Icon(
                                           Icons.check,
                                           size: 12,
-                                          color: widget.currentTheme.backgroundColor,
+                                          color: widget
+                                              .currentTheme
+                                              .backgroundColor,
                                         ),
                                       ),
                                     ),
@@ -414,8 +427,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       UserRepositoryImpl.setExplicitAvatarChoice(
                                         tempSelectedAvatar,
                                       );
-                                      UserRepositoryImpl
-                                          .setExplicitBannerColorChoice(
+                                      UserRepositoryImpl.setExplicitBannerColorChoice(
                                         tempSelectedBannerColor,
                                       );
                                       await _userRepository.updatePreferences({
@@ -438,12 +450,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       }
                                       if (mounted) {
                                         setState(() {
-                                          _selectedAvatarUrl = tempSelectedAvatar;
+                                          _selectedAvatarUrl =
+                                              tempSelectedAvatar;
                                           _selectedBannerColor =
                                               tempSelectedBannerColor;
                                           _fetchProfileData();
                                         });
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
                                             content: Text(
                                               'Perfil atualizado com sucesso!',
@@ -454,7 +469,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     } catch (e) {
                                       setDialogState(() => isSaving = false);
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               'Erro ao salvar alterações: $e',
@@ -492,7 +509,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         height: 16,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: widget.currentTheme.backgroundColor,
+                                          color: widget
+                                              .currentTheme
+                                              .backgroundColor,
                                         ),
                                       )
                                     : Text(
@@ -500,7 +519,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         style: TextStyle(
                                           fontSize: 12.5,
                                           fontWeight: FontWeight.w900,
-                                          color: widget.currentTheme.backgroundColor,
+                                          color: widget
+                                              .currentTheme
+                                              .backgroundColor,
                                         ),
                                       ),
                               ),
@@ -594,9 +615,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar follow: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao atualizar follow: $e')));
       }
     } finally {
       if (mounted) {
@@ -619,7 +640,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: widget.currentTheme.backgroundColor,
         title: Text(
           'Excluir Usuário',
-          style: TextStyle(color: widget.currentTheme.textColor, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: widget.currentTheme.textColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           'Tem certeza que deseja excluir permanentemente o nó $targetNodeId e todas as suas transmissões?',
@@ -628,11 +652,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('CANCELAR', style: TextStyle(color: widget.currentTheme.textColor)),
+            child: Text(
+              'CANCELAR',
+              style: TextStyle(color: widget.currentTheme.textColor),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('EXCLUIR', style: TextStyle(color: Color(0xFFFF4D4D), fontWeight: FontWeight.bold)),
+            child: const Text(
+              'EXCLUIR',
+              style: TextStyle(
+                color: Color(0xFFFF4D4D),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -644,7 +677,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _userRepository.deleteUser(targetNodeId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Usuário $targetNodeId excluído com sucesso!')),
+          SnackBar(
+            content: Text('Usuário $targetNodeId excluído com sucesso!'),
+          ),
         );
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
@@ -654,9 +689,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao excluir usuário: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao excluir usuário: $e')));
       }
     }
   }
@@ -719,15 +754,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         final profile = snapshot.data!;
-        final bool isOwner = profile.isMe || (widget.nodeId == null || widget.nodeId!.isEmpty);
+        final bool isOwner =
+            profile.isMe || (widget.nodeId == null || widget.nodeId!.isEmpty);
         final String formattedHandle = profile.nodeId.startsWith('@')
             ? profile.nodeId
             : '@${profile.nodeId}';
-        final String effectiveAvatar = _selectedAvatarUrl ??
+        final String effectiveAvatar =
+            _selectedAvatarUrl ??
             profile.preferencias?.avatarUrl ??
             profile.avatarUrl ??
             UserRepositoryImpl.currentAvatarNotifier.value;
-        final String effectiveBannerColor = _selectedBannerColor ??
+        final String effectiveBannerColor =
+            _selectedBannerColor ??
             profile.preferencias?.bannerColor ??
             profile.bannerColor ??
             (isOwner
@@ -747,7 +785,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     name: profile.nome,
                     handle: formattedHandle,
                     bio: profile.bio ?? 'Sem biografia disponível.',
-                    location: (profile.localizacao != null && profile.localizacao!.isNotEmpty)
+                    location:
+                        (profile.localizacao != null &&
+                            profile.localizacao!.isNotEmpty)
                         ? profile.localizacao!
                         : 'Penedo, Brasil',
                     avatarUrl: effectiveAvatar,
@@ -758,16 +798,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     isFollowing: _isFollowing,
                     isLoadingFollow: _isLoadingFollow,
                     isOwner: isOwner,
-                    canDeleteUser: !isOwner && UserRepositoryImpl.isCurrentUserAdmin,
-                    onDeleteUserPressed: () => _deleteUserAccount(profile.nodeId),
+                    canDeleteUser:
+                        !isOwner && UserRepositoryImpl.isCurrentUserAdmin,
+                    onDeleteUserPressed: () =>
+                        _deleteUserAccount(profile.nodeId),
                     onFollowPressed: _toggleFollow,
                     onMessagePressed: () {},
                     onEditProfilePressed: isOwner
                         ? () => _showEditProfileDialog(
-                              profile,
-                              effectiveAvatar,
-                              effectiveBannerColor,
-                            )
+                            profile,
+                            effectiveAvatar,
+                            effectiveBannerColor,
+                          )
                         : null,
                     onAvatarSelected: isOwner ? _updateAvatarPreference : null,
                   ),
@@ -816,7 +858,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
-              child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+              child: CircularProgressIndicator(
+                color: widget.currentTheme.primaryColor,
+              ),
             ),
           );
         }
@@ -829,7 +873,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: BoxDecoration(
               color: widget.currentTheme.backgroundColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+              border: Border.all(
+                color: widget.currentTheme.shadowColor,
+                width: 2,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: widget.currentTheme.shadowColor,
@@ -840,7 +887,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                Icon(emptyIcon, size: 40, color: widget.currentTheme.primaryColor),
+                Icon(
+                  emptyIcon,
+                  size: 40,
+                  color: widget.currentTheme.primaryColor,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   emptyMessage,
@@ -857,11 +908,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         return Column(
           children: posts.map((post) {
-            final bool isPostFromProfileOwner = post.authorHandle.replaceAll('@', '').toLowerCase() ==
+            final bool isPostFromProfileOwner =
+                post.authorHandle.replaceAll('@', '').toLowerCase() ==
                 profile.nodeId.replaceAll('@', '').toLowerCase();
             final bool isRepostInProfilePostsTab =
-                _selectedTab == 0 && (!isPostFromProfileOwner || post.repostadoNoPerfil);
-            final bool canDeletePost = UserRepositoryImpl.isCurrentUserAdmin ||
+                _selectedTab == 0 &&
+                (!isPostFromProfileOwner || post.repostadoNoPerfil);
+            final bool canDeletePost =
+                UserRepositoryImpl.isCurrentUserAdmin ||
                 UserRepositoryImpl.isCurrentUser(
                   post.authorHandle,
                   authorName: post.authorName,
@@ -869,7 +923,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: PostCard(
-                key: ValueKey('${_selectedTab}_${post.id.isNotEmpty ? post.id : UniqueKey().toString()}'),
+                key: ValueKey(
+                  '${_selectedTab}_${post.id.isNotEmpty ? post.id : UniqueKey().toString()}',
+                ),
                 currentTheme: widget.currentTheme,
                 name: post.authorName,
                 handle: post.authorHandle,
@@ -967,7 +1023,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(width: 12),
         _buildTabButton('Likes', 1),
         const SizedBox(width: 12),
-        _buildTabButton('Saved', 2),
+        _buildTabButton('Salvos', 2),
       ],
     );
   }
@@ -979,11 +1035,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? widget.currentTheme.shadowColor : widget.currentTheme.backgroundColor,
+          color: isSelected
+              ? widget.currentTheme.shadowColor
+              : widget.currentTheme.backgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
           boxShadow: isSelected
-              ? [BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0)]
+              ? [
+                  BoxShadow(
+                    color: widget.currentTheme.shadowColor,
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
+                  ),
+                ]
               : [],
         ),
         child: Text(
@@ -991,7 +1055,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: isSelected ? widget.currentTheme.backgroundColor : widget.currentTheme.textColor,
+            color: isSelected
+                ? widget.currentTheme.backgroundColor
+                : widget.currentTheme.textColor,
           ),
         ),
       ),

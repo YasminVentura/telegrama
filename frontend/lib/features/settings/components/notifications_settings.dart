@@ -8,10 +8,12 @@ class NotificationsSettingsContent extends StatefulWidget {
   const NotificationsSettingsContent({super.key, required this.currentTheme});
 
   @override
-  State<NotificationsSettingsContent> createState() => _NotificationsSettingsContentState();
+  State<NotificationsSettingsContent> createState() =>
+      _NotificationsSettingsContentState();
 }
 
-class _NotificationsSettingsContentState extends State<NotificationsSettingsContent> {
+class _NotificationsSettingsContentState
+    extends State<NotificationsSettingsContent> {
   final UserRepository _userRepository = UserRepositoryImpl();
   bool _pushNotifications = true;
   bool _soundEchos = true;
@@ -60,7 +62,9 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
-          child: CircularProgressIndicator(color: widget.currentTheme.primaryColor),
+          child: CircularProgressIndicator(
+            color: widget.currentTheme.primaryColor,
+          ),
         ),
       );
     }
@@ -72,26 +76,38 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
         boxShadow: [
-          BoxShadow(color: widget.currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+          BoxShadow(
+            color: widget.currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Transmission Alerts',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor),
+            'Configurações de Notificações',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: widget.currentTheme.textColor,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Customize how your terminal notifies incoming signals and wave echoes.',
-            style: TextStyle(fontSize: 12.5, color: widget.currentTheme.textColor.withOpacity(0.6)),
+            'Personalize como o Telegrama notifica transmissões de ondas e interações.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: widget.currentTheme.textColor.withOpacity(0.6),
+            ),
           ),
           const SizedBox(height: 24),
 
           _buildToggleItem(
-            title: 'Push transmissions',
-            subtitle: 'Receive system alerts when new waves hit your radar.',
+            title: 'Notificações Push',
+            subtitle:
+                'Receba alertas do sistema quando novas ondas atingirem seu radar.',
             value: _pushNotifications,
             onChanged: (val) {
               setState(() => _pushNotifications = val);
@@ -100,8 +116,8 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
-            title: 'Acoustic echos (Sound)',
-            subtitle: 'Play vintage terminal sound feedback on interactions.',
+            title: 'Efeitos sonoros',
+            subtitle: 'Ativar efeitos sonoros do terminal.',
             value: _soundEchos,
             onChanged: (val) {
               setState(() => _soundEchos = val);
@@ -110,8 +126,9 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
           ),
           const SizedBox(height: 16),
           _buildToggleItem(
-            title: 'Zone broadcast alerts',
-            subtitle: 'Notify when high-priority nodes go live inside joined zones.',
+            title: 'Alertas de Zona',
+            subtitle:
+                'Notifique quando nós de alta prioridade entrarem em zonas ativas.',
             value: _zoneAlerts,
             onChanged: (val) {
               setState(() => _zoneAlerts = val);
@@ -143,9 +160,22 @@ class _NotificationsSettingsContentState extends State<NotificationsSettingsCont
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: widget.currentTheme.textColor)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: widget.currentTheme.textColor,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: TextStyle(fontSize: 11.5, color: widget.currentTheme.textColor.withOpacity(0.6))),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: widget.currentTheme.textColor.withOpacity(0.6),
+                  ),
+                ),
               ],
             ),
           ),

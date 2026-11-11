@@ -105,7 +105,9 @@ class ProfileCard extends StatelessWidget {
                   alignment: WrapAlignment.center,
                   children: UserPreferences.fixedAvatars.map((preset) {
                     final bool isSelected =
-                        (UserAvatar.resolvePresetAsset(currentAvatar) ?? currentAvatar) == preset;
+                        (UserAvatar.resolvePresetAsset(currentAvatar) ??
+                            currentAvatar) ==
+                        preset;
                     return GestureDetector(
                       onTap: () {
                         Navigator.of(dialogContext).pop();
@@ -154,7 +156,10 @@ class ProfileCard extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: currentTheme.primaryColor,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: currentTheme.shadowColor, width: 1.5),
+                                    border: Border.all(
+                                      color: currentTheme.shadowColor,
+                                      width: 1.5,
+                                    ),
                                   ),
                                   child: Icon(
                                     Icons.check,
@@ -185,7 +190,11 @@ class ProfileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: currentTheme.shadowColor, width: 2),
         boxShadow: [
-          BoxShadow(color: currentTheme.shadowColor, offset: const Offset(4, 4), blurRadius: 0),
+          BoxShadow(
+            color: currentTheme.shadowColor,
+            offset: const Offset(4, 4),
+            blurRadius: 0,
+          ),
         ],
       ),
       child: Column(
@@ -197,18 +206,24 @@ class ProfileCard extends StatelessWidget {
               final String effectiveBannerHex = isOwner
                   ? myCurrentBannerColor
                   : (bannerColor ?? UserPreferences.defaultBannerColor);
-              final Color resolvedBannerColor = UserPreferences.parseBannerColor(
-                effectiveBannerHex,
-                fallback: currentTheme.secondaryColor,
-              );
+              final Color resolvedBannerColor =
+                  UserPreferences.parseBannerColor(
+                    effectiveBannerHex,
+                    fallback: currentTheme.secondaryColor,
+                  );
 
               return Container(
                 height: 180,
                 decoration: BoxDecoration(
                   color: resolvedBannerColor,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(10),
+                  ),
                   border: Border(
-                    bottom: BorderSide(color: currentTheme.shadowColor, width: 2),
+                    bottom: BorderSide(
+                      color: currentTheme.shadowColor,
+                      width: 2,
+                    ),
                   ),
                 ),
               );
@@ -231,9 +246,16 @@ class ProfileCard extends StatelessWidget {
                           : (avatarUrl ?? UserPreferences.defaultAvatar);
 
                       return GestureDetector(
-                        onTap: isOwner ? () => _showAvatarPickerModal(context, effectiveAvatar) : null,
+                        onTap: isOwner
+                            ? () => _showAvatarPickerModal(
+                                context,
+                                effectiveAvatar,
+                              )
+                            : null,
                         child: MouseRegion(
-                          cursor: isOwner ? SystemMouseCursors.click : SystemMouseCursors.basic,
+                          cursor: isOwner
+                              ? SystemMouseCursors.click
+                              : SystemMouseCursors.basic,
                           child: Stack(
                             children: [
                               Container(
@@ -241,9 +263,16 @@ class ProfileCard extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: currentTheme.backgroundColor,
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                  border: Border.all(
+                                    color: currentTheme.shadowColor,
+                                    width: 2,
+                                  ),
                                   boxShadow: [
-                                    BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                                    BoxShadow(
+                                      color: currentTheme.shadowColor,
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 0,
+                                    ),
                                   ],
                                 ),
                                 child: UserAvatar(
@@ -265,7 +294,10 @@ class ProfileCard extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: currentTheme.primaryColor,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                      border: Border.all(
+                                        color: currentTheme.shadowColor,
+                                        width: 2,
+                                      ),
                                     ),
                                     child: Icon(
                                       Icons.camera_alt_outlined,
@@ -295,12 +327,20 @@ class ProfileCard extends StatelessWidget {
                           children: [
                             Text(
                               name,
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: currentTheme.textColor),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: currentTheme.textColor,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               handle,
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: currentTheme.primaryColor),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: currentTheme.primaryColor,
+                              ),
                             ),
                           ],
                         ),
@@ -310,11 +350,17 @@ class ProfileCard extends StatelessWidget {
                             child: MouseRegion(
                               cursor: SystemMouseCursors.click,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                                 decoration: BoxDecoration(
                                   color: currentTheme.backgroundColor,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: currentTheme.shadowColor, width: 2),
+                                  border: Border.all(
+                                    color: currentTheme.shadowColor,
+                                    width: 2,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color: currentTheme.shadowColor,
@@ -333,7 +379,7 @@ class ProfileCard extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'EDIT PROFILE',
+                                      'EDITAR PERFIL',
                                       style: TextStyle(
                                         fontSize: 12.5,
                                         fontWeight: FontWeight.w900,
@@ -349,28 +395,45 @@ class ProfileCard extends StatelessWidget {
                           Row(
                             children: [
                               _buildActionButton(
-                                isFollowing ? 'FOLLOWING' : 'FOLLOW',
+                                isFollowing ? 'SEGUINDO' : 'SEGUIR',
                                 isPrimary: !isFollowing,
                                 onTap: onFollowPressed,
                                 isLoading: isLoadingFollow,
                               ),
-                              if (canDeleteUser && onDeleteUserPressed != null) ...[
+                              if (canDeleteUser &&
+                                  onDeleteUserPressed != null) ...[
                                 const SizedBox(width: 10),
                                 GestureDetector(
                                   onTap: onDeleteUserPressed,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFF4D4D).withOpacity(0.15),
+                                      color: const Color(
+                                        0xFFFF4D4D,
+                                      ).withOpacity(0.15),
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: const Color(0xFFFF4D4D), width: 2),
+                                      border: Border.all(
+                                        color: const Color(0xFFFF4D4D),
+                                        width: 2,
+                                      ),
                                       boxShadow: [
-                                        BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+                                        BoxShadow(
+                                          color: currentTheme.shadowColor,
+                                          offset: const Offset(2, 2),
+                                          blurRadius: 0,
+                                        ),
                                       ],
                                     ),
                                     child: const Row(
                                       children: [
-                                        Icon(Icons.person_remove_outlined, size: 16, color: Color(0xFFFF4D4D)),
+                                        Icon(
+                                          Icons.person_remove_outlined,
+                                          size: 16,
+                                          color: Color(0xFFFF4D4D),
+                                        ),
                                         SizedBox(width: 6),
                                         Text(
                                           'DELETE NODE',
@@ -393,17 +456,21 @@ class ProfileCard extends StatelessWidget {
 
                     Text(
                       bio,
-                      style: TextStyle(fontSize: 13.5, height: 1.4, color: currentTheme.textColor.withOpacity(0.8)),
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        height: 1.4,
+                        color: currentTheme.textColor.withOpacity(0.8),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
                     Row(
                       children: [
-                        _buildStatItem(followingCount, 'Following'),
+                        _buildStatItem(followingCount, 'Seguindo'),
                         const SizedBox(width: 24),
-                        _buildStatItem(followersCount, 'Followers'),
+                        _buildStatItem(followersCount, 'Seguidores'),
                         const SizedBox(width: 24),
-                        _buildStatItem(artifactsCount, 'Artifacts'),
+                        _buildStatItem(artifactsCount, 'Artefatos'),
                       ],
                     ),
                   ],
@@ -416,17 +483,28 @@ class ProfileCard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label, {required bool isPrimary, VoidCallback? onTap, bool isLoading = false}) {
+  Widget _buildActionButton(
+    String label, {
+    required bool isPrimary,
+    VoidCallback? onTap,
+    bool isLoading = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isPrimary ? currentTheme.primaryColor : currentTheme.backgroundColor,
+          color: isPrimary
+              ? currentTheme.primaryColor
+              : currentTheme.backgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: currentTheme.shadowColor, width: 2),
           boxShadow: [
-            BoxShadow(color: currentTheme.shadowColor, offset: const Offset(2, 2), blurRadius: 0),
+            BoxShadow(
+              color: currentTheme.shadowColor,
+              offset: const Offset(2, 2),
+              blurRadius: 0,
+            ),
           ],
         ),
         child: isLoading
@@ -435,7 +513,9 @@ class ProfileCard extends StatelessWidget {
                 height: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: isPrimary ? currentTheme.backgroundColor : currentTheme.primaryColor,
+                  color: isPrimary
+                      ? currentTheme.backgroundColor
+                      : currentTheme.primaryColor,
                 ),
               )
             : Text(
@@ -443,7 +523,9 @@ class ProfileCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isPrimary ? currentTheme.backgroundColor : currentTheme.textColor,
+                  color: isPrimary
+                      ? currentTheme.backgroundColor
+                      : currentTheme.textColor,
                 ),
               ),
       ),
@@ -460,9 +542,22 @@ class ProfileCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(count, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: currentTheme.textColor)),
+          Text(
+            count,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: currentTheme.textColor,
+            ),
+          ),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 12, color: currentTheme.textColor.withOpacity(0.6))),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: currentTheme.textColor.withOpacity(0.6),
+            ),
+          ),
         ],
       ),
     );

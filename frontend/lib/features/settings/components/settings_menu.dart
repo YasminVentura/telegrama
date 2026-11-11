@@ -16,12 +16,12 @@ class SettingsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> menuItems = [
-      {'title': 'Profile & Account', 'icon': Icons.person_outline},
-      {'title': 'Appearance', 'icon': Icons.palette_outlined},
-      {'title': 'Privacy', 'icon': Icons.lock_outline},
-      {'title': 'Security', 'icon': Icons.shield_outlined},
-      {'title': 'Notifications', 'icon': Icons.notifications_outlined},
-      {'title': 'Help center', 'icon': Icons.help_outline},
+      {'title': 'Perfil & Conta', 'icon': Icons.person_outline},
+      {'title': 'Aparência', 'icon': Icons.palette_outlined},
+      {'title': 'Privacidade', 'icon': Icons.lock_outline},
+      {'title': 'Segurança', 'icon': Icons.shield_outlined},
+      {'title': 'Notificações', 'icon': Icons.notifications_outlined},
+      {'title': 'Ajuda', 'icon': Icons.help_outline},
     ];
 
     return Column(
@@ -49,13 +49,23 @@ class SettingsMenu extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onItemSelected(item['title']),
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? currentTheme.primaryColor.withOpacity(0.15) : Colors.transparent,
+                      color: isSelected
+                          ? currentTheme.primaryColor.withOpacity(0.15)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isSelected ? currentTheme.primaryColor : Colors.transparent,
+                        color: isSelected
+                            ? currentTheme.primaryColor
+                            : Colors.transparent,
                         width: 1.5,
                       ),
                     ),
@@ -64,7 +74,9 @@ class SettingsMenu extends StatelessWidget {
                         Icon(
                           item['icon'],
                           size: 18,
-                          color: isSelected ? currentTheme.primaryColor : currentTheme.textColor.withOpacity(0.7),
+                          color: isSelected
+                              ? currentTheme.primaryColor
+                              : currentTheme.textColor.withOpacity(0.7),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -72,8 +84,12 @@ class SettingsMenu extends StatelessWidget {
                             item['title'],
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                              color: isSelected ? currentTheme.primaryColor : currentTheme.textColor,
+                              fontWeight: isSelected
+                                  ? FontWeight.w900
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? currentTheme.primaryColor
+                                  : currentTheme.textColor,
                             ),
                           ),
                         ),
@@ -93,7 +109,7 @@ class SettingsMenu extends StatelessWidget {
               );
             }).toList(),
           ),
-        ),        // Card de status do sinal na parte inferior
+        ), // Card de status do sinal na parte inferior
       ],
     );
   }

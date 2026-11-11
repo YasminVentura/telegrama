@@ -12,7 +12,7 @@ class MenuWidget extends StatefulWidget {
   const MenuWidget({
     super.key,
     required this.currentTheme,
-    this.activeRoute = 'Home Feed',
+    this.activeRoute = 'Feed Inicial',
     required this.onItemSelected,
     this.onLogout,
   });
@@ -36,7 +36,10 @@ class _MenuWidgetState extends State<MenuWidget> {
           decoration: BoxDecoration(
             color: widget.currentTheme.backgroundColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: widget.currentTheme.shadowColor, width: 2),
+            border: Border.all(
+              color: widget.currentTheme.shadowColor,
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: widget.currentTheme.shadowColor,
@@ -51,15 +54,19 @@ class _MenuWidgetState extends State<MenuWidget> {
               _buildMenuItem(
                 icon: Icons.home_outlined,
                 activeIcon: Icons.home,
-                title: 'Home Feed',
+                title: 'Feed Inicial',
               ),
               const SizedBox(height: 16),
-              Divider(color: widget.currentTheme.shadowColor, thickness: 2, height: 24),
+              Divider(
+                color: widget.currentTheme.shadowColor,
+                thickness: 2,
+                height: 24,
+              ),
               const SizedBox(height: 8),
               _buildMenuItem(
                 icon: Icons.person_outline,
                 activeIcon: Icons.person,
-                title: 'My Profile',
+                title: 'Meu Perfil',
                 hasIndicator: autenticado,
               ),
               if (autenticado && widget.onLogout != null) ...[
@@ -67,7 +74,7 @@ class _MenuWidgetState extends State<MenuWidget> {
                 CustomMenuItemButton(
                   icon: Icons.logout,
                   activeIcon: Icons.logout,
-                  title: 'Logout',
+                  title: 'Sair',
                   isActive: false,
                   hasIndicator: false,
                   primaryColor: const Color(0xFFFF4D4D),
