@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegrama - Diagramas da Arquitetura de Microsserviços</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --accent: #38bdf8;
+      --border: #334155;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+    }
+    header {
+      max-width: 1200px;
+      margin: 0 auto 2rem auto;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+    h1 {
+      color: var(--accent);
+      margin: 0 0 0.5rem 0;
+    }
+    p {
+      color: #94a3b8;
+      margin: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      overflow-x: auto;
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #e2e8f0;
+      border-left: 4px solid var(--accent);
+      padding-left: 0.75rem;
+    }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+    }
+    .tip {
+      background-color: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+    }
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+      }
+      .card {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Telegrama - Diagramas de Engenharia de Backend</h1>
+    <p>Projeto de Microsserviços: Comunicação Inter-serviços e Modelagem de Dados</p>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>1. Fluxograma Detalhado das Chamadas (Síncronas / Feign / Gateway)</h2>
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor User as Cliente / Frontend
+    participant GW as API Gateway (8080)
+    participant Redis as Redis (6379)
+    participant Auth as auth-service (8081)
+    participant Profile as user-profile-service (8083)
+    participant Post as post-service (8082)
+    participant PG_Auth as PostgreSQL (telegrama_auth)
+    participant PG_Prof as PostgreSQL (telegrama_profile)
+    participant Mongo as MongoDB (telegrama_posts)
+
+    %% FLUXO 1: REGISTRO DE USUÁRIO
+    rect rgb(235, 245, 255)
+    Note over User, Profile: Fluxo 1: Registro de Usuário (POST /auth/registro)
+    User->>GW: POST /auth/registro (payload)
+    GW->>Auth: Roteia para auth-service
+    Auth->>PG_Auth: Salva credencial (BCrypt)
+    Auth->>Profile: [Síncrono Feign] POST /usuarios/interno/perfil
+    Profile->>PG_Prof: Cria PerfilUsuario e UsuarioPreferencias
+    Profile-->>Auth: 200 OK
+    Auth-->>GW: 201 Created
+    GW-->>User: Sucesso
+    end
+
+    %% FLUXO 2: LOGIN E SESSÃO
+    rect rgb(240, 255, 240)
+    Note over User, Redis: Fluxo 2: Login & Sessão Opaca (Reference Token)
+    User->>GW: POST /auth/login (email/nodeId, senha)
+    GW->>Auth: Roteia para auth-service
+    Auth->>PG_Auth: Valida senha via AuthenticationManager
+    Auth->>Redis: SET sessao:{uuid} = JWT (TTL 24h)
+    Auth->>Redis: SET refresh:{uuid} = usuarioId (TTL 7d)
+    Auth-->>GW: Retorna idSessao (Set-Cookie / JSON)
+    GW-->>User: Retorna cookie de sessão
+    end
+
+    %% FLUXO 3: LEITURA DO FEED / POSTS
+    rect rgb(255, 250, 235)
+    Note over User, Mongo: Fluxo 3: Listagem de Posts Enriquecida
+    User->>GW: GET /posts (Cookie: idSessao=xxx)
+    GW->>Redis: GET sessao:xxx -> Obtém JWT
+    GW->>GW: Injeta Header "Authorization: Bearer <JWT>"
+    GW->>Post: Roteia para post-service com Bearer Token
+    Post->>Post: Valida JWT localmente (filtro JwtFiltroAutenticacao)
+    Post->>Mongo: Busca postagens ordenadas (findAllByOrderByCriadoEmDesc)
+    Post->>Profile: [Síncrono Feign] POST /usuarios/batch (IDs dos autores)
+    Profile->>PG_Prof: Busca perfis em lote por UUID/nodeId
+    Profile-->>Post: Lista de perfis resumidos
+    Post->>Post: Merge em memória (substitui nomes/avatares)
+    Post-->>GW: Retorna JSON consolidado
+    GW-->>User: Renderiza Feed
+    end
+
+    %% FLUXO 4: EXCLUSÃO DE CONTA (CASCATA DISTRIBUÍDA)
+    rect rgb(255, 240, 245)
+    Note over User, Auth: Fluxo 4: Exclusão Distribuída de Conta
+    User->>GW: DELETE /usuarios/{nodeId}
+    GW->>Profile: Roteia com Bearer Token
+    Profile->>PG_Prof: Apaga vínculos de seguidores e perfil local
+    Profile->>Post: [Síncrono Feign] DELETE /posts/interno/autor/{nodeId}
+    Post->>Mongo: deleteByAutorNodeIdIn(...)
+    Post-->>Profile: 200 OK
+    Profile->>Auth: [Síncrono Feign] DELETE /auth/interno/usuarios/{id}
+    Auth->>PG_Auth: deleteById(...)
+    Auth-->>Profile: 200 OK
+    Profile-->>GW: 200 OK
+    GW-->>User: Conta Excluída
+    end
+      </div>
+      <div class="tip">
+        <strong>💡 Dica para os slides:</strong> Você pode clicar com o botão direito no diagrama e escolher "Copiar imagem" ou imprimir a página para PDF (Ctrl + P).
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Diagrama Entidade-Relacionamento (ERD / UML) dos Bancos de Dados</h2>
+      <div class="mermaid">
+erDiagram
+    %% BANCO POSTGRESQL: telegrama_auth
+    usuarios {
+        uuid id PK "UUID"
+        varchar nome "Nome do usuário"
+        varchar node_id UK "ex: @fulano"
+        varchar email UK "ex: fulano@email.com"
+        varchar senha "Hash BCrypt"
+        boolean termos_aceitos "Termos de uso"
+        varchar perfil "Role: USER, ADMIN"
+        timestamp criado_em "Auditing"
+        timestamp atualizado_em "Auditing"
+    }
+
+    %% BANCO POSTGRESQL: telegrama_profile
+    perfis_usuarios {
+        uuid id PK "UUID compartilhado com auth"
+        varchar nome "Nome de exibição"
+        varchar node_id UK "Identificador na rede"
+        varchar email UK "E-mail cadastrado"
+        varchar bio "Biografia (max 500)"
+        varchar localizacao "Localização física"
+        varchar avatar_url "Caminho ou URL do avatar"
+        varchar banner_color "Cor hexadecimal do banner"
+        varchar perfil "Role: USER, ADMIN"
+        timestamp criado_em "Auditing"
+        timestamp atualizado_em "Auditing"
+    }
+
+    usuario_preferencias {
+        uuid id PK "UUID"
+        uuid usuario_id FK,UK "Referência 1:1 ao perfil"
+        boolean private_frequency_mode
+        boolean direct_transmissions
+        boolean broadcast_node_activity
+        boolean push_transmissions
+        boolean acoustic_echos
+        boolean zone_broadcast_alerts
+        boolean two_factor_auth
+        varchar theme "Tema visual (ex: RETRO_GREEN)"
+        varchar avatar_url
+        varchar banner_color
+    }
+
+    seguidores {
+        uuid id PK "UUID"
+        uuid seguidor_id FK "Quem está seguindo"
+        uuid seguido_id FK "Quem está sendo seguido"
+        timestamp criado_em
+    }
+
+    perfis_usuarios ||--|| usuario_preferencias : "possui (1:1)"
+    perfis_usuarios ||--o{ seguidores : "seguidor (1:N)"
+    perfis_usuarios ||--o{ seguidores : "seguido (1:N)"
+
+    %% BANCO MONGODB: telegrama_posts
+    postagens {
+        string id PK "ObjectId / UUID Mongo"
+        string autorId "UUID de referência"
+        string autorNodeId "Handle do autor (@...)"
+        string autorNome "Nome desnormalizado"
+        string autorAvatarUrl "Avatar desnormalizado"
+        string conteudo "Texto da postagem"
+        array curtidas "Set<String> de nodeIds/userIds"
+        array salvos "Set<String> de nodeIds/userIds"
+        array reposts "Set<String> de nodeIds/userIds"
+        array comentarios "Lista embutida de ComentarioPostagem"
+        int quantidadeCurtidas "Contador"
+        int quantidadeComentarios "Contador"
+        int quantidadeReposts "Contador"
+        timestamp criadoEm
+        timestamp atualizadoEm
+    }
+
+    comentarios_embutidos {
+        string id PK "UUID do comentário"
+        string parentId "Para replies aninhados em árvore"
+        string autorId
+        string autorNodeId
+        string autorNome
+        string autorAvatarUrl
+        string conteudo
+        array curtidas "Set<String>"
+        timestamp criadoEm
+    }
+
+    postagens ||--o{ comentarios_embutidos : "contém (Document Embed)"
+
+    %% REDIS (Chave-Valor com TTL)
+    redis_sessao {
+        string key PK "sessao:{uuid}"
+        string value "JWT Token (TTL 24h)"
+    }
+    redis_refresh {
+        string key PK "refresh:{uuid}"
+        string value "usuarioId (TTL 7d)"
+    }
+      </div>
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose'
+    });
+  </script>
+</body>
+</html>
+

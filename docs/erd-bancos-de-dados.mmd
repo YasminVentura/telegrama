@@ -1,0 +1,98 @@
+erDiagram
+    %% BANCO POSTGRESQL: telegrama_auth
+    usuarios {
+        uuid id PK "UUID"
+        varchar nome "Nome do usuário"
+        varchar node_id UK "ex: @fulano"
+        varchar email UK "ex: fulano@email.com"
+        varchar senha "Hash BCrypt"
+        boolean termos_aceitos "Termos de uso"
+        varchar perfil "Role: USER, ADMIN"
+        timestamp criado_em "Auditing"
+        timestamp atualizado_em "Auditing"
+    }
+
+    %% BANCO POSTGRESQL: telegrama_profile
+    perfis_usuarios {
+        uuid id PK "UUID compartilhado com auth"
+        varchar nome "Nome de exibição"
+        varchar node_id UK "Identificador na rede"
+        varchar email UK "E-mail cadastrado"
+        varchar bio "Biografia (max 500)"
+        varchar localizacao "Localização física"
+        varchar avatar_url "Caminho ou URL do avatar"
+        varchar banner_color "Cor hexadecimal do banner"
+        varchar perfil "Role: USER, ADMIN"
+        timestamp criado_em "Auditing"
+        timestamp atualizado_em "Auditing"
+    }
+
+    usuario_preferencias {
+        uuid id PK "UUID"
+        uuid usuario_id FK,UK "Referência 1:1 ao perfil"
+        boolean private_frequency_mode
+        boolean direct_transmissions
+        boolean broadcast_node_activity
+        boolean push_transmissions
+        boolean acoustic_echos
+        boolean zone_broadcast_alerts
+        boolean two_factor_auth
+        varchar theme "Tema visual (ex: RETRO_GREEN)"
+        varchar avatar_url
+        varchar banner_color
+    }
+
+    seguidores {
+        uuid id PK "UUID"
+        uuid seguidor_id FK "Quem está seguindo"
+        uuid seguido_id FK "Quem está sendo seguido"
+        timestamp criado_em
+    }
+
+    perfis_usuarios ||--|| usuario_preferencias : "possui (1:1)"
+    perfis_usuarios ||--o{ seguidores : "seguidor (1:N)"
+    perfis_usuarios ||--o{ seguidores : "seguido (1:N)"
+
+    %% BANCO MONGODB: telegrama_posts
+    postagens {
+        string id PK "ObjectId / UUID Mongo"
+        string autorId "UUID de referência"
+        string autorNodeId "Handle do autor (@...)"
+        string autorNome "Nome desnormalizado"
+        string autorAvatarUrl "Avatar desnormalizado"
+        string conteudo "Texto da postagem"
+        array curtidas "Set<String> de nodeIds/userIds"
+        array salvos "Set<String> de nodeIds/userIds"
+        array reposts "Set<String> de nodeIds/userIds"
+        array comentarios "Lista embutida de ComentarioPostagem"
+        int quantidadeCurtidas "Contador"
+        int quantidadeComentarios "Contador"
+        int quantidadeReposts "Contador"
+        timestamp criadoEm
+        timestamp atualizadoEm
+    }
+
+    comentarios_embutidos {
+        string id PK "UUID do comentário"
+        string parentId "Para replies aninhados em árvore"
+        string autorId
+        string autorNodeId
+        string autorNome
+        string autorAvatarUrl
+        string conteudo
+        array curtidas "Set<String>"
+        timestamp criadoEm
+    }
+
+    postagens ||--o{ comentarios_embutidos : "contém (Document Embed)"
+
+    %% REDIS (Chave-Valor com TTL)
+    redis_sessao {
+        string key PK "sessao:{uuid}"
+        string value "JWT Token (TTL 24h)"
+    }
+    redis_refresh {
+        string key PK "refresh:{uuid}"
+        string value "usuarioId (TTL 7d)"
+    }
+

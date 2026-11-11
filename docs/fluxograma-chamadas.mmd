@@ -1,0 +1,70 @@
+sequenceDiagram
+    autonumber
+    actor User as Cliente / Frontend
+    participant GW as API Gateway (8080)
+    participant Redis as Redis (6379)
+    participant Auth as auth-service (8081)
+    participant Profile as user-profile-service (8083)
+    participant Post as post-service (8082)
+    participant PG_Auth as PostgreSQL (telegrama_auth)
+    participant PG_Prof as PostgreSQL (telegrama_profile)
+    participant Mongo as MongoDB (telegrama_posts)
+
+    %% FLUXO 1: REGISTRO DE USUÁRIO
+    rect rgb(235, 245, 255)
+    Note over User, Profile: Fluxo 1: Registro de Usuário (POST /auth/registro)
+    User->>GW: POST /auth/registro (payload)
+    GW->>Auth: Roteia para auth-service
+    Auth->>PG_Auth: Salva credencial (BCrypt)
+    Auth->>Profile: [Síncrono Feign] POST /usuarios/interno/perfil
+    Profile->>PG_Prof: Cria PerfilUsuario e UsuarioPreferencias
+    Profile-->>Auth: 200 OK
+    Auth-->>GW: 201 Created
+    GW-->>User: Sucesso
+    end
+
+    %% FLUXO 2: LOGIN E SESSÃO
+    rect rgb(240, 255, 240)
+    Note over User, Redis: Fluxo 2: Login & Sessão Opaca (Reference Token)
+    User->>GW: POST /auth/login (email/nodeId, senha)
+    GW->>Auth: Roteia para auth-service
+    Auth->>PG_Auth: Valida senha via AuthenticationManager
+    Auth->>Redis: SET sessao:{uuid} = JWT (TTL 24h)
+    Auth->>Redis: SET refresh:{uuid} = usuarioId (TTL 7d)
+    Auth-->>GW: Retorna idSessao (Set-Cookie / JSON)
+    GW-->>User: Retorna cookie de sessão
+    end
+
+    %% FLUXO 3: LEITURA DO FEED / POSTS
+    rect rgb(255, 250, 235)
+    Note over User, Mongo: Fluxo 3: Listagem de Posts Enriquecida
+    User->>GW: GET /posts (Cookie: idSessao=xxx)
+    GW->>Redis: GET sessao:xxx -> Obtém JWT
+    GW->>GW: Injeta Header "Authorization: Bearer <JWT>"
+    GW->>Post: Roteia para post-service com Bearer Token
+    Post->>Post: Valida JWT localmente (filtro JwtFiltroAutenticacao)
+    Post->>Mongo: Busca postagens ordenadas (findAllByOrderByCriadoEmDesc)
+    Post->>Profile: [Síncrono Feign] POST /usuarios/batch (IDs dos autores)
+    Profile->>PG_Prof: Busca perfis em lote por UUID/nodeId
+    Profile-->>Post: Lista de perfis resumidos
+    Post->>Post: Merge em memória (substitui nomes/avatares)
+    Post-->>GW: Retorna JSON consolidado
+    GW-->>User: Renderiza Feed
+    end
+
+    %% FLUXO 4: EXCLUSÃO DE CONTA (CASCATA DISTRIBUÍDA)
+    rect rgb(255, 240, 245)
+    Note over User, Auth: Fluxo 4: Exclusão Distribuída de Conta
+    User->>GW: DELETE /usuarios/{nodeId}
+    GW->>Profile: Roteia com Bearer Token
+    Profile->>PG_Prof: Apaga vínculos de seguidores e perfil local
+    Profile->>Post: [Síncrono Feign] DELETE /posts/interno/autor/{nodeId}
+    Post->>Mongo: deleteByAutorNodeIdIn(...)
+    Post-->>Profile: 200 OK
+    Profile->>Auth: [Síncrono Feign] DELETE /auth/interno/usuarios/{id}
+    Auth->>PG_Auth: deleteById(...)
+    Auth-->>Profile: 200 OK
+    Profile-->>GW: 200 OK
+    GW-->>User: Conta Excluída
+    end
+
