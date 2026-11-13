@@ -405,9 +405,12 @@ class PostRepositoryImpl implements PostRepository {
       }
     }
 
+    final commentId = (json['id'] ?? json['_id'])?.toString() ?? '';
+    final parentId = (json['parentId'] ?? json['parent_id'])?.toString();
+
     return {
-      'id': json['id']?.toString() ?? '',
-      'parentId': json['parentId']?.toString(),
+      'id': commentId,
+      'parentId': parentId,
       'authorName': json['authorName'] ?? 'Node Anônimo',
       'authorHandle': handle,
       'authorAvatarUrl': UserAvatar.resolvePresetAsset(rawAvatar) ?? rawAvatar,

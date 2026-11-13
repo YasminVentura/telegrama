@@ -23,7 +23,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  TELEGRAMA - GERADOR DE CARGA EM MASSA (PERSISTENCIA POLIGLOTA) " -ForegroundColor Cyan
+Write-Host "   TELEGRAMA - GERADOR DE CARGA EM MASSA (PERSISTENCIA POLIGLOTA) " -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "Total de Usuários : $TotalUsuarios"
 Write-Host "Total de Seguidores: $TotalSeguidores"
@@ -75,7 +75,7 @@ $Avatares = @(
     "lib/assets/images/avatars/avatar_5.webp"
 )
 $CoresBanner = @("#2E4F3E", "#1F3A4B", "#4A2E4F", "#4F3A2E", "#2A2A2A", "#1D4ED8", "#047857", "#B45309")
-$Temas = @("RETRO_GREEN", "CYBER_DARK", "NEON_AMBER", "MONOCHROME")
+$Temas = @("RETRO_GREEN", "CYBERPUNK_DARK", "SUNSET_SYNTHWAVE", "MONOKAI_HACKER", "CREAM_ESPRESSO")
 
 # Senha padrão criptografada em BCrypt para a senha '123456'
 $SenhaBCryptPadrao = "`$2a`$10`$eACCYoNOHEqgkVE8aWnATO3qE7WODErGQzL6GZ8lq0m8o6C7xS4rS"
@@ -126,7 +126,8 @@ for ($i = 1; $i -le $TotalUsuarios; $i++) {
 $FileAuth = Join-Path $ScriptDir "01_carga_auth.sql"
 Write-Host "2/4: Escrevendo arquivo SQL do auth ($FileAuth)..." -ForegroundColor Yellow
 
-$swAuth = [System.IO.StreamWriter]::new($FileAuth, $false, [System.Text.Encoding]::UTF8)
+$utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+$swAuth = [System.IO.StreamWriter]::new($FileAuth, $false, $utf8WithoutBom)
 try {
     $swAuth.WriteLine("-- CARGA DE USUARIOS PARA telegrama_auth ($TotalUsuarios registros)")
     $swAuth.WriteLine("BEGIN;")
@@ -152,7 +153,7 @@ try {
 $FileProfile = Join-Path $ScriptDir "02_carga_profile.sql"
 Write-Host "3/4: Escrevendo arquivo SQL do profile ($FileProfile)..." -ForegroundColor Yellow
 
-$swProf = [System.IO.StreamWriter]::new($FileProfile, $false, [System.Text.Encoding]::UTF8)
+$swProf = [System.IO.StreamWriter]::new($FileProfile, $false, $utf8WithoutBom)
 try {
     $swProf.WriteLine("-- CARGA DE PERFIS E GRAFO DE SEGUIDORES PARA telegrama_profile")
     $swProf.WriteLine("BEGIN;")
@@ -221,7 +222,8 @@ try {
 $FilePosts = Join-Path $ScriptDir "03_carga_posts.json"
 Write-Host "4/4: Gerando 100.000 documentos para o MongoDB ($FilePosts)..." -ForegroundColor Yellow
 
-$swPosts = [System.IO.StreamWriter]::new($FilePosts, $false, [System.Text.Encoding]::UTF8)
+$utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
+$swPosts = [System.IO.StreamWriter]::new($FilePosts, $false, $utf8WithoutBom)
 try {
     for ($p = 1; $p -le $TotalPosts; $p++) {
         $uAutor = $Usuarios[$Random.Next($TotalUsuarios)]
@@ -229,28 +231,43 @@ try {
         
         # Gerar algumas curtidas reais usando outros usuários
         $qtdCurtidas = $Random.Next(0, 8)
-        $listaCurtidas = @()
+        $listaCurtidasSet = New-Object "System.Collections.Generic.HashSet[string]"
         for ($c = 0; $c -lt $qtdCurtidas; $c++) {
             $uCurtiu = $Usuarios[$Random.Next($TotalUsuarios)]
-            $listaCurtidas += "`"$($uCurtiu.NodeId)`""
+            $listaCurtidasSet.Add("@" + $uCurtiu.NodeId.TrimStart('@')) | Out-Null
         }
+        $listaCurtidas = foreach ($curtiu in $listaCurtidasSet) { "`"$curtiu`"" }
         $curtidasJson = "[" + ($listaCurtidas -join ",") + "]"
 
-        # Gerar comentários embutidos (0 a 3 comentários)
+        # Gerar comentários estruturados (0 a 3 comentários) com suporte a parentId real
         $qtdComentarios = $Random.Next(0, 4)
         $comentariosArr = @()
+        $primeiroComentarioId = $null
+
         for ($k = 0; $k -lt $qtdComentarios; $k++) {
             $uComentou = $Usuarios[$Random.Next($TotalUsuarios)]
             $comentId = [System.Guid]::NewGuid().ToString()
+            
+            $parentIdJson = "null"
+            if ($k -eq 0) {
+                $primeiroComentarioId = $comentId
+            } else {
+                if ($primeiroComentarioId -ne $null -and $Random.Next(0, 2) -eq 1) {
+                    $parentIdJson = "`"$primeiroComentarioId`""
+                }
+            }
+
             $comentTexto = "Concordo totalmente com você, $($uAutor.NodeId)!"
             $comentData = (Get-Date).AddMinutes(-$Random.Next(5, 5000)).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-            $comentariosArr += "{`"id`":`"$comentId`",`"parentId`":null,`"autorId`":`"$($uComentou.Id)`",`"autorNodeId`":`"$($uComentou.NodeId)`",`"autorNome`":`"$($uComentou.Nome)`",`"autorAvatarUrl`":`"$($uComentou.AvatarUrl)`",`"conteudo`":`"$comentTexto`",`"curtidas`":[],`"criadoEm`":{`"`$date`":`"$comentData`"}}"
+            
+            $comentariosArr += "{`"_id`":`"$comentId`",`"id`":`"$comentId`",`"parentId`":$parentIdJson,`"autorId`":`"$($uComentou.Id)`",`"autorNodeId`":`"$($uComentou.NodeId)`",`"autorNome`":`"$($uComentou.Nome)`",`"autorAvatarUrl`":`"$($uComentou.AvatarUrl)`",`"conteudo`":`"$comentTexto`",`"curtidas`":[],`"criadoEm`":{`"`$date`":`"$comentData`"}}"
         }
         $comentariosJson = "[" + ($comentariosArr -join ",") + "]"
 
         $dataPostIso = (Get-Date).AddDays(-$Random.Next(0, 120)).AddMinutes(-$Random.Next(0, 1440)).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 
-        $jsonDoc = "{`"autorId`":`"$($uAutor.Id)`",`"autorNodeId`":`"$($uAutor.NodeId)`",`"autorNome`":`"$($uAutor.Nome)`",`"autorAvatarUrl`":`"$($uAutor.AvatarUrl)`",`"conteudo`":`"$texto`",`"curtidas`":$curtidasJson,`"salvos`":[],`"reposts`":[],`"comentarios`":$comentariosJson,`"quantidadeCurtidas`":$qtdCurtidas,`"quantidadeComentarios`":$qtdComentarios,`"quantidadeReposts`":0,`"criadoEm`":{`"`$date`":`"$dataPostIso`"},`"atualizadoEm`":{`"`$date`":`"$dataPostIso`"}}"
+        $qtdCurtidasReal = $listaCurtidasSet.Count
+        $jsonDoc = "{`"autorId`":`"$($uAutor.Id)`",`"autorNodeId`":`"$($uAutor.NodeId)`",`"autorNome`":`"$($uAutor.Nome)`",`"autorAvatarUrl`":`"$($uAutor.AvatarUrl)`",`"conteudo`":`"$texto`",`"curtidas`":$curtidasJson,`"salvos`":[],`"reposts`":[],`"comentarios`":$comentariosJson,`"quantidadeCurtidas`":$qtdCurtidasReal,`"quantidadeComentarios`":$qtdComentarios,`"quantidadeReposts`":0,`"criadoEm`":{`"`$date`":`"$dataPostIso`"},`"atualizadoEm`":{`"`$date`":`"$dataPostIso`"}}"
         
         $swPosts.WriteLine($jsonDoc)
 
@@ -263,9 +280,8 @@ try {
 }
 
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "  SUCESSO! TODOS OS ARQUIVOS FORAM GERADOS COM PERFEIÇÃO  " -ForegroundColor Green
+Write-Host "   SUCESSO! TODOS OS ARQUIVOS FORAM GERADOS COM PERFEIÇÃO   " -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host "1. PostgreSQL Auth:   $FileAuth"
 Write-Host "2. PostgreSQL Profile:$FileProfile"
 Write-Host "3. MongoDB Posts:     $FilePosts (100.000 Documentos JSON Lines)"
-
