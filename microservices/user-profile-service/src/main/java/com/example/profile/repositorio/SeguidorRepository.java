@@ -1,4 +1,4 @@
-package com.example.profile.repositorio;
+﻿package com.example.profile.repositorio;
 
 import com.example.profile.modelo.PerfilUsuario;
 import com.example.profile.modelo.Seguidor;
@@ -21,4 +21,3 @@ public interface SeguidorRepository extends JpaRepository<Seguidor, UUID> {
 
     void deleteBySeguidorOrSeguido(PerfilUsuario seguidor, PerfilUsuario seguido);
 }
-

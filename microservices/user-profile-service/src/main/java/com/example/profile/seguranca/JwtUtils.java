@@ -1,4 +1,4 @@
-package com.example.profile.seguranca;
+﻿package com.example.profile.seguranca;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -77,4 +77,3 @@ public class JwtUtils {
                 .build();
     }
 }
-

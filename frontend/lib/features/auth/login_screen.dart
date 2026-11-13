@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
         image: const DecorationImage(
           image: AssetImage(
             'lib/assets/images/signal_artwork.png',
-          ), // Substitua pelo caminho do seu asset/imagem
+          ),
           fit: BoxFit.cover,
         ),
       ),

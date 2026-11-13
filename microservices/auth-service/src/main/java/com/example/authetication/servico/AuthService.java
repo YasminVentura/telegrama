@@ -1,4 +1,4 @@
-package com.example.authetication.servico;
+﻿package com.example.authetication.servico;
 
 import com.example.authetication.cliente.UserProfileClient;
 import com.example.authetication.dto.AutenticacaoResultado;
@@ -70,7 +70,6 @@ public class AuthService {
             throw new RegraNegocioException("Identificador de usuário inválido no refresh token.");
         }
 
-        // Remove o refresh token antigo (rotação de refresh token)
         redisTemplate.delete(chaveRefresh);
 
         UserDetails userDetails = new DetalhesUsuarioImpl(usuario);

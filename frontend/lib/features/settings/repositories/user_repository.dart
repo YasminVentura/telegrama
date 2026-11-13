@@ -1,7 +1,7 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 class UserRepository {
-  // Simulação de banco local para isFollowing e contadores
+
   final Map<String, bool> _followingState = {};
   int _followersCount = 1284;
   int _followingCount = 42;

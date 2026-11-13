@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import com.example.profile.modelo.Role;
 import lombok.AllArgsConstructor;
@@ -20,4 +20,3 @@ public class CriarPerfilInternoRequisicaoDto {
     private String avatarUrl;
     private Role perfil;
 }
-

@@ -1,4 +1,4 @@
-package com.example.post.configuracao;
+﻿package com.example.post.configuracao;
 
 import com.example.post.seguranca.JwtFiltroAutenticacao;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +32,13 @@ public class ConfiguracaoSeguranca {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Libera requisições preflight (OPTIONS)
+
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Libera exclusão em cascata inter-serviços
+
                         .requestMatchers("/posts/interno/**", "/api/posts/interno/**").permitAll()
-                        // Leitura pública de posts (Feed / busca)
+
                         .requestMatchers(HttpMethod.GET, "/posts/**", "/api/posts/**").permitAll()
-                        // Apenas usuários autenticados com token válido podem criar post, curtir ou excluir
+
                         .requestMatchers(HttpMethod.POST, "/posts/**", "/api/posts/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/posts/**", "/api/posts/**").authenticated()
                         .anyRequest().authenticated()

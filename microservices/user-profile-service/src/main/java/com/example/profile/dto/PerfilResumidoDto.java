@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,4 +15,3 @@ public class PerfilResumidoDto {
     private String nodeId;
     private String avatarUrl;
 }
-

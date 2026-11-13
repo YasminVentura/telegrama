@@ -1,7 +1,7 @@
-version: '3.8'
+﻿version: '3.8'
 
 services:
-  # Banco de dados PostgreSQL
+
   postgres:
     image: postgres:15-alpine
     container_name: telegrama-postgres
@@ -21,7 +21,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Service Discovery (Eureka)
   service-discovery:
     build:
       context: ./microservices
@@ -32,7 +31,6 @@ services:
     networks:
       - telegrama-network
 
-  # Auth Service
   auth-service:
     build:
       context: ./microservices
@@ -55,7 +53,6 @@ services:
     networks:
       - telegrama-network
 
-  # User Profile Service
   user-profile-service:
     build:
       context: ./microservices
@@ -74,7 +71,6 @@ services:
     networks:
       - telegrama-network
 
-  # API Gateway
   api-gateway:
     build:
       context: ./microservices
@@ -92,7 +88,6 @@ services:
     networks:
       - telegrama-network
 
-  # Post Service
   post-service:
     build:
       context: ./microservices
@@ -109,7 +104,6 @@ services:
     networks:
       - telegrama-network
 
-  # Banco de dados MongoDB
   mongodb:
     image: mongo:6.0
     container_name: telegrama-mongodb
@@ -123,7 +117,6 @@ services:
     networks:
       - telegrama-network
 
-  # Cache em Memória e Gerenciamento de Sessão (Redis)
   redis:
     image: redis:7-alpine
     container_name: telegrama-redis

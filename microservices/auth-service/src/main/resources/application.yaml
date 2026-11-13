@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 8081
 
 spring:
@@ -29,8 +29,7 @@ eureka:
   instance:
     prefer-ip-address: true
 
-# Configurações do JWT
 jwt:
-  # O ideal é usar variável de ambiente: ${JWT_SECRET}
+
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 86400000 # 24 horas em milissegundos
+  expiration: 86400000

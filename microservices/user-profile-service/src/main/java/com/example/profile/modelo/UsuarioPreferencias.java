@@ -1,4 +1,4 @@
-package com.example.profile.modelo;
+﻿package com.example.profile.modelo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
@@ -81,4 +81,3 @@ public class UsuarioPreferencias {
     @Builder.Default
     private String bannerColor = "#2E4F3E";
 }
-

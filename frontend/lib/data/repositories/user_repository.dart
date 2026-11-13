@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/core/network/session_storage.dart';
 import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
 
-/// DTO que mapeia a resposta do endpoint GET /usuarios/{nodeId} e GET /usuarios/me
 class PerfilRespostaDto {
   final String id;
   final String nome;
@@ -103,7 +102,6 @@ class PerfilRespostaDto {
   }
 }
 
-/// DTO resumido para buscas e listagens em lote de usuários
 class PerfilResumidoDto {
   final String id;
   final String nome;
@@ -151,7 +149,7 @@ abstract class UserRepository {
 }
 
 class UserRepositoryImpl implements UserRepository {
-  /// Notificador global para manter a foto e a cor do banner sincronizadas entre Header, Perfil e Posts
+
   static final ValueNotifier<String> currentAvatarNotifier =
       ValueNotifier<String>(UserPreferences.defaultAvatar);
   static final ValueNotifier<String> currentBannerColorNotifier =
@@ -174,7 +172,6 @@ class UserRepositoryImpl implements UserRepository {
   static bool get isCurrentUserAdmin =>
       isLoggedIn && currentUserRoleNotifier.value.toUpperCase() == 'ADMIN';
 
-  /// Guarda a foto e a cor de fundo escolhidas pelo usuário na sessão atual
   static String? _userExplicitlyChosenAvatar;
   static String? _userExplicitlyChosenBannerColor;
   static final Map<String, String> _avatarByNodeId = {};
@@ -220,7 +217,7 @@ class UserRepositoryImpl implements UserRepository {
       final incomingCleanNodeId = nodeId.trim().replaceAll('@', '');
       if (currentUserNodeId != null &&
           currentUserNodeId!.toLowerCase() != incomingCleanNodeId.toLowerCase()) {
-        // Se trocou de usuário logado, limpa a escolha anterior em memória
+
         _userExplicitlyChosenAvatar = null;
         _userExplicitlyChosenBannerColor = null;
       }
@@ -266,7 +263,6 @@ class UserRepositoryImpl implements UserRepository {
       }
     }
 
-    // Se o usuário já escolheu uma foto na sessão, preserva a escolha dele
     if (_userExplicitlyChosenAvatar != null && _userExplicitlyChosenAvatar!.isNotEmpty) {
       if (currentAvatarNotifier.value != _userExplicitlyChosenAvatar!) {
         currentAvatarNotifier.value = _userExplicitlyChosenAvatar!;

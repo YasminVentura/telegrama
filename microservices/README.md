@@ -34,14 +34,12 @@ Responsável pelo **Perfil Social, Preferências e Seguidores**.
 - **Exclusão em Cascata e Moderação**: Permite que o próprio dono ou um `ADMIN` exclua uma conta (`DELETE /usuarios/{nodeId}`), acionando via Feign a limpeza de postagens no `post-service` e de credenciais no `auth-service`.
 
 ### 5. `post-service` (Porta `8082`)
-Responsável pela **Criação, Leitura e Interação com Postagens**.
+Responsável pela **Criação, Leitura, Feed e Interação com Postagens**.
 - Banco de Dados: MongoDB (`telegrama_posts`)
-- Domínios: Postagens de texto, Sistema de Curtidas (toggle curtir/descurtir), Contagem de comentários/reposts, Auditoria de datas.
-- **Integração**: Consulta o `user-profile-service` via Feign (`POST /usuarios/batch`) para enriquecer postagens com nome e avatar atualizados.
+- Domínios: Postagens de texto, Geração e Paginação de Feed (Fan-out on Read), Sistema de Curtidas (toggle curtir/descurtir), Contagem de comentários/reposts, Auditoria de datas.
+- **Integração**: Consulta o `user-profile-service` via Feign (`POST /usuarios/batch`) para enriquecer postagens e feed com nome e avatar atualizados.
 - **Segurança e Moderação**: Validação de JWT injetado pelo API Gateway. Tanto o autor da publicação quanto usuários com papel `ADMIN` podem excluir postagens.
-
-### Serviços Futuros (Em Planejamento)
-- **`feed-service`**: Para orquestração da linha do tempo e cache em memória (Redis) baseada em quem o usuário segue.
+- **Consolidação de Feed**: A geração da timeline de postagens e agregação de dados é realizada diretamente no `post-service`, eliminando a necessidade de um microsserviço intermediário de feed e reduzindo a latência de rede.
 
 ---
 

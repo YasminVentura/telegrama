@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/features/settings/components/profile_card.dart';
@@ -13,7 +13,7 @@ class ProfileScreen extends StatefulWidget {
   final AppTheme currentTheme;
   final Function(String route)? onNavigate;
   final String?
-  nodeId; // Opcional: Se nulo, busca o perfil do usuário logado via GET /usuarios/me
+  nodeId;
 
   const ProfileScreen({
     super.key,
@@ -185,7 +185,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Preview ao vivo do fundo + avatar
                       Container(
                         height: 90,
                         width: double.infinity,

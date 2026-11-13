@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
@@ -135,7 +135,7 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Search Input
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
@@ -188,7 +188,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
             ),
           ),
 
-          // Filters
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
@@ -211,7 +210,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
             ),
           ),
 
-          // Results
           Flexible(
             child: _results.isEmpty &&
                     _searchController.text.isNotEmpty &&
@@ -401,7 +399,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     }
   }
 
-  /// Item de Perfil de Usuário (com foto de perfil e badge PERFIL)
   Widget _buildUserResultItem(SearchResult item) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -481,7 +478,6 @@ class _GlobalSearchModalState extends State<GlobalSearchModal> {
     );
   }
 
-  /// Item de Post / Transmissão (SEM foto de perfil ao lado, com ícone de transmissão e badge POST)
   Widget _buildPostResultItem(SearchResult item) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,

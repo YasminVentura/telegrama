@@ -1,4 +1,4 @@
-package com.example.authetication.seguranca;
+﻿package com.example.authetication.seguranca;
 
 import com.example.authetication.modelo.Usuario;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,7 @@ public class DetalhesUsuarioImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return usuario.getNodeId(); 
+        return usuario.getNodeId();
     }
 
     @Override

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/features/chats/repositories/chat_repository.dart';
 
@@ -25,7 +25,7 @@ class ChatWindowComponent extends StatefulWidget {
 class _ChatWindowComponentState extends State<ChatWindowComponent> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   List<MessageModel> _messages = [];
   bool _isLoading = true;
   bool _isTyping = false;
@@ -74,29 +74,26 @@ class _ChatWindowComponentState extends State<ChatWindowComponent> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-    
+
     _messageController.clear();
-    
-    // Add locally immediately as "undelivered"
+
     final localMsg = MessageModel(text: text, isMe: true, time: DateTime.now(), isDelivered: false);
     setState(() {
       _messages.add(localMsg);
     });
     _scrollToBottom();
 
-    // Send to repository
     final deliveredMsg = await widget.chatRepository.sendMessage(widget.chatId, text);
-    
+
     if (mounted) {
       setState(() {
-        // Replace local with delivered
+
         _messages.removeLast();
         _messages.add(deliveredMsg);
         _isTyping = true;
       });
       _scrollToBottom();
-      
-      // Auto reply simulation
+
       final reply = await widget.chatRepository.simulateAutoReply(widget.chatId);
       if (mounted && widget.chatId == widget.chatId) {
         setState(() {
@@ -134,7 +131,7 @@ class _ChatWindowComponentState extends State<ChatWindowComponent> {
       ),
       child: Column(
         children: [
-          // Header
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
@@ -166,8 +163,8 @@ class _ChatWindowComponentState extends State<ChatWindowComponent> {
                         Text(
                           _isTyping ? 'Typing...' : widget.activeChatHandle,
                           style: TextStyle(
-                            fontSize: 11, 
-                            fontWeight: FontWeight.bold, 
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                             color: _isTyping ? widget.currentTheme.primaryColor : widget.currentTheme.textColor.withValues(alpha: 0.5)
                           ),
                         ),
@@ -190,7 +187,6 @@ class _ChatWindowComponentState extends State<ChatWindowComponent> {
             ),
           ),
 
-          // Messages List
           Expanded(
             child: Container(
               color: widget.currentTheme.backgroundColor.withValues(alpha: 0.5),
@@ -265,7 +261,6 @@ class _ChatWindowComponentState extends State<ChatWindowComponent> {
             ),
           ),
 
-          // Input Area
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

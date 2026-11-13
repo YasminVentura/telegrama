@@ -1,4 +1,4 @@
-package com.example.post.servico;
+﻿package com.example.post.servico;
 
 import com.example.post.cliente.AuthClient;
 import com.example.post.dto.ComentarioRespostaDto;
@@ -349,12 +349,18 @@ public class PostagemService {
         for (ComentarioPostagem c : postagem.getComentarios()) {
             PerfilResumidoDto perfil = obterPerfilAutor(c.getAutorId(), c.getAutorNodeId(), perfisMap);
             ComentarioRespostaDto dto = mapearComentarioParaDto(c, usuarioLogado, perfil);
-            dtoPorId.put(c.getId(), dto);
+            String cid = c.getId();
+            if (cid != null && !cid.isBlank()) {
+                dtoPorId.put(cid, dto);
+            }
         }
 
         List<ComentarioRespostaDto> raizes = new ArrayList<>();
         for (ComentarioPostagem c : postagem.getComentarios()) {
-            ComentarioRespostaDto atual = dtoPorId.get(c.getId());
+            String cid = c.getId();
+            ComentarioRespostaDto atual = cid != null ? dtoPorId.get(cid) : mapearComentarioParaDto(c, usuarioLogado, null);
+            if (atual == null) continue;
+
             String parentId = c.getParentId();
             if (parentId != null && !parentId.isBlank() && dtoPorId.containsKey(parentId)) {
                 dtoPorId.get(parentId).getReplies().add(atual);
@@ -388,8 +394,10 @@ public class PostagemService {
                 ? requisicao.getParentId().trim()
                 : null;
 
+        String novoId = UUID.randomUUID().toString();
         ComentarioPostagem novoComentario = ComentarioPostagem.builder()
-                .id(UUID.randomUUID().toString())
+                .id(novoId)
+                .idLegado(novoId)
                 .parentId(parentId)
                 .autorId(autor.getId())
                 .autorNodeId(perfilAutor != null && perfilAutor.getNodeId() != null ? perfilAutor.getNodeId() : autor.getNodeId())
@@ -421,7 +429,7 @@ public class PostagemService {
         }
 
         ComentarioPostagem alvo = postagem.getComentarios().stream()
-                .filter(c -> c.getId().equals(comentarioId))
+                .filter(c -> c.getId() != null && c.getId().equals(comentarioId))
                 .findFirst()
                 .orElseThrow(() -> new PostagemNaoEncontradaException("Comentário não encontrado: " + comentarioId));
 
@@ -455,8 +463,6 @@ public class PostagemService {
 
         return mapearComentarioParaDto(alvo, usuarioLogado, perfilAutor);
     }
-
-    // --- Métodos Auxiliares ---
 
     private List<String> extrairIdentificadores(List<Postagem> postagens) {
         Set<String> idsUnicos = new HashSet<>();
@@ -619,11 +625,11 @@ public class PostagemService {
         String dataCriacaoFormatada = formatarDataIso(postagem.getCriadoEm());
         String dataAtualizacaoFormatada = formatarDataIso(postagem.getAtualizadoEm());
 
-        String nomeAutor = (perfilAtual != null && perfilAtual.getNome() != null) 
+        String nomeAutor = (perfilAtual != null && perfilAtual.getNome() != null)
                 ? perfilAtual.getNome() : postagem.getAutorNome();
-        String handleAutor = (perfilAtual != null && perfilAtual.getNodeId() != null) 
+        String handleAutor = (perfilAtual != null && perfilAtual.getNodeId() != null)
                 ? perfilAtual.getNodeId() : postagem.getAutorNodeId();
-        String avatarAutor = (perfilAtual != null) 
+        String avatarAutor = (perfilAtual != null)
                 ? perfilAtual.getAvatarUrl() : postagem.getAutorAvatarUrl();
 
         return PostagemRespostaDto.builder()

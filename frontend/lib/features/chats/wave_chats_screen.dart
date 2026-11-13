@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../core/themes/app_themes.dart';
 import 'package:frontend/features/chats/components/chat_list_component.dart';
 import 'package:frontend/features/chats/components/chat_window_component.dart';

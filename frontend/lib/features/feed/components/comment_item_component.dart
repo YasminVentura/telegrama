@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/settings/profile_screen.dart';
@@ -82,7 +82,7 @@ class CommentItemComponent extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Coluna Esquerda: Avatar e Linha de Conexão
+
               Column(
                 children: [
                   GestureDetector(
@@ -129,7 +129,7 @@ class CommentItemComponent extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 14),
-              // Coluna Direita: Conteúdo
+
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(0, 16, 16, 12),

@@ -1,4 +1,4 @@
-package com.example.authetication.configuracao;
+﻿package com.example.authetication.configuracao;
 
 import com.example.authetication.seguranca.DetalhesUsuarioServicoImpl;
 import com.example.authetication.seguranca.JwtFiltroAutenticacao;
@@ -39,11 +39,11 @@ public class ConfiguracaoSeguranca {
             .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // Libera requisições preflight (OPTIONS)
+
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Libera o acesso para registro, login, refresh token, logout, endpoints internos de cascata e erros
+
                 .requestMatchers("/auth/registro", "/auth/login", "/auth/refresh", "/auth/logout", "/auth/interno/**", "/error").permitAll()
-                // Exige autenticação para o resto (ex: logout)
+
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -56,26 +56,20 @@ public class ConfiguracaoSeguranca {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Origens de desenvolvimento permitidas
+
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:*",
             "http://127.0.0.1:*"
         ));
-        
-        // Métodos HTTP permitidos
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
-        // Cabeçalhos permitidos na requisição (Content-Type, X-Session-Id, Authorization, etc.)
+
         configuration.setAllowedHeaders(List.of("*"));
-        
-        // Cabeçalhos expostos na resposta para o cliente (Flutter Web)
+
         configuration.setExposedHeaders(List.of("Set-Cookie", "X-Session-Id", "X-Refresh-Token"));
-        
-        // Permite envio de credenciais (cookies e autorizações)
+
         configuration.setAllowCredentials(true);
-        
-        // Cache preflight por 1 hora
+
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

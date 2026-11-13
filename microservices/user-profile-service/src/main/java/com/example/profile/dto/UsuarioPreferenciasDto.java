@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import com.example.profile.modelo.TemaVisual;
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -27,4 +27,3 @@ public class UsuarioPreferenciasDto {
     @JsonAlias({"corCapa", "banner_color"})
     private String bannerColor;
 }
-

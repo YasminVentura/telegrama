@@ -1,4 +1,4 @@
-final Map<String, String> _memoryStore = {};
+﻿final Map<String, String> _memoryStore = {};
 
 String? readStorageKey(String key) => _memoryStore[key];
 
@@ -9,4 +9,3 @@ void writeStorageKey(String key, String value) {
 void removeStorageKey(String key) {
   _memoryStore.remove(key);
 }
-

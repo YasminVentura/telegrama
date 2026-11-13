@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/feed/models/post_model.dart';
@@ -28,7 +28,6 @@ abstract class PostRepository {
 class PostRepositoryImpl implements PostRepository {
   final ApiClient _apiClient;
 
-  /// Cache em memória de postagens repostadas na sessão para sincronia imediata
   static final Map<String, PostModel> _sessionRepostedPosts = {};
   static final Set<String> _sessionUnrepostedIds = {};
   static final Map<String, PostModel> _knownPostsCache = {};
@@ -138,7 +137,7 @@ class PostRepositoryImpl implements PostRepository {
     final String formattedTargetHandle = '@$cleanTargetNodeId';
 
     if (isTargetCurrentUser) {
-      // Remove posts que o usuário desfez o repost nesta sessão (e que não são de autoria dele)
+
       posts.removeWhere((p) {
         final isOwnAuthor = p.authorHandle.replaceAll('@', '').toLowerCase() ==
             cleanTargetNodeId.toLowerCase();
@@ -160,7 +159,6 @@ class PostRepositoryImpl implements PostRepository {
       }
     }
 
-    // Marca qualquer post na aba "Posts" cujo autor seja diferente do dono do perfil como repostado
     return posts.map((p) {
       final bool isPostAuthorDifferent =
           p.authorHandle.replaceAll('@', '').toLowerCase() !=
@@ -405,9 +403,12 @@ class PostRepositoryImpl implements PostRepository {
       }
     }
 
+    final commentId = (json['id'] ?? json['_id'])?.toString() ?? '';
+    final parentId = (json['parentId'] ?? json['parent_id'])?.toString();
+
     return {
-      'id': json['id']?.toString() ?? '',
-      'parentId': json['parentId']?.toString(),
+      'id': commentId,
+      'parentId': parentId,
       'authorName': json['authorName'] ?? 'Node Anônimo',
       'authorHandle': handle,
       'authorAvatarUrl': UserAvatar.resolvePresetAsset(rawAvatar) ?? rawAvatar,

@@ -1,4 +1,4 @@
-package com.example.post.dto;
+﻿package com.example.post.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,4 +17,3 @@ public class CriarComentarioRequisicaoDto {
 
     private String parentId;
 }
-

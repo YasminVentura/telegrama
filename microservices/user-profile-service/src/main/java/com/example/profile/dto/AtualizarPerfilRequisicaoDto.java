@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
@@ -23,4 +23,3 @@ public class AtualizarPerfilRequisicaoDto {
 
     private UsuarioPreferenciasDto preferencias;
 }
-

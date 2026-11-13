@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/features/settings/components/settings_menu.dart';
@@ -112,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   Text(
-                    'NODE ID • $_userNodeId', // Exibição dinâmica do nodeId do usuário
+                    'NODE ID • $_userNodeId',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,

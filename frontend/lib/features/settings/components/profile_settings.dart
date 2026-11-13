@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/shared/components/user_avatar.dart';
@@ -80,7 +80,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     super.dispose();
   }
 
-  /// Seleciona uma das 6 fotos fixas no preview; a alteração é efetivada ao clicar em "SAVE PROFILE"
   void _selectFixedAvatar(String avatarAssetPath) {
     final resolved =
         UserAvatar.resolvePresetAsset(avatarAssetPath) ?? avatarAssetPath;
@@ -89,7 +88,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
     });
   }
 
-  /// Seleciona uma das cores fixas da capa no preview; efetivada ao clicar em "SAVE PROFILE"
   void _selectBannerColor(String hexColor) {
     setState(() {
       _selectedBannerColor = hexColor;
@@ -181,7 +179,7 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Coluna Esquerda: Public Profile
+
             Expanded(
               flex: 3,
               child: Container(
@@ -224,7 +222,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Preview do fundo da capa atrás do avatar
                     Container(
                       height: 95,
                       width: double.infinity,
@@ -340,7 +337,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                     ),
                     const SizedBox(height: 8),
 
-                    // Grade com as 6 fotos de perfil fixas
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
@@ -465,7 +461,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
             ),
             const SizedBox(width: 24),
 
-            // Coluna Direita: Account Frequency & Save Button
             Expanded(
               flex: 2,
               child: Column(
@@ -532,7 +527,6 @@ class _ProfileSettingsContentState extends State<ProfileSettingsContent> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Sincronização e Botão Salvar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

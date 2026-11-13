@@ -1,4 +1,4 @@
-package com.example.profile.controller;
+﻿package com.example.profile.controller;
 
 import com.example.profile.dto.AtualizarPerfilRequisicaoDto;
 import com.example.profile.dto.CriarPerfilInternoRequisicaoDto;
@@ -146,4 +146,3 @@ public class UsuarioController {
         throw new RegraNegocioException("Usuário não autenticado.");
     }
 }
-

@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,4 +10,3 @@ import lombok.NoArgsConstructor;
 public class RespostaEnvelopeDto<T> {
     private T data;
 }
-

@@ -1,4 +1,4 @@
-package com.example.profile.modelo;
+﻿package com.example.profile.modelo;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -82,4 +82,3 @@ public class PerfilUsuario {
         }
     }
 }
-

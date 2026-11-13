@@ -1,4 +1,4 @@
-package com.example.profile.repositorio;
+﻿package com.example.profile.repositorio;
 
 import com.example.profile.modelo.PerfilUsuario;
 import com.example.profile.modelo.UsuarioPreferencias;
@@ -13,4 +13,3 @@ public interface UsuarioPreferenciasRepository extends JpaRepository<UsuarioPref
     Optional<UsuarioPreferencias> findByUsuario(PerfilUsuario usuario);
     Optional<UsuarioPreferencias> findByUsuarioNodeId(String nodeId);
 }
-

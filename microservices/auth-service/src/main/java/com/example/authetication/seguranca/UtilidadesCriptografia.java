@@ -1,4 +1,4 @@
-package com.example.authetication.seguranca;
+﻿package com.example.authetication.seguranca;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class UtilidadesCriptografia {
-    private static final String CHAVE_SECRETA_STRING = "TelegramaSecreta"; // 16 bytes para AES-128
+    private static final String CHAVE_SECRETA_STRING = "TelegramaSecreta";
     private static final SecretKeySpec CHAVE_SECRETA = new SecretKeySpec(CHAVE_SECRETA_STRING.getBytes(StandardCharsets.UTF_8), "AES");
 
     public static String criptografar(String dados) {

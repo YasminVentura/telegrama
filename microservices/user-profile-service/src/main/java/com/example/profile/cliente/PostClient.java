@@ -1,4 +1,4 @@
-package com.example.profile.cliente;
+﻿package com.example.profile.cliente;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,4 +10,3 @@ public interface PostClient {
     @DeleteMapping("/posts/interno/autor/{nodeId}")
     void excluirPostagensPorAutor(@PathVariable("nodeId") String nodeId);
 }
-

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class CustomMenuItemButton extends StatefulWidget {
   final IconData icon;
@@ -53,8 +53,8 @@ class _CustomMenuItemButtonState extends State<CustomMenuItemButton> {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
-            border: widget.isActive 
-                ? Border.all(color: widget.primaryColor, width: 1.5) 
+            border: widget.isActive
+                ? Border.all(color: widget.primaryColor, width: 1.5)
                 : Border.all(color: Colors.transparent, width: 1.5),
           ),
           child: Row(

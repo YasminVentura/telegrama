@@ -1,4 +1,4 @@
-package com.example.post.excecao;
+﻿package com.example.post.excecao;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +41,7 @@ public class ManipuladorExcecoes {
         corpo.put("erro", "Dados inválidos");
 
         Map<String, String> erros = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> 
+        ex.getBindingResult().getFieldErrors().forEach(error ->
             erros.put(error.getField(), error.getDefaultMessage())
         );
         corpo.put("campos", erros);

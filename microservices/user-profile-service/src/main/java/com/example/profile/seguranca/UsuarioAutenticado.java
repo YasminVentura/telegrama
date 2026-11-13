@@ -1,4 +1,4 @@
-package com.example.profile.seguranca;
+﻿package com.example.profile.seguranca;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,4 +67,3 @@ public class UsuarioAutenticado implements UserDetails {
         return true;
     }
 }
-

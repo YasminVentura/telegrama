@@ -1,4 +1,4 @@
-package com.example.post.dto;
+﻿package com.example.post.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,4 +35,3 @@ public class ComentarioRespostaDto {
     @Builder.Default
     private List<ComentarioRespostaDto> replies = new ArrayList<>();
 }
-

@@ -1,4 +1,4 @@
-package com.example.profile.excecao;
+﻿package com.example.profile.excecao;
 
 public class RegraNegocioException extends RuntimeException {
 
@@ -6,4 +6,3 @@ public class RegraNegocioException extends RuntimeException {
         super(mensagem);
     }
 }
-

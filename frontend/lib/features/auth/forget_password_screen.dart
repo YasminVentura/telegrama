@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -73,7 +73,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Logo no topo
+
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -201,7 +201,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Caixa informativa "Secure pulse protocol"
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -240,7 +239,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Campo de Email de Recuperação
               Text(
                 'RECOVERY EMAIL',
                 style: TextStyle(
@@ -273,13 +271,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Botão Principal: SEND RECOVERY PULSE
               MouseRegion(
                 onEnter: (_) => setState(() => _isHoveredSend = true),
                 onExit: (_) => setState(() => _isHoveredSend = false),
                 child: GestureDetector(
                   onTap: () {
-                    // Ação de envio do pulso de recuperação
+
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 100),

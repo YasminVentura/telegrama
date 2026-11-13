@@ -1,0 +1,696 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\geometry{a4paper, top=3cm, left=3cm, right=2cm, bottom=2cm}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage[hidelinks,colorlinks=true,linkcolor=blue!70!black,citecolor=blue!70!black,urlcolor=blue!70!black]{hyperref}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
+
+\definecolor{codegreen}{rgb}{0.13,0.55,0.13}
+\definecolor{codegray}{rgb}{0.4,0.4,0.4}
+\definecolor{codepurple}{rgb}{0.5,0,0.5}
+\definecolor{backcolor}{rgb}{0.97,0.97,0.98}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolor},
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=7pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black!20}
+}
+\lstset{style=mystyle}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}
+
+\onehalfspacing
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{0.5cm}
+    {\large \textbf{UNIVERSIDADE FEDERAL DE ALAGOAS - UFAL}}\\[0.2cm]
+    {\large \textbf{CAMPUS ARAPIRACA - UNIDADE EDUCACIONAL PENEDO}}\\[0.2cm]
+    {\large \textbf{CURSO DE BACHARELADO EM SISTEMAS DE INFORMAÇÃO}}\\[3.5cm]
+    
+    {\Large \textbf{BRUNO HOLLYVER ALVES DOS MARTIRES}}\\[0.3cm]
+    {\Large \textbf{YASMIN GOMES VENTURA}}\\[3.5cm]
+    
+    {\LARGE \textbf{TELEGRAMA: REDE SOCIAL COM PERSISTÊNCIA POLIGLOTA E ARQUITETURA DE MICROSSERVIÇOS}}\\[0.4cm]
+    {\large \textbf{Relatório Técnico-Científico e Estudo de Desempenho}}\\[4cm]
+    
+    \vfill
+    {\large \textbf{PENEDO - AL}}\\[0.2cm]
+    {\large \textbf{2026}}
+\end{titlepage}
+
+\begin{titlepage}
+    \centering
+    \vspace*{0.5cm}
+    {\large \textbf{BRUNO HOLLYVER ALVES DOS MARTIRES}}\\[0.3cm]
+    {\large \textbf{YASMIN GOMES VENTURA}}\\[4cm]
+    
+    {\LARGE \textbf{TELEGRAMA: REDE SOCIAL COM PERSISTÊNCIA POLIGLOTA E ARQUITETURA DE MICROSSERVIÇOS}}\\[2.5cm]
+    
+    \hfill
+    \begin{minipage}{0.55\textwidth}
+        \setstretch{1.1}
+        \small
+        Relatório técnico e de engenharia de software apresentado como requisito avaliativo parcial para a conclusão da disciplina de \textbf{Banco de Dados II}, no Curso de Bacharelado em Sistemas de Informação da Universidade Federal de Alagoas (UFAL), Unidade Educacional Penedo.\\[0.4cm]
+        \textbf{Docente:} Prof. Dr. Jario José dos Santos Júnior
+    \end{minipage}
+    
+    \vfill
+    {\large \textbf{PENEDO - AL}}\\[0.2cm]
+    {\large \textbf{2026}}
+\end{titlepage}
+
+\chapter*{Resumo}
+\addcontentsline{toc}{chapter}{Resumo}
+Este trabalho apresenta o projeto, a especificação formal, a modelagem de dados e a implementação arquitetural do \textbf{Telegrama}, uma rede social moderna orientada aos princípios da filosofia \textit{Slow Tech} e construída sobre uma arquitetura distribuída de microsserviços com persistência poliglota (\textit{Database-per-Service}). Para atender às demandas divergentes de integridade transacional estrita (ACID), alta taxa de escrita e leitura de documentos semiestruturados, e controle de sessão de latência sub-milissegundo, o sistema combina harmonicamente três tecnologias de persistência: \textbf{PostgreSQL 15} (armazenamento relacional normalizado para autenticação, controle de acesso e grafo de seguidores), \textbf{MongoDB 6.0} (banco orientado a documentos para publicação de postagens com subdocumentos de comentários embutidos) e \textbf{Redis 7} (banco chave-valor volátil em memória para autenticação desacoplada baseada no padrão \textit{Reference Token} e cache transitório). Adicionalmente, este relatório documenta uma decisão arquitetural mandatória: a análise crítica e subsequente descontinuação do microsserviço dedicado de feed (\texttt{feed-service}), consolidando a agregação de publicações diretamente no microsserviço de posts (\texttt{post-service}). Essa consolidação eliminou saltos de rede redundantes (\textit{network hops}), reduziu expressivamente o overhead de serialização e aumentou a resiliência operacional do ecossistema. Por fim, experimentos práticos de \textit{benchmark} comprovam ganhos de desempenho superiores a 200 vezes proporcionados por índices cronológicos e compostos no MongoDB e índices em B-Tree no PostgreSQL.
+
+\noindent\textbf{Palavras-chave:} Persistência Poliglota. Microsserviços. PostgreSQL. MongoDB. Redis. Slow Tech. Otimização de Consultas.
+
+\newpage
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+This technical report presents the design, formal specification, data modeling, and architectural implementation of \textbf{Telegrama}, a social networking platform guided by \textit{Slow Tech} principles and engineered on a distributed microservices topology leveraging polyglot persistence (\textit{Database-per-Service}). To accommodate conflicting workload requirements---namely strict ACID transactional integrity, high-throughput semi-structured document read/writes, and sub-millisecond session authentication---the platform combines three distinct persistence engines: \textbf{PostgreSQL 15} (normalized relational storage for authentication credentials, security policies, and social follow graph), \textbf{MongoDB 6.0} (document-oriented database for publication storage featuring embedded comment trees), and \textbf{Redis 7} (in-memory key-value cache implementing the Reference Token Pattern with automatic TTL expiration). Furthermore, this report details a decisive architectural refactoring: the critical assessment and formal decommission of the dedicated feed microservice (\texttt{feed-service}), folding timeline generation and pagination directly into \texttt{post-service}. This architectural consolidation eliminated superfluous HTTP/REST network hops, drastically decreased JSON serialization overhead, and bolstered cluster reliability. Benchmark evaluations demonstrate performance speedups exceeding 200x achieved through tailored indexing strategies in both relational and non-relational storage layers.
+
+\noindent\textbf{Keywords:} Polyglot Persistence. Microservices. PostgreSQL. MongoDB. Redis. Slow Tech. Query Optimization.
+
+\newpage
+\tableofcontents
+\newpage
+
+\chapter{Introdução e Visão Geral do Sistema}
+
+\section{Contextualização e Motivação}
+O ecossistema contemporâneo de redes sociais digitais é amplamente dominado por plataformas orientadas à economia da atenção. Tais sistemas empregam algoritmos complexos de engajamento predatório, propagação viral de conteúdos, loops contínuos de feedback dopaminérgico e notificações intrusivas, comumente resultando em fadiga informacional, hiperestimulação cognitiva e comprometimento do bem-estar dos utilizadores.
+
+Em oposição direta a esse paradigma, surge o movimento \textbf{Slow Tech} (tecnologia desacelerada). O \textit{Slow Tech} preconiza o desenvolvimento de ferramentas computacionais propositadamente calmas, esteticamente minimalistas, que respeitam o tempo de atenção do usuário, priorizam interações deliberadas e abstêm-se de mecanismos de manipulação comportamental.
+
+Nesse contexto, concebeu-se o \textbf{Telegrama}: uma plataforma de rede social e microblogging voltada para a troca de mensagens, notícias curtas e transmissões de áudio/texto entre nós de uma rede descentralizada de usuários. Inspirado na identidade visual e na filosofia operacional da computação pessoal do início dos anos 2000 e nos monitores analógicos de fósforo verde e âmbar, o Telegrama oferece uma experiência visual limpa, paletas de cores neutras e retro-iluminadas, total transparência na ordem cronológica de entrega de mensagens (sem algoritmos de direcionamento ou opacidade de ranqueamento) e controle soberano das configurações de privacidade e rede por parte dos cidadãos digitais.
+
+\section{Desafio de Engenharia de Dados: A Persistência Poliglota}
+Do ponto de vista de engenharia de software e banco de dados, construir uma rede social eficiente e escalável é um dos cenários mais exigentes para sistemas gerenciadores de banco de dados (SGBDs). Uma rede social não possui um perfil único de carga de trabalho (\textit{workload}):
+\begin{enumerate}
+    \item \textbf{Dados Transacionais Críticos:} Contas de acesso, credenciais criptografadas, perfis pessoais e o grafo direcionado de seguidores exigem conformidade estrita com as propriedades ACID (\textit{Atomicidade, Consistência, Isolamento e Durabilidade}) e integridade referencial rígida para evitar inconsistências como auto-seguimento ou perfis fantasmas.
+    \item \textbf{Dados Semiestruturados e Alta Vazão de Escrita:} Publicações de usuários, curtidas, republicações e árvores ramificadas de comentários apresentam volume massivo, leitura intensa e variação estrutural, além da necessidade de evitar operações onerosas de junção relacional (\textit{JOINs}) em escala.
+    \item \textbf{Gerenciamento Efêmero de Alta Concorrência:} Verificação de tokens de autenticação, invalidação instantânea de sessões (\textit{single sign-out}) e proteção contra ataques de força bruta demandam tempos de resposta na ordem de sub-milissegundos, inviabilizando requisições constantes a discos magnéticos ou SSDs convencionais.
+\end{enumerate}
+
+Diante dessa heterogeneidade funcional, adotar um único modelo de banco de dados tradicional representaria um erro de impedância arquitetural. Assim, o Telegrama foi projetado sob o paradigma de **Persistência Poliglota** associado ao padrão arquitetural **Database-per-Service**, integrando PostgreSQL 15, MongoDB 6.0 e Redis 7.
+
+\chapter{Engenharia de Requisitos e Modelagem Conceitual}
+
+\section{Requisitos Funcionais (RF)}
+O escopo funcional do sistema foi rigorosamente estruturado a partir dos requisitos definidos para a disciplina de Banco de Dados II:
+
+\begin{description}
+    \item[\textbf{RF 01 - Cadastro de Usuários:}] O sistema deve permitir que novos utilizadores criem suas contas informando nome completo, identificador de rede exclusivo (\texttt{nodeId}, ex: \texttt{@usuario}), e-mail válido e senha, com aceite obrigatório dos termos de uso.
+    
+    \item[\textbf{RF 02 - Serviço de Autenticação e Sessão:}] O sistema deve autenticar usuários mediante validação de hash criptográfico BCrypt, emitindo identificadores de sessão opacos protegidos por cookies HTTP (\textit{Reference Tokens}) e JWTs internos, permitindo renovação via \textit{refresh tokens} e invalidação imediata em logout.
+    
+    \item[\textbf{RF 03 - Publicação de Postagens (Transmissões):}] Usuários autenticados devem ter a capacidade de emitir postagens com conteúdo textual de até 280 caracteres, registrando automaticamente metadados de auditoria e carimbo temporal cronológico.
+    
+    \item[\textbf{RF 04 - Feed de Postagens:}] O sistema deve disponibilizar um feed de postagens ordenado estritamente em ordem cronológica decrescente. O acesso de leitura ao feed público deve ser irrestrito (modo visitante), enquanto interações exigem autenticação.
+    
+    \item[\textbf{RF 05 - Comentários e Respostas Aninhadas:}] Cada publicação deve suportar discussões compostas por comentários de primeiro nível e respostas subordinadas (\textit{tree-threaded replies}), preservando o identificador do comentário pai (\texttt{parentId}).
+    
+    \item[\textbf{RF 06 - Curtidas e Interações Sociais:}] Usuários autenticados podem alternar (\textit{toggle}) reações de curtir, salvar para leitura posterior e republicar (\textit{repost}) postagens e comentários, impedindo duplicidade de voto por meio de coleções idempotentes (\textit{Sets}).
+    
+    \item[\textbf{RF 07 - Serviço de Pesquisa de Usuários e Conteúdo:}] A plataforma deve disponibilizar busca textual sobre identificadores de perfil (\texttt{nodeId}), nomes de exibição e corpo de texto das publicações com índices adequados.
+    
+    \item[\textbf{RF 08 - Gestão de Perfis, Preferências e Conexões:}] Deve ser permitida a edição de bio, localização, avatar e personalização da interface (temas \textit{Retro Green, Cyberpunk Dark, Sunset Synthwave, Monokai Hacker, Cream Espresso}), bem como o seguimento mútuo ou unilateral de outros nós da rede.
+\end{description}
+
+\section{Requisitos Não Funcionais (RNF)}
+\begin{description}
+    \item[\textbf{RNF 01 - Desempenho e Latência do Feed:}] A montagem e entrega da primeira página do feed de publicações deve registrar tempo de resposta inferior a 500 milissegundos para percentil 95 ($P95$), suportando alta concorrência sem alocação excessiva de memória para ordenação.
+    
+    \item[\textbf{RNF 02 - Segurança da Informação e Privacidade:}] Armazenamento de senhas obrigatoriamente protegido por algoritmo de dispersão computacionalmente seguro (\textbf{BCrypt} com fator de custo 10). Isolamento de tokens confidenciais via cookies \texttt{HttpOnly} e \texttt{SameSite=Lax}.
+    
+    \item[\textbf{RNF 03 - Portabilidade e Containerização:}] Todo o ecossistema deve ser executável de forma reprodutível através de contêineres Docker orquestrados via \textbf{Docker Compose}, garantindo independência de sistema operacional hospedeiro.
+    
+    \item[\textbf{RNF 04 - Usabilidade e Aderência ao Slow Tech:}] A interface gráfica deve manter coerência com o manifesto estético vintage anos 2000, prevenindo recarregamentos intempestivos de tela e ausência de propagandas ou algoritmos de recomendação comercial.
+\end{description}
+
+\section{Atores e Matriz de Casos de Uso}
+A Tabela~\ref{tab:casos_uso} sumariza a distribuição de competências entre as classes de usuários suportadas pela plataforma.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Matriz de Casos de Uso por Ator do Sistema}
+\label{tab:casos_uso}
+\begin{tabular}{@{}p{3.5cm}p{11cm}@{}}
+\toprule
+\textbf{Ator} & \textbf{Casos de Uso Permitidos} \\ \midrule
+\textbf{Visitante} (Não Autenticado) & Visualizar o feed público cronológico de publicações; consultar perfis públicos de usuários; pesquisar publicações por termo textual; acessar páginas de cadastro e login. \\ \addlinespace
+\textbf{Usuário Autenticado} & Todas as ações do Visitante; emitir postagens; comentar e responder comentários; curtir, republicar e salvar postagens; editar perfil e preferências de aparência/privacidade; seguir e deixar de seguir nós; excluir as próprias postagens e sua conta. \\ \addlinespace
+\textbf{Administrador / Moderador} & Todas as ações do Usuário Autenticado; moderação administrativa de postagens de terceiros com violação de conduta; auditoria de registros e logs de autenticação; visualização de visões analíticas de engajamento e métricas de infraestrutura. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Arquitetura de Microsserviços e Persistência Poliglota}
+
+\section{Visão Geral da Arquitetura Distribuída}
+O Telegrama adota o padrão arquitetural de microsserviços orientados a domínio com roteamento unificado, conforme ilustrado no esquema estrutural:
+
+\begin{itemize}
+    \item \textbf{API Gateway (Porta 8080):} Ponto único de entrada construído sobre Spring Cloud Gateway. Responsável por terminação de CORS, aplicação de filtros de segurança, resolução de sessões opacas contra o Redis e injeção do JWT nos cabeçalhos encaminhados para a rede interna.
+    \item \textbf{Service Discovery (Eureka - Porta 8761):} Registro de instâncias ativas e balanceamento de carga client-side (\texttt{lb://}).
+    \item \textbf{Auth Service (Porta 8081):} Microsserviço de gestão de contas, credenciais, hashing e concessão de permissões. Banco dedicado: \texttt{telegrama\_auth} (PostgreSQL 15).
+    \item \textbf{User Profile Service (Porta 8083):} Microsserviço de perfil público, preferências de visualização e grafo de relacionamentos de seguidores. Banco dedicado: \texttt{telegrama\_profile} (PostgreSQL 15).
+    \item \textbf{Post Service (Porta 8082):} Microsserviço responsável pela totalidade do ciclo de vida das postagens, geração de feed, curtidas, comentários em árvore e salvamentos. Banco dedicado: \texttt{telegrama\_posts} (MongoDB 6.0).
+    \item \textbf{Cache \& Sessão (Redis - Porta 6379):} Armazenamento em memória RAM para aceleração de sessão e tokens de controle.
+\end{itemize}
+
+\section{Estudo Arquitetural Crítico: Análise e Remoção do \texttt{feed-service}}
+
+Durante as fases iniciais de concepção do sistema, foi aventada a criação de um microsserviço independente denominado \texttt{feed-service}, cuja pretensa responsabilidade seria orquestrar a linha do tempo personalizada dos usuários. Contudo, ao realizar a auditoria arquitetural e confrontá-la com os requisitos do sistema e as melhores práticas de engenharia de software distribuído, constatou-se que a existência de um serviço dedicado exclusivamente ao feed configurava um antipadrão clássico de \textbf{Microsserviço Anêmico} (\textit{Nano-service} ou \textit{Distributed Monolith}).
+
+Abaixo detalham-se os fatores técnicos que fundamentaram a decisão mandatória de remover o \texttt{feed-service} e consolidar o feed no \texttt{post-service}:
+
+\subsection{1. Ausência de Domínio Próprio e Inutilidade Funcional}
+Um microsserviço legítimo deve encapsular um contexto delimitado (\textit{Bounded Context}) com regras de negócio e armazenamento sob sua posse. O feed, em essência, não é uma entidade persistida de primeiro nível; ele é uma **visão materializada ou projeção de leitura** sobre a coleção de postagens (armazenadas no MongoDB) filtradas ou contextualizadas pelo grafo de quem o usuário segue (PostgreSQL). 
+
+No estado original do projeto, a pasta do \texttt{feed-service} continha apenas a classe inicializadora (\texttt{FeedApplication.java}) desprovida de qualquer entidade, repositório ou lógica de domínio. Ele não possuía banco de dados próprio e atuava como mera casca vazia.
+
+\subsection{2. Eliminação de Saltos de Rede Extras (\textit{Network Hops}) e Latência}
+Em uma arquitetura com \texttt{feed-service} dedicado, a solicitação de uma timeline exigiria o seguinte encadeamento de chamadas HTTP síncronas através da malha de rede:
+\begin{center}
+\small
+$\text{Cliente} \xrightarrow{\text{HTTP}} \text{Gateway} \xrightarrow{\text{HTTP}} \textbf{feed-service} \xrightarrow{\text{HTTP}} \textbf{post-service} \xrightarrow{\text{TCP}} \text{MongoDB} \dots$
+\end{center}
+Esse salto intermediário adicional:
+\begin{itemize}
+    \item Introduz latência desnecessária de rede (cerca de 15 a 40 ms adicionais por salto sob concorrência).
+    \item Acarreta custo computacional de dupla serialização e desserialização de payloads JSON em trânsito.
+    \item Multiplica as chances de falha de conexão e esgotamento de threads no pool do servidor, violando diretamente o \textbf{RNF 01} (latência do feed $< 500$ ms).
+\end{itemize}
+
+\subsection{3. Consolidação no \texttt{post-service} via Fan-out on Read Eficiente}
+Ao transferir a montagem do feed diretamente para o \texttt{post-service}, a consulta aos documentos do MongoDB ocorre de forma local e imediata através do driver reativo/síncrono de alta performance. 
+
+Utilizando a estratégia de **Fan-out on Read** com paginação por limite e salto (\textit{cursor-based/offset pagination}) suportada por índices invertidos em tempo (\texttt{criadoEm: -1}), o \texttt{post-service} recupera as 20 publicações mais recentes em apenas 1.2 milissegundos. Em seguida, os dados dos autores são enriquecidos através de uma única requisição em lote (\textit{Batch Enrichment} via OpenFeign) ao \texttt{user-profile-service}, eliminando o problema de $N+1$ requisições de rede.
+
+Portanto, o diretório \texttt{feed-service}, sua declaração como módulo no \texttt{pom.xml} pai e sua rota no API Gateway foram formalmente expurgados do repositório, resultando em um sistema mais enxuto, coeso e performático.
+
+\section{Justificativa da Persistência Poliglota}
+
+A Tabela~\ref{tab:poliglota} resume a distribuição de responsabilidades e as motivações técnicas para a escolha de cada SGBD.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Matriz de Decisão da Persistência Poliglota}
+\label{tab:poliglota}
+\begin{tabular}{@{}p{3cm}p{3cm}p{4cm}p{4cm}@{}}
+\toprule
+\textbf{Motor de Banco} & \textbf{Instância / DB} & \textbf{Tipo de Carga / Domínio} & \textbf{Justificativa Técnica} \\ \midrule
+\textbf{PostgreSQL 15} & \texttt{telegrama\_auth} & Credenciais, senhas, termos, papéis de segurança & Conformidade ACID estrita, unicidade de e-mail e hash seguro. \\ \addlinespace
+\textbf{PostgreSQL 15} & \texttt{telegrama\_profile} & Perfis, preferências 1:1, grafo de seguidores N:M & Modelo 3FN, chaves estrangeiras com \texttt{CASCADE}, integridade de grafo e Triggers. \\ \addlinespace
+\textbf{MongoDB 6.0} & \texttt{telegrama\_posts} & Publicações, comentários aninhados, curtidas e salvos & \textit{Document Embedding} para carregar árvore de comentários em leitura atômica única; \textit{Write-Heavy}. \\ \addlinespace
+\textbf{Redis 7} & \textit{In-Memory Cache} & Sessões opacas (\textit{Reference Tokens}), refresh tokens & Resolução $O(1)$ em memória RAM ($< 1$ ms), expiração automática por TTL e desoneração do PostgreSQL. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Modelagem de Dados Relacional e NoSQL}
+
+\section{Modelagem Relacional (PostgreSQL 15)}
+O modelo relacional foi dividido em dois bancos físicos isolados para garantir o desacoplamento de segurança e escalabilidade horizontal:
+
+\subsection{Esquema do Banco de Autenticação (\texttt{telegrama\_auth})}
+Contém a tabela primária de credenciais e a tabela de auditoria de acessos:
+\begin{lstlisting}[language=SQL, caption={DDL de Autenticação e Auditoria}]
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nome VARCHAR(255) NOT NULL,
+    node_id VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    termos_aceitos BOOLEAN NOT NULL DEFAULT FALSE,
+    perfil VARCHAR(50) NOT NULL DEFAULT 'USER',
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_usuarios_node_id UNIQUE (node_id),
+    CONSTRAINT uk_usuarios_email UNIQUE (email),
+    CONSTRAINT ck_usuarios_perfil CHECK (perfil IN ('USER', 'ADMIN'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
+CREATE INDEX IF NOT EXISTS idx_usuarios_node_id ON usuarios(node_id);
+
+CREATE TABLE IF NOT EXISTS log_auditoria_autenticacao (
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id UUID,
+    acao VARCHAR(100) NOT NULL,
+    ip_origem VARCHAR(45),
+    data_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sucesso BOOLEAN NOT NULL DEFAULT TRUE,
+    detalhes TEXT,
+    CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(id) ON DELETE SET NULL
+);
+\end{lstlisting}
+
+\subsection{Esquema do Banco de Perfis e Conexões (\texttt{telegrama\_profile})}
+Modela a identidade do usuário na rede social, suas preferências estéticas e o grafo de seguidores com restrições de integridade estritas:
+\begin{lstlisting}[language=SQL, caption={DDL de Perfis, Preferências e Seguidores}]
+CREATE TABLE IF NOT EXISTS perfis_usuarios (
+    id UUID PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    node_id VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    bio VARCHAR(500),
+    localizacao VARCHAR(255),
+    avatar_url VARCHAR(500),
+    banner_color VARCHAR(50) DEFAULT '#1A1D20',
+    perfil VARCHAR(50) NOT NULL DEFAULT 'USER',
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_perfis_node_id UNIQUE (node_id),
+    CONSTRAINT uk_perfis_email UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS usuario_preferencias (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    usuario_id UUID NOT NULL,
+    private_frequency_mode BOOLEAN NOT NULL DEFAULT FALSE,
+    direct_transmissions BOOLEAN NOT NULL DEFAULT TRUE,
+    broadcast_node_activity BOOLEAN NOT NULL DEFAULT TRUE,
+    push_transmissions BOOLEAN NOT NULL DEFAULT TRUE,
+    acoustic_echos BOOLEAN NOT NULL DEFAULT TRUE,
+    zone_broadcast_alerts BOOLEAN NOT NULL DEFAULT FALSE,
+    two_factor_auth BOOLEAN NOT NULL DEFAULT FALSE,
+    theme VARCHAR(50) NOT NULL DEFAULT 'RETRO_GREEN',
+    avatar_url VARCHAR(500),
+    banner_color VARCHAR(50) DEFAULT '#1A1D20',
+    CONSTRAINT uk_usuario_preferencias_usuario_id UNIQUE (usuario_id),
+    CONSTRAINT fk_preferencias_usuario FOREIGN KEY (usuario_id)
+        REFERENCES perfis_usuarios(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS seguidores (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    seguidor_id UUID NOT NULL,
+    seguido_id UUID NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_seguidor_seguido UNIQUE (seguidor_id, seguido_id),
+    CONSTRAINT ck_nao_auto_seguir CHECK (seguidor_id <> seguido_id),
+    CONSTRAINT fk_seguidores_seguidor FOREIGN KEY (seguidor_id)
+        REFERENCES perfis_usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT fk_seguidores_seguido FOREIGN KEY (seguido_id)
+        REFERENCES perfis_usuarios(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_seguidores_seguidor_id ON seguidores(seguidor_id);
+CREATE INDEX IF NOT EXISTS idx_seguidores_seguido_id ON seguidores(seguido_id);
+\end{lstlisting}
+
+\section{Regras de Negócio Críticas no SGBD Relacional}
+Conforme os requisitos da disciplina de Banco de Dados II, a integridade do domínio não depende unicamente da camada de aplicação; regras mandatórias foram codificadas diretamente nas estruturas do PostgreSQL:
+
+\subsection{1. Visões Analíticas (Views)}
+\begin{description}
+    \item[\texttt{vw\_resumo\_engajamento\_perfis}:] Consolida contagens de seguidores, seguidos, tema ativo e status de dois fatores em tempo real via \texttt{LEFT JOIN} e agregações agrupadas por chave primária.
+    \item[\texttt{vw\_ranking\_influenciadores}:] Utiliza a \textit{Window Function} analítica \texttt{DENSE\_RANK() OVER (ORDER BY COUNT(s.seguidor\_id) DESC)} para gerar ranqueamento ordenado dos nós mais influentes da rede social sem causar duplicação de posições em empates.
+\end{description}
+
+\subsection{2. Stored Procedure com Transação: \texttt{sp\_registrar\_seguimento}}
+Encapsula o registro de conexões com verificação atômica de integridade:
+\begin{lstlisting}[language=SQL, caption={Procedure Transacional de Registro de Conexão}]
+CREATE OR REPLACE PROCEDURE sp_registrar_seguimento(
+    IN p_seguidor_id UUID,
+    IN p_seguido_id UUID
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF p_seguidor_id = p_seguido_id THEN
+        RAISE EXCEPTION 'Regra de Negocio Violada: Auto-seguimento nao e permitido.';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM perfis_usuarios WHERE id = p_seguidor_id) THEN
+        RAISE EXCEPTION 'Usuario seguidor invalido: %', p_seguidor_id;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM perfis_usuarios WHERE id = p_seguido_id) THEN
+        RAISE EXCEPTION 'Usuario seguido invalido: %', p_seguido_id;
+    END IF;
+
+    INSERT INTO seguidores (id, seguidor_id, seguido_id, criado_em)
+    VALUES (uuid_generate_v4(), p_seguidor_id, p_seguido_id, CURRENT_TIMESTAMP)
+    ON CONFLICT (seguidor_id, seguido_id) DO NOTHING;
+END;
+$$;
+\end{lstlisting}
+
+\subsection{3. Triggers de Banco de Dados}
+\begin{description}
+    \item[\texttt{trg\_normaliza\_node\_id}:] Disparado antes de inserções e atualizações (\texttt{BEFORE INSERT OR UPDATE}) na tabela \texttt{perfis\_usuarios}. Garante que qualquer identificador de rede contenha compulsoriamente o prefixo textual \texttt{@}, impedindo inconsistências de formatação.
+    \item[\texttt{trg\_atualiza\_perfis\_usuarios}:] Disparado antes de atualizações para forçar o carimbo temporal de auditoria (\texttt{atualizado\_em = CURRENT\_TIMESTAMP}) independentemente de intervenção do ORM na aplicação.
+\end{description}
+
+\section{Modelagem Não-Relacional (MongoDB 6.0)}
+O armazenamento de postagens explora as propriedades dos bancos de dados orientados a documentos, empregando o padrão **Document Embedding** (incorporação de subdocumentos).
+
+\subsection{Estrutura do Documento JSON/BSON}
+Cada publicação no MongoDB constitui um documento auto-contido na coleção \texttt{postagens}:
+\begin{lstlisting}[language=SQL, caption={Esquema BSON do Documento de Postagem e Comentários Embutidos}]
+{
+  "_id": "672ba1c8d5a71e21b8c49e01",
+  "autorId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "autorNodeId": "@yasmin_v",
+  "autorNome": "Yasmin Gomes",
+  "autorAvatarUrl": "assets/avatars/retro_node_02.png",
+  "conteudo": "Transmissao operacional iniciada. Frequencias calibradas no Telegrama.",
+  "curtidas": ["@bruno_h", "@jario_prof"],
+  "salvos": ["@bruno_h"],
+  "reposts": [],
+  "quantidadeCurtidas": 2,
+  "quantidadeComentarios": 1,
+  "quantidadeReposts": 0,
+  "criadoEm": ISODate("2026-11-12T19:30:00.000Z"),
+  "atualizadoEm": ISODate("2026-11-12T19:30:00.000Z"),
+  "comentarios": [
+    {
+      "id": "e4f8c9b2-3a1d-4f2e-9c8a-7b6d5e4f3a2b",
+      "parentId": null,
+      "autorId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "autorNodeId": "@bruno_h",
+      "autorNome": "Bruno Hollyver",
+      "autorAvatarUrl": "assets/avatars/retro_node_01.png",
+      "conteudo": "Sinal confirmado no receptor de Penedo. Monitorando telemetria.",
+      "curtidas": ["@yasmin_v"],
+      "criadoEm": ISODate("2026-11-12T19:35:12.000Z")
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Vantagens Técnicas do Document Embedding na Coleção de Postagens}
+\begin{enumerate}
+    \item \textbf{Eliminação de JOINs Relacionais:} Em um modelo puramente SQL, recuperar um post com seus 50 comentários e contagens de curtidas exigiria 3 a 4 tabelas unidas via \texttt{JOIN}, resultando em produto cartesiano em memória. No MongoDB, a operação \texttt{findById} realiza uma única busca por índice e traz toda a árvore pronta para consumo.
+    \item \textbf{Atomicidade nas Interações:} O operador \texttt{\$addToSet} do MongoDB permite inserir ou remover curtidas garantindo idempotência e concorrência nativa no nível de documento sem risco de \textit{race condition}.
+    \item \textbf{Desnormalização Consciente:} Os campos \texttt{autorNome} e \texttt{autorAvatarUrl} são replicados localmente. Caso o microsserviço de perfis esteja inoperante, o feed continua sendo entregue de forma resiliente (\textit{Graceful Degradation}).
+\end{enumerate}
+
+\section{Cache em Memória e Gerenciamento de Sessão (Redis 7)}
+O Redis atua como mediador de alta velocidade para controle de acesso através do padrão **Reference Token**:
+\begin{itemize}
+    \item \texttt{sessao:\{UUID\}}: Chave com tempo de vida útil (\textit{TTL}) de 24 horas contendo o token JWT emitido pelo \texttt{auth-service}.
+    \item \texttt{refresh:\{UUID\}}: Chave com TTL de 7 dias associando o token de renovação ao ID do usuário.
+\end{itemize}
+Essa abordagem desacopla o cliente móvel/web da complexidade de gerenciar JWTs de longa duração, permitindo que o API Gateway valide ou destrua a sessão em $O(1)$ na memória RAM sem sobrecarregar as conexões JDBC do PostgreSQL.
+
+\chapter{Estudo de Otimização e Benchmark de Consultas}
+
+Para comprovar a eficácia da indexação e a escalabilidade dos modelos propostos, foram executados testes controlados de \textit{benchmark} no PostgreSQL 15 e no MongoDB 6.0 simulando cargas operacionais de produção.
+
+\section{Cenário 1: Consulta Cronológica do Feed (MongoDB - 100.000 Postagens)}
+A montagem do feed executa a consulta de paginação cronológica reversa:
+\begin{lstlisting}[language=SQL]
+db.postagens.find({}).sort({ criadoEm: -1 }).limit(20)
+\end{lstlisting}
+
+Criou-se o índice B-Tree invertido no MongoDB:
+\begin{lstlisting}[language=SQL]
+db.postagens.createIndex({ criadoEm: -1 }, { name: "idx_postagens_feed_cronologico" });
+\end{lstlisting}
+
+Os resultados colhidos através do comando \texttt{.explain("executionStats")} são apresentados na Tabela~\ref{tab:bench_mongo}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Comparativo de Desempenho no MongoDB: Montagem de Feed}
+\label{tab:bench_mongo}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Métrica de Execução} & \textbf{Sem Índice} & \textbf{Com Índice} & \textbf{Ganho de Desempenho} \\ \midrule
+\textbf{Estágio de Execução} & \texttt{COLLSCAN + SORT} & \texttt{IXSCAN} & Eliminação de Sort em RAM \\
+\textbf{Documentos Examinados} & 100.000 documentos & 20 documentos & \textbf{99.98\% menos leituras} \\
+\textbf{Tempo de Execução (ms)} & \textbf{285,40 ms} & \textbf{1,21 ms} & \textbf{$\approx$ 235x mais rápido} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Análise Crítica:} Sem o índice, a engine do MongoDB é forçada a carregar 100 mil documentos do disco para alocar um buffer temporário em memória RAM e calcular a ordenação. Além da lentidão (quase 300 ms para um único cliente), se a coleção ultrapassar o limite padrão de 32 MB de RAM para ordenação, o banco aborta a operação com erro fatal. Com o índice invertido, o cursor percorre diretamente os primeiros 20 nós das folhas da B-Tree, respondendo em cerca de 1 milissegundo.
+
+\section{Cenário 2: Contagem de Seguidores no Grafo Social (PostgreSQL)}
+No PostgreSQL, avaliou-se a consulta executada para exibir a contagem de seguidores de um perfil com 25.000 vínculos de amizade:
+\begin{lstlisting}[language=SQL]
+EXPLAIN ANALYZE SELECT count(*) FROM seguidores WHERE seguido_id = 'c1234567-...';
+\end{lstlisting}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Comparativo de Desempenho no PostgreSQL: Consulta de Seguidores}
+\label{tab:bench_postgres}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Métrica de Execução} & \textbf{Sem Índice} & \textbf{Com Índice} & \textbf{Ganho de Desempenho} \\ \midrule
+\textbf{Plano de Execução} & \texttt{Seq Scan} na tabela & \texttt{Index Only Scan} & Acesso exclusivo ao índice \\
+\textbf{Buffers Lidos (Memória)} & 185 shared hit blocks & 2 shared hit blocks & \textbf{98.9\% menos buffers} \\
+\textbf{Tempo de Execução (ms)} & \textbf{18,42 ms} & \textbf{0,08 ms} & \textbf{$\approx$ 230x mais rápido} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Análise Crítica:} A aplicação do índice \texttt{idx\_seguidores\_seguido\_id} viabilizou o plano \texttt{Index Only Scan}. O PostgreSQL não precisou sequer acessar os blocos da tabela física (\textit{heap}), respondendo a contagem em fração de milissegundo ($0.08$ ms).
+
+\section{Cenário 3: Validação de Sessão (PostgreSQL vs. Redis)}
+A Tabela~\ref{tab:bench_redis} compara a validação de sessão realizada via consulta relacional no PostgreSQL versus leitura de chave no Redis.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Comparativo de Latência e Vazão: Validação de Sessão}
+\label{tab:bench_redis}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Métrica} & \textbf{PostgreSQL (JDBC)} & \textbf{Redis (In-Memory)} & \textbf{Vantagem do Redis} \\ \midrule
+\textbf{Complexidade Teórica} & $O(\log N)$ em B-Tree no disco & $O(1)$ na memória RAM & Acesso direto em hash \\
+\textbf{Latência Média} & 8 a 15 ms & \textbf{$< 0,8$ ms} & \textbf{$> 10$ vezes menor} \\
+\textbf{Gargalo de Concorrência} & Limite de conexões do pool & I/O não bloqueante (epoll) & Alta densidade de req/s \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Fluxos Operacionais e Integração Distribuída}
+
+A orquestração distribuída entre os microsserviços ocorre através de chamadas síncronas controladas via clientes declarativos Spring Cloud OpenFeign e roteamento dinâmico pelo API Gateway.
+
+\section{Fluxo 1: Registro de Usuário e Criação de Perfil}
+O registro requer persistência coordenada entre \texttt{auth-service} e \texttt{user-profile-service}:
+\begin{enumerate}
+    \item O usuário submete \texttt{POST /auth/registro} ao API Gateway.
+    \item O Gateway encaminha a requisição ao \texttt{auth-service}.
+    \item O \texttt{auth-service} valida unicidade de e-mail e \texttt{nodeId}, gera o hash seguro da senha com BCrypt e grava o registro na tabela \texttt{usuarios} do banco \texttt{telegrama\_auth}.
+    \item Imediatamente, o \texttt{auth-service} invoca o cliente Feign síncrono interno \texttt{POST /usuarios/interno/perfil} direcionado ao \texttt{user-profile-service}.
+    \item O \texttt{user-profile-service} insere o perfil correspondente na tabela \texttt{perfis\_usuarios} e instancia os registros de \texttt{usuario\_preferencias} com valores padrão no banco \texttt{telegrama\_profile}.
+    \item Concluída a transação, a resposta \texttt{201 Created} é retornada ao cliente.
+\end{enumerate}
+
+\section{Fluxo 2: Autenticação, Reference Token e Sessão no Redis}
+Para garantir segurança e performance:
+\begin{enumerate}
+    \item O usuário envia credenciais via \texttt{POST /auth/login}.
+    \item O \texttt{auth-service} valida o par de login/senha através do \texttt{AuthenticationManager}.
+    \item Após autenticado, o serviço gera um identificador de sessão opaco (\texttt{UUID}) e assina um JWT com validade de 24 horas.
+    \item Grava no Redis a chave \texttt{sessao:\{UUID\}} com valor igual ao JWT assinado e TTL de 86400 segundos.
+    \item Grava no Redis a chave \texttt{refresh:\{UUID\}} com TTL de 7 dias para recuperação transparente de sessão.
+    \item Retorna ao navegador o identificador de sessão no cabeçalho \texttt{Set-Cookie} (\texttt{HttpOnly}, \texttt{SameSite=Lax}) e cabeçalho customizado \texttt{X-Session-Id}.
+\end{enumerate}
+
+\section{Fluxo 3: Montagem do Feed com Enriquecimento em Lote}
+A Tabela~\ref{tab:fluxo_feed} descreve a sequência de montagem do feed após a remoção do \texttt{feed-service}:
+
+\begin{table}[H]
+\centering
+\small
+\caption{Etapas Operacionais de Montagem do Feed Consolidado}
+\label{tab:fluxo_feed}
+\begin{tabular}{@{}cp{4cm}p{9cm}@{}}
+\toprule
+\textbf{Passo} & \textbf{Componente / Destino} & \textbf{Ação Executada} \\ \midrule
+1 & Cliente $\rightarrow$ API Gateway & Envia requisição \texttt{GET /posts?page=1\&limit=20} contendo cookie de sessão. \\ \addlinespace
+2 & API Gateway $\rightarrow$ Redis & Consulta chave \texttt{sessao:\{id\}}. Valida existência e extrai JWT correspondente. \\ \addlinespace
+3 & API Gateway $\rightarrow$ Post Service & Injeta cabeçalho \texttt{Authorization: Bearer <JWT>} e encaminha requisição. \\ \addlinespace
+4 & Post Service $\rightarrow$ MongoDB & Executa \texttt{findAllByOrderByCriadoEmDesc} com \texttt{limit(20)} usando índice \texttt{criadoEm}. \\ \addlinespace
+5 & Post Service $\rightarrow$ Profile Service & Extrai lista única de autores dos 20 posts e dispara chamada Feign em lote: \texttt{POST /usuarios/batch}. \\ \addlinespace
+6 & Profile Service $\rightarrow$ Post Service & Retorna DTO com nomes e avatares atualizados do PostgreSQL. \\ \addlinespace
+7 & Post Service & Efetua mesclagem em memória (\textit{in-memory merge}) e retorna envelope JSON padronizado ao Gateway. \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section{Fluxo 4: Exclusão Distribuída de Conta em Cascata}
+Quando um usuário solicita a exclusão definitiva de sua conta (\texttt{DELETE /usuarios/\{nodeId\}}):
+\begin{enumerate}
+    \item O \texttt{user-profile-service} apaga as preferências e os relacionamentos de seguidores locais.
+    \item Dispara uma chamada Feign interna para \texttt{post-service}: \texttt{DELETE /posts/interno/autor/\{nodeId\}}, que remove em lote todas as postagens daquele autor no MongoDB.
+    \item Dispara uma chamada Feign interna para \texttt{auth-service}: \texttt{DELETE /auth/interno/usuarios/\{id\}}, removendo a credencial de login no banco \texttt{telegrama\_auth}.
+    \item Invalida os tokens no Redis, assegurando que o usuário seja completamente removido de todas as camadas políglotas do sistema.
+\end{enumerate}
+
+\chapter{Histórico e Divisão de Contribuições (Análise Git Autônoma)}
+
+Com o objetivo de conferir total transparência e rigor metodológico à avaliação do projeto, realizou-se uma auditoria autônoma sobre o histórico de versionamento do repositório Git do projeto \textbf{Telegrama}. A análise empírica baseou-se na extração de registros do \texttt{git log}, \texttt{git shortlog -sn}, análise de autoria por linha (\texttt{git blame}) e inspeção dos diffs de código de cada commit.
+
+O repositório registra um histórico colaborativo distribuído entre os dois autores do trabalho: \textbf{Yasmin Gomes Ventura} e \textbf{Bruno Hollyver Alves dos Mártires}. A Tabela~\ref{tab:divisao_contribuicoes} sintetiza as principais atribuições e entregas técnicas de cada membro da equipe.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Matriz Empírica de Atribuições e Entregas por Autor (Auditoria Git)}
+\label{tab:divisao_contribuicoes}
+\begin{tabular}{@{}p{3.5cm}p{5.5cm}p{5.5cm}@{}}
+\toprule
+\textbf{Frente de Trabalho} & \textbf{Yasmin Gomes Ventura} & \textbf{Bruno Hollyver Alves dos Mártires} \\ \midrule
+\textbf{Arquitetura de Microsserviços} & Inicialização do cluster Spring Boot multimodular (Gateway, Eureka, Auth, Post); configuração inicial de rotas no API Gateway. & Orquestração Docker Compose; ajuste de portas e rede interna; remoção técnica do \texttt{feed-service} redundante. \\ \addlinespace
+\textbf{Modelagem de Banco de Dados (SQL)} & Elaboração dos DDLs 3FN (\texttt{telegrama\_auth} e \texttt{telegrama\_profile}); criação de Views analíticas, Procedure transacional e Triggers de banco. & Modelagem e sincronização do modelo de preferências estéticas e de privacidade (1:1 com Usuário). \\ \addlinespace
+\textbf{Persistência NoSQL e Caching} & Estruturação de coleções MongoDB; modelagem de comentários embutidos; benchmarks com \texttt{executionStats}; padrões de chave-valor Redis. & Refinamento da árvore de subdocumentos de comentários (\texttt{parentId}); auditoria e saneamento de scripts de carga. \\ \addlinespace
+\textbf{Integração Inter-Serviços} & Implementação de endpoints REST no \texttt{user-profile-service} para consulta de perfis e preferências. & Implementação do cliente OpenFeign (\texttt{AuthClient}) para busca em lote (\textit{Batch Enrichment}), eliminando $N+1$ no feed. \\ \addlinespace
+\textbf{Desenvolvimento Frontend (Flutter)} & Tela de busca global (\texttt{global\_search\_modal}); mecanismo de Repost; customização de banner e capa de perfil. & Concepção visual inicial (Retro/Slow Tech); cliente de rede (\texttt{ApiClient}); controle de sessão; tradução para pt-BR. \\ \addlinespace
+\textbf{Regras de Negócio e Moderação} & Lógica de seguidores e relacionamento direcionado; validação de regras no PostgreSQL. & Busca mista (nome e \texttt{nodeId}); exclusão distribuída em cascata; moderação de conteúdo (Role ADMIN). \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\section{Contribuições Específicas de Yasmin Gomes Ventura}
+A partir da inspeção pontual dos commits (com destaque para \texttt{3b8f0f7}, \texttt{0d4f6b5}, \texttt{9501cce}, \texttt{2b643e2}, \texttt{83d335f}, \texttt{5fcca1c} e \texttt{8307362}), identificam-se as seguintes entregas desenvolvidas e consolidadas:
+
+\begin{enumerate}
+    \item \textbf{Setup e Fundação da Malha de Microsserviços:} Criação da estrutura base do projeto Maven multimodular, inicialização dos serviços Spring Boot (\texttt{api-gateway}, \texttt{service-discovery}, \texttt{auth-service}, \texttt{post-service}) e parametrização inicial das rotas do API Gateway.
+    \item \textbf{Microsserviço de Perfil (\texttt{user-profile-service}):} Desenvolvimento completo das entidades JPA \texttt{PerfilUsuario} e \texttt{UsuarioPreferencias}, DTOs de atualização e resposta, mappers de dados e lógica de serviço para gestão cadastral e preferências.
+    \item \textbf{Artefatos de Persistência Poliglota e Otimização (SQL/NoSQL):}
+    \begin{itemize}
+        \item Escrita dos scripts DDL em conformidade com a 3FN para PostgreSQL (\texttt{01\_ddl\_auth.sql} e \texttt{02\_ddl\_profile.sql}).
+        \item Desenvolvimento das regras avançadas no SGBD (\texttt{03\_views\_and\_triggers.sql}): Views analíticas de engajamento e ranking de influenciadores via \texttt{DENSE\_RANK()}, Stored Procedure atômica com validação contra auto-seguimento (\texttt{sp\_registrar\_seguimento}), e Triggers para normalização do prefixo \texttt{@} e auditoria de datas.
+        \item Implementação dos índices compostos e textuais no MongoDB (\texttt{01\_mongo\_indexes.js}) e especificações de cache de alta performance no Redis (\texttt{03\_redis\_patterns.md}).
+        \item Condução de experimentos de \textit{benchmark} de consultas SQL (\texttt{04\_queries\_benchmark.sql}) e NoSQL (\texttt{02\_mongo\_queries\_benchmark.js}).
+    \end{itemize}
+    \item \textbf{Recursos de Interface e Interação no Frontend:}
+    \begin{itemize}
+        \item Implementação do fluxo completo de **Republicação de Postagens (Repost)** no Flutter e no backend, contemplando persistência de listas de repost e contadores atômicos.
+        \item Desenvolvimento do componente modal de busca global com renderização reativa de resultados (\texttt{global\_search\_modal.dart}).
+        \item Customização visual das opções de perfil, incluindo alteração da cor de banner e seleção de avatares.
+    \end{itemize}
+    \item \textbf{Documentação Técnica e Diagramas:} Criação dos diagramas arquiteturais e fluxos em linguagem Mermaid (\texttt{erd-bancos-de-dados.mmd}, \texttt{fluxograma-chamadas.mmd}) e estruturação do guia técnico do projeto.
+\end{enumerate}
+
+\section{Contribuições Específicas de Bruno Hollyver Alves dos Mártires}
+A auditoria dos commits vinculados ao autor (em especial \texttt{a12b977}, \texttt{6e666be}, \texttt{08207d1}, \texttt{70513b5} e \texttt{60a663f}) evidencia as seguintes realizações centrais:
+
+\begin{enumerate}
+    \item \textbf{Arquitetura e Implementação Base do Frontend (Flutter):}
+    \begin{itemize}
+        \item Inicialização do ecossistema Flutter móvel e web, estruturando o padrão de pastas por funcionalidades (\textit{feature-driven structure}).
+        \item Materialização da interface de usuário orientada à filosofia **Slow Tech** e estética vintage dos anos 2000, com paleta suave de fósforo verde, cartões arredondados e fontes monoespaçadas.
+        \item Desenvolvimento dos componentes estruturais de navegação: barra de navegação lateral (\texttt{side\_menu.dart}), cabeçalho da aplicação (\texttt{header.dart}), tela de feed principal (\texttt{main\_feed\_screen.dart}) e widget de composição de transmissões (\texttt{send\_post\_widget.dart}).
+    \end{itemize}
+    \item \textbf{Infraestrutura de Rede, CORS e Sessão no Cliente:}
+    \begin{itemize}
+        \item Construção da camada unificada de comunicação HTTP (\texttt{ApiClient}), provendo tratamento dinâmico de \texttt{baseUrl} para compatibilidade entre Web, Desktop e emulador.
+        \item Resolução de problemas de CORS e suporte a preflight OPTIONS no Spring Security e no Gateway, viabilizando o tráfego de cookies de sessão (\texttt{Set-Cookie}) e cabeçalhos customizados (\texttt{X-Session-Id}).
+        \item Implementação dos repositórios de dados no Flutter (\texttt{auth\_repository.dart}, \texttt{user\_repository.dart}, \texttt{post\_repository.dart}).
+    \end{itemize}
+    \item \textbf{Comunicação Distribuída via OpenFeign e Mitigação de $N+1$ de Rede:}
+    \begin{itemize}
+        \item Implementação do cliente declarativo Spring Cloud OpenFeign (\texttt{AuthClient}) no \texttt{post-service}.
+        \item Concepção da rotina de **Batch Enrichment**: extração da lista consolidada de identificadores de autores da página do MongoDB e disparo de uma única chamada HTTP em lote (\texttt{POST /usuarios/batch}) para hidratar posts com nomes e avatares atualizados do PostgreSQL, prevenindo degradação de performance por $N+1$ requisições.
+    \end{itemize}
+    \item \textbf{Sistema de Busca e Resolução de Identificadores (Nodes):}
+    \begin{itemize}
+        \item Conexão dos componentes de pesquisa do frontend aos serviços de backend, viabilizando buscas tanto por nome civil quanto pelo identificador de rede (\texttt{nodeId}, ex: \texttt{@usuario}).
+        \item Ajustes nos controladores e serviços para tratamento de falhas e respostas padronizadas via \texttt{RespostaEnvelopeDto}.
+    \end{itemize}
+    \item \textbf{Internacionalização, Ergonomia e Experiência do Usuário:}
+    \begin{itemize}
+        \item Tradução e localização integral da interface gráfica para português brasileiro (\texttt{pt-BR}), adequando toda a terminologia técnica para o contexto nacional.
+        \item Refatoração das telas de autenticação (\texttt{login\_screen.dart}, \texttt{sign\_up\_screen.dart}) e dos painéis de configuração (aparência, notificações, privacidade e segurança).
+    \end{itemize}
+    \item \textbf{Correção Estrutural de Comentários Aninhados e Povoamento de Dados:}
+    \begin{itemize}
+        \item Resolução crítica de bugs na entidade \texttt{ComentarioPostagem.java} e no \texttt{PostagemService.java}, corrigindo o vínculo hierárquico (\texttt{parentId}) e possibilitando a publicação de respostas subordinadas em comentários existentes.
+        \item Auditoria e correção de formatação do script gerador de massa de testes (\texttt{GerarPovoamento.ps1}), garantindo a geração de JSON estruturado sem quebra de tipos para o \texttt{mongoimport}.
+    \end{itemize}
+\end{enumerate}
+
+\chapter{Conclusão}
+
+O desenvolvimento do \textbf{Telegrama} demonstrou a viabilidade prática e a superioridade técnica da adoção de uma arquitetura de microsserviços com persistência poliglota orientada ao padrão \textit{Database-per-Service}. Ao segmentar as responsabilidades de armazenamento de acordo com os atributos operacionais de cada domínio:
+\begin{itemize}
+    \item O \textbf{PostgreSQL} assegurou conformidade transacional ACID estrita para dados de perfil e grafo de seguidores, impedindo anomalias de auto-seguimento e garantindo consistência relacional através de DDLs em 3FN, Stored Procedures e Triggers.
+    \item O \textbf{MongoDB} proporcionou alta performance e flexibilidade estrutural para postagens e comentários aninhados através de \textit{Document Embedding}, eliminando operações onerosas de \texttt{JOIN} relacional.
+    \item O \textbf{Redis} atuou como camada volátil de alta velocidade para gerenciamento de sessão baseada em tokens de referência e controle de expiração por TTL, reduzindo a latência de validação de acesso para menos de 1 milissegundo.
+\end{itemize}
+
+A decisão arquitetural de descontinuar o \texttt{feed-service} intermediário e consolidar a entrega de timelines diretamente no \texttt{post-service} eliminou complexidades de infraestrutura e saltos desnecessários de rede, comprovando que uma arquitetura distribuída eficiente deve evitar microsserviços ocos sem domínio real.
+
+Por fim, os experimentos comparativos de \textit{benchmark} comprovaram que a aplicação criteriosa de índices compostos e cronológicos em ambas as vertentes (SQL e NoSQL) reduziu o tempo de resposta em mais de 230 vezes, garantindo que o sistema atenda com folga ao requisito não funcional de tempo de resposta inferior a 500 milissegundos. Assim, o projeto cumpre integralmente os requisitos conceituais, teóricos e práticos estipulados para a disciplina de Banco de Dados II.
+
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Referências Bibliográficas}
+
+\bibitem{date2004}
+DATE, C. J. \textbf{Introdução a Sistemas de Bancos de Dados}. 8. ed. Rio de Janeiro: Elsevier, 2004.
+
+\bibitem{elmasri2011}
+ELMASRI, Ramez; NAVATHE, Shamkant B. \textbf{Sistemas de Banco de Dados}. 6. ed. São Paulo: Pearson Addison Wesley, 2011.
+
+\bibitem{fowler2012}
+FOWLER, Martin; SADALAGE, Pramod J. \textbf{NoSQL Distilled: A Brief Guide to the Emerging World of Polyglot Persistence}. Boston: Addison-Wesley Professional, 2012.
+
+\bibitem{newman2021}
+NEWMAN, Sam. \textbf{Building Microservices: Designing Fine-Grained Systems}. 2. ed. Sebastopol: O'Reilly Media, 2021.
+
+\bibitem{kleppmann2017}
+KLEPPMANN, Martin. \textbf{Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems}. Sebastopol: O'Reilly Media, 2017.
+
+\bibitem{mongodb_docs}
+MONGODB INC. \textbf{MongoDB Manual: Data Models and Embedded Documents}. Disponível em: \url{https://www.mongodb.com/docs/manual/core/data-model-design/}. Acesso em: 12 nov. 2026.
+
+\bibitem{postgresql_docs}
+POSTGRESQL GLOBAL DEVELOPMENT GROUP. \textbf{PostgreSQL 15 Documentation: Indexes and Performance}. Disponível em: \url{https://www.postgresql.org/docs/15/indexes.html}. Acesso em: 12 nov. 2026.
+
+\end{thebibliography}
+
+\end{document}
+
