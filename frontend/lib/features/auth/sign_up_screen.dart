@@ -233,7 +233,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ],
           ),
-
         ],
       ),
     );
@@ -557,7 +556,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     if (widget.onContinueAsGuest != null) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 2),
                       GestureDetector(
                         onTap: widget.onContinueAsGuest,
                         child: MouseRegion(
@@ -579,7 +578,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 2),
             ],
           ),
         ),
