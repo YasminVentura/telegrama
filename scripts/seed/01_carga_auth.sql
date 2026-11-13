@@ -1,4 +1,4 @@
--- CARGA DE USUARIOS PARA telegrama_auth (5 registros)
+﻿
 BEGIN;
 INSERT INTO usuarios (id, nome, node_id, email, senha, termos_aceitos, perfil, criado_em, atualizado_em) VALUES
 ('491bece0-9a67-4f6f-8a49-dfd9f04965ab', 'Arthur Nogueira 1', '@user_1', 'user_1@telegrama.zone', '$2a$10$eACCYoNOHEqgkVE8aWnATO3qE7WODErGQzL6GZ8lq0m8o6C7xS4rS', TRUE, 'ADMIN', '2026-07-06 09:58:16', '2026-07-06 09:58:16'),

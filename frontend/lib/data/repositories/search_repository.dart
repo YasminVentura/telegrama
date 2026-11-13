@@ -1,4 +1,4 @@
-import 'package:frontend/data/repositories/user_repository.dart';
+﻿import 'package:frontend/data/repositories/user_repository.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
 
 abstract class SearchRepository {

@@ -1,4 +1,4 @@
-package com.example.profile.modelo;
+﻿package com.example.profile.modelo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -44,4 +44,3 @@ public class Seguidor {
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 }
-

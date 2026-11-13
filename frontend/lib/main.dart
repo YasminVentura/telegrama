@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 import 'package:frontend/features/auth/forget_password_screen.dart';
@@ -36,8 +36,7 @@ class _MyAppState extends State<MyApp> {
     if (mounted) {
       setState(() {
         _isCheckingSession = false;
-        // Se a sessão ainda estiver válida (ou renovada via refreshToken), entra direto no feed logado.
-        // Caso não esteja logado, ainda pode acessar o feed em modo visitante.
+
         _currentRoute = sessaoValida ? 'feed' : 'feed';
       });
     }

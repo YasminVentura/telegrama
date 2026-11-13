@@ -1,4 +1,4 @@
-package com.example.authetication.repositorio;
+﻿package com.example.authetication.repositorio;
 
 import com.example.authetication.modelo.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +16,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     Optional<Usuario> findByNodeIdIgnoreCase(String nodeId);
 
-    // Essencial para permitir que o usuário logue tanto com email quanto com @node_id
     Optional<Usuario> findByEmailOrNodeId(String email, String nodeId);
 
     boolean existsByEmail(String email);

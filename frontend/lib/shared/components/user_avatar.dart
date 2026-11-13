@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:frontend/data/models/user_preferences.dart';
@@ -28,7 +28,6 @@ class UserAvatar extends StatelessWidget {
     this.backgroundColor,
   });
 
-  /// Normaliza e resolve o caminho de qualquer uma das 6 fotos de perfil fixas
   static String? resolvePresetAsset(String? rawPath) {
     if (rawPath == null || rawPath.trim().isEmpty) return null;
     final clean = rawPath.trim().replaceAll('\\', '/');
@@ -40,7 +39,6 @@ class UserAvatar extends StatelessWidget {
       return clean.startsWith('assets/') ? 'lib/$clean' : clean;
     }
 
-    // Mapeamento pelos nomes originais ou índices
     final lower = clean.toLowerCase();
     if (lower.contains('02f7b97b') || lower == 'avatar_1' || lower == '1') {
       return presetAvatars[0];

@@ -1,4 +1,4 @@
-package com.example.profile.seguranca;
+﻿package com.example.profile.seguranca;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,10 +49,9 @@ public class JwtFiltroAutenticacao extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
-            // Se o token for inválido ou expirado, prossegue sem autenticar para não quebrar rotas públicas
+
         }
 
         filterChain.doFilter(request, response);
     }
 }
-

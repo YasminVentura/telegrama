@@ -1,4 +1,4 @@
-package com.example.profile.dto;
+﻿package com.example.profile.dto;
 
 import com.example.profile.modelo.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,4 +34,3 @@ public class PerfilRespostaDto {
 
     private UsuarioPreferenciasDto preferencias;
 }
-

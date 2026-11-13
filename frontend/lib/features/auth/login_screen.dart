@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
 
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
         image: const DecorationImage(
           image: AssetImage(
             'lib/assets/images/signal_artwork.png',
-          ), // Substitua pelo caminho do seu asset/imagem
+          ),
           fit: BoxFit.cover,
         ),
       ),

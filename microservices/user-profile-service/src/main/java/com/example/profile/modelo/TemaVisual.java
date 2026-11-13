@@ -1,4 +1,4 @@
-package com.example.profile.modelo;
+﻿package com.example.profile.modelo;
 
 public enum TemaVisual {
     RETRO_GREEN,
@@ -7,4 +7,3 @@ public enum TemaVisual {
     MONOKAI_HACKER,
     CREAM_ESPRESSO
 }
-

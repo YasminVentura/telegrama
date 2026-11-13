@@ -1,4 +1,4 @@
-package com.example.profile.excecao;
+﻿package com.example.profile.excecao;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,4 +50,3 @@ public class TratadorErrosGlobal {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(corpo);
     }
 }
-

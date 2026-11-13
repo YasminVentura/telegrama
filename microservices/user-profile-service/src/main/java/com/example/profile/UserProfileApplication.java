@@ -1,4 +1,4 @@
-package com.example.profile;
+﻿package com.example.profile;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,4 +14,3 @@ public class UserProfileApplication {
         SpringApplication.run(UserProfileApplication.class, args);
     }
 }
-

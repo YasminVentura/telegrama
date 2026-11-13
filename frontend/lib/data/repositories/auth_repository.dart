@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:frontend/core/network/api_client.dart';
 import 'package:frontend/data/repositories/user_repository.dart';
 
@@ -53,7 +53,7 @@ class AuthRepository {
       await userRepository.getMyProfile();
       return true;
     } catch (_) {
-      // Se falhou mesmo após a tentativa automática de refresh no ApiClient, tenta explicitamente o refresh:
+
       final renovou = await _apiClient.tentarRenovarSessao();
       if (renovou) {
         try {

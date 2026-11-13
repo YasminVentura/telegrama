@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -70,7 +70,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // Logo no topo
+
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -103,7 +103,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ],
           ),
           const SizedBox(height: 200),
-          
+
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

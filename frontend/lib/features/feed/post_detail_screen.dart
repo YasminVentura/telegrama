@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/repositories/post_repository.dart';
 import 'package:frontend/features/feed/components/post_detail_card.dart';
@@ -203,7 +203,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       backgroundColor: widget.currentTheme.backgroundColor,
       body: Column(
         children: [
-          // Header Area
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
@@ -243,7 +243,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
           ),
 
-          // Scrollable Content
           Expanded(
             child: SingleChildScrollView(
               child: Center(
@@ -275,7 +274,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         },
                       ),
 
-                      // Comments Section
                       if (_comments.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(40),
@@ -335,7 +333,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
           ),
 
-          // Bottom Reply Input
           ReplyInputWidget(
             currentTheme: widget.currentTheme,
             focusNode: _replyFocusNode,

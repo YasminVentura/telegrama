@@ -1,4 +1,4 @@
-package com.example.authetication.seguranca;
+﻿package com.example.authetication.seguranca;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -57,8 +57,7 @@ public class JwtFiltroAutenticacao extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Se o token for inválido, expirado ou de um usuário que não existe mais no banco,
-            // prossegue sem autenticar para não quebrar rotas públicas (GET /usuarios/**)
+
         }
         filterChain.doFilter(request, response);
     }

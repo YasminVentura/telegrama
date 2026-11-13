@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class UserPreferences {
   static const String defaultAvatar = 'lib/assets/images/avatars/avatar_1.webp';
@@ -14,14 +14,14 @@ class UserPreferences {
   ];
 
   static const List<String> fixedBannerColors = [
-    '#2E4F3E', // Verde musgo retrô (Padrão)
-    '#1E3A5F', // Azul marinho profundo
-    '#5C2D46', // Vinho retrô
-    '#6E3B1E', // Terracota / Âmbar escuro
-    '#3D2C5E', // Roxo espacial
-    '#1F4E5B', // Petróleo / Teal
-    '#4A4E2E', // Oliva militar
-    '#2B2B2B', // Grafite escuro
+    '#2E4F3E',
+    '#1E3A5F',
+    '#5C2D46',
+    '#6E3B1E',
+    '#3D2C5E',
+    '#1F4E5B',
+    '#4A4E2E',
+    '#2B2B2B',
   ];
 
   final bool privateFrequencyMode;

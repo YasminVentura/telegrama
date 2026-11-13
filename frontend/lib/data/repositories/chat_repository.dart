@@ -1,4 +1,4 @@
-abstract class ChatRepository {
+﻿abstract class ChatRepository {
   Future<List<Map<String, dynamic>>> getChatConversations();
   Future<List<Map<String, dynamic>>> getMessagesForChat(String chatId);
   Future<void> sendMessage(String chatId, String text);
@@ -8,7 +8,7 @@ abstract class ChatRepository {
 class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<List<Map<String, dynamic>>> getChatConversations() async {
-    // Stub: Simula carregamento da lista de conversas ativas
+
     await Future.delayed(const Duration(milliseconds: 400));
     return [
       {
@@ -25,7 +25,7 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getMessagesForChat(String chatId) async {
-    // Stub: Simula histórico de mensagens de uma conversa
+
     await Future.delayed(const Duration(milliseconds: 300));
     return [
       {
@@ -39,13 +39,13 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Future<void> sendMessage(String chatId, String text) async {
-    // Stub: Simula o envio de mensagem
+
     await Future.delayed(const Duration(milliseconds: 200));
   }
 
   @override
   Future<void> markAsRead(String chatId) async {
-    // Stub: Marca mensagens de um chat como lidas
+
     await Future.delayed(const Duration(milliseconds: 200));
   }
 }

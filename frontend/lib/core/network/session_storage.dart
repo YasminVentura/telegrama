@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'session_storage_stub.dart'
     if (dart.library.html) 'session_storage_web.dart';
 
@@ -47,4 +47,3 @@ class SessionStorage {
     removeStorageKey(_keyUserData);
   }
 }
-

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class PostAttachmentButton extends StatefulWidget {
   final IconData icon;
@@ -39,8 +39,8 @@ class _PostAttachmentButtonState extends State<PostAttachmentButton> {
             border: Border.all(color: widget.shadowColor, width: 1.5),
           ),
           child: Icon(
-            widget.icon, 
-            color: _isHovered ? widget.primaryColor : widget.shadowColor, 
+            widget.icon,
+            color: _isHovered ? widget.primaryColor : widget.shadowColor,
             size: 20,
           ),
         ),

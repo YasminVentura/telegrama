@@ -51,11 +51,11 @@ O ecossistema é baseado em **Java 17, Spring Boot 3.3.1 e Spring Cloud 2023.0.2
 └───────┬──────────────┬──────────────┬──────────────────┘
         │              │              │
         ▼              ▼              ▼
-┌──────────────┐┌──────────────┐┌──────────────┐   ┌────────────────┐
-│ auth-service ││ user-profile ││ post-service │   │  feed-service  │
-│ (Porta 8081) ││ (Porta 8083) ││ (Porta 8082) │   │  (Porta 8084)  │
-│ [PostgreSQL] ││ [PostgreSQL] ││  [MongoDB]   │   │  [INCOMPLETO]  │
-└──────┬───────┘└──────┬───────┘└──────┬───────┘   └────────────────┘
+┌──────────────┐┌──────────────┐┌──────────────┐
+│ auth-service ││ user-profile ││ post-service │
+│ (Porta 8081) ││ (Porta 8083) ││ (Porta 8082) │
+│ [PostgreSQL] ││ [PostgreSQL] ││  [MongoDB]   │
+└──────┬───────┘└──────┬───────┘└──────┬───────┘
        │               │               │
        └───────────────┴───────────────┘
                        ▲
@@ -289,10 +289,10 @@ Aqui estão as armadilhas exatas do seu código e como você deve responder para
 ---
 
 ###  Casca 3: "O que faz o feed-service? Como o feed é gerado?"
-* **A casca:** Na pasta `feed-service` só existe a classe `FeedApplication` vazia. Não há controllers, repositórios, nem container no `docker-compose.yml`, embora o `api-gateway` tenha a rota `/api/feed/**` declarada.
+* **A decisão arquitetural:** O microsserviço dedicado `feed-service` foi descontinuado e removido do projeto. A montagem do feed foi consolidada no `post-service`. A manutenção de um serviço independente apenas para o feed adicionava complexidade desnecessária e saltos de rede adicionais (REST hops) sem acrescentar lógica de domínio distinta.
 * **A pergunta do professor:** *"Como o feed do usuário é montado? É Fan-out-on-Write (alimenta a timeline na publicação) ou Fan-out-on-Read (agrega em tempo real na leitura)?"*
 * **Como responder:**
-  > *"Atualmente, a montagem do feed é feita por **Fan-out-on-Read** diretamente no `post-service`, que consulta o MongoDB ordenando por data de criação (`findAllByOrderByCriadoEmDesc`). O módulo `feed-service` foi provisionado na arquitetura para separar a responsabilidade de ranqueamento, agregação e cache de timelines personalizadas dos seguidores, mas ainda se encontra em fase de esqueleto/estudo de design, sendo o `post-service` o responsável ativo pela entrega das publicações."*
+  > *"A montagem do feed é realizada por **Fan-out-on-Read** diretamente no `post-service`, que consulta o MongoDB com suporte a índices e ordenação por data de criação (`findAllByOrderByCriadoEmDesc`). Avaliamos a arquitetura e decidimos remover o `feed-service` intermediário para evitar latência desnecessária de rede (eliminação de saltos HTTP extras), centralizando a agregação e paginação de postagens diretamente no serviço de posts com suporte a enriquecimento em lote e cache Redis."*
 
 ---
 

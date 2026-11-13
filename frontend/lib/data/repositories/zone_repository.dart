@@ -1,4 +1,4 @@
-abstract class ZoneRepository {
+﻿abstract class ZoneRepository {
   Future<List<Map<String, dynamic>>> getExploreZones({String? category, String? searchQuery});
   Future<Map<String, dynamic>> getZoneDetails(String zoneId);
   Future<void> joinZone(String zoneId);
@@ -8,7 +8,7 @@ abstract class ZoneRepository {
 class ZoneRepositoryImpl implements ZoneRepository {
   @override
   Future<List<Map<String, dynamic>>> getExploreZones({String? category, String? searchQuery}) async {
-    // Stub: Simula busca de zonas para explorar
+
     await Future.delayed(const Duration(milliseconds: 700));
     return [
       {
@@ -28,7 +28,7 @@ class ZoneRepositoryImpl implements ZoneRepository {
 
   @override
   Future<Map<String, dynamic>> getZoneDetails(String zoneId) async {
-    // Stub: Retorna detalhes ricos de uma zona
+
     await Future.delayed(const Duration(milliseconds: 400));
     return {
       'id': zoneId,
@@ -42,13 +42,13 @@ class ZoneRepositoryImpl implements ZoneRepository {
 
   @override
   Future<void> joinZone(String zoneId) async {
-    // Stub: Simula conectar-se a uma zona
+
     await Future.delayed(const Duration(milliseconds: 300));
   }
 
   @override
   Future<List<Map<String, dynamic>>> getZonePosts(String zoneId) async {
-    // Stub: Simula posts específicos de uma zona
+
     await Future.delayed(const Duration(milliseconds: 500));
     return [];
   }

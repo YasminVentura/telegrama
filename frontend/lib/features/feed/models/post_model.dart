@@ -1,4 +1,4 @@
-import 'package:frontend/shared/components/user_avatar.dart';
+﻿import 'package:frontend/shared/components/user_avatar.dart';
 
 class PostModel {
   final String id;
@@ -45,7 +45,6 @@ class PostModel {
   String get authorHandle => authorId.startsWith('@') ? authorId : '@$authorId';
   String? get imageUrl => postImageUrl;
 
-  /// Método copyWith para criar cópias modificadas imutáveis
   PostModel copyWith({
     String? id,
     String? authorName,

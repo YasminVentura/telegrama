@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class HoverIconButton extends StatefulWidget {
   final Widget icon;
@@ -67,25 +67,25 @@ class _HoverIconButtonState extends State<HoverIconButton> {
               _buildThemedIcon(),
               if (widget.hasNotification)
                 Positioned(
-                  right: widget.notificationCount != null ? -4 : 3, 
+                  right: widget.notificationCount != null ? -4 : 3,
                   top: widget.notificationCount != null ? -4 : null,
-                  bottom: widget.notificationCount != null ? null : 3, 
+                  bottom: widget.notificationCount != null ? null : 3,
                   child: Container(
                     padding: widget.notificationCount != null ? const EdgeInsets.all(2) : null,
                     width: widget.notificationCount != null ? 18 : 10,
                     height: widget.notificationCount != null ? 18 : 10,
                     decoration: BoxDecoration(
-                      color: Colors.red, 
+                      color: Colors.red,
                       shape: BoxShape.circle,
                       border: Border.all(color: widget.backgroundColor, width: 1.5),
                     ),
-                    child: widget.notificationCount != null 
+                    child: widget.notificationCount != null
                         ? Center(
                             child: Text(
                               widget.notificationCount! > 9 ? '9+' : widget.notificationCount.toString(),
                               style: const TextStyle(
-                                fontSize: 9, 
-                                fontWeight: FontWeight.bold, 
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
                                 color: Colors.white,
                                 height: 1.0,
                               ),

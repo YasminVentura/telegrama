@@ -1,4 +1,4 @@
-package com.example.profile.servico;
+﻿package com.example.profile.servico;
 
 import com.example.profile.cliente.AuthClient;
 import com.example.profile.cliente.PostClient;
@@ -332,18 +332,15 @@ public class PerfilUsuarioService {
         String alvoNodeId = alvo.getNodeId();
         String alvoId = alvo.getId().toString();
 
-        // 1. Remove vínculos de seguidores antes de apagar o perfil
         seguidorRepository.deleteBySeguidorOrSeguido(alvo, alvo);
         perfilUsuarioRepository.delete(alvo);
 
-        // 2. Aciona o post-service para remover postagens do usuário excluído
         try {
             postClient.excluirPostagensPorAutor(alvoNodeId);
         } catch (Exception e) {
             log.warn("Falha ao excluir postagens em cascata para {}: {}", alvoNodeId, e.getMessage());
         }
 
-        // 3. Aciona o auth-service para remover credenciais e sessões
         try {
             authClient.excluirCredencialInterna(alvoId);
         } catch (Exception e) {
@@ -511,7 +508,6 @@ public class PerfilUsuarioService {
             return existente;
         }
 
-        // Auto-provisiona o perfil caso o usuário já existisse no auth-service antes da separação de bancos
         UUID uuid = null;
         if (auth.getId() != null) {
             try {

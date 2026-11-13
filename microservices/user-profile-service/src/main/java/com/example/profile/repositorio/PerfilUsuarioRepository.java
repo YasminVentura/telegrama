@@ -1,4 +1,4 @@
-package com.example.profile.repositorio;
+﻿package com.example.profile.repositorio;
 
 import com.example.profile.modelo.PerfilUsuario;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,4 +23,3 @@ public interface PerfilUsuarioRepository extends JpaRepository<PerfilUsuario, UU
 
     List<PerfilUsuario> findByNomeContainingIgnoreCaseOrNodeIdContainingIgnoreCase(String nome, String nodeId);
 }
-

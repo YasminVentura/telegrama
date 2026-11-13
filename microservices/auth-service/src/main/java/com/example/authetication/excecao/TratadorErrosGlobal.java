@@ -1,4 +1,4 @@
-package com.example.authetication.excecao;
+﻿package com.example.authetication.excecao;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,5 +56,3 @@ public class TratadorErrosGlobal {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(corpo);
     }
 }
-
-

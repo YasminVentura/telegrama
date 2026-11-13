@@ -1,18 +1,4 @@
-<#
-.SYNOPSIS
-    Gerador Automatizado de Dados em Massa para o Projeto Telegrama (Banco de Dados II)
-.DESCRIPTION
-    Gera scripts SQL e NoSQL em alta velocidade:
-      - 5.000 Usuários no PostgreSQL (telegrama_auth)
-      - 5.000 Perfis e Preferências no PostgreSQL (telegrama_profile)
-      - 25.000 Relações de Seguidores no PostgreSQL (telegrama_profile)
-      - 100.000 Postagens no MongoDB (telegrama_posts) com comentários e curtidas
-.OUTPUTS
-    - scripts/seed/01_carga_auth.sql
-    - scripts/seed/02_carga_profile.sql
-    - scripts/seed/03_carga_posts.json
-#>
-
+﻿
 param(
     [int]$TotalUsuarios = 5000,
     [int]$TotalSeguidores = 25000,
@@ -77,13 +63,11 @@ $Avatares = @(
 $CoresBanner = @("#2E4F3E", "#1F3A4B", "#4A2E4F", "#4F3A2E", "#2A2A2A", "#1D4ED8", "#047857", "#B45309")
 $Temas = @("RETRO_GREEN", "CYBERPUNK_DARK", "SUNSET_SYNTHWAVE", "MONOKAI_HACKER", "CREAM_ESPRESSO")
 
-# Senha padrão criptografada em BCrypt para a senha '123456'
 $SenhaBCryptPadrao = "`$2a`$10`$eACCYoNOHEqgkVE8aWnATO3qE7WODErGQzL6GZ8lq0m8o6C7xS4rS"
 
-# 1. Gerar Lista de Usuários em Memória
 Write-Host "1/4: Gerando $TotalUsuarios usuários em memória..." -ForegroundColor Yellow
 $Usuarios = New-Object System.Collections.Generic.List[PSCustomObject]
-$Random = New-Object System.Random(42) # Seed fixa para reprodutibilidade
+$Random = New-Object System.Random(42)
 
 for ($i = 1; $i -le $TotalUsuarios; $i++) {
     $uuid = [System.Guid]::NewGuid().ToString()
@@ -98,8 +82,7 @@ for ($i = 1; $i -le $TotalUsuarios; $i++) {
     $banner = $CoresBanner[$Random.Next($CoresBanner.Count)]
     $role = if ($i -eq 1) { "ADMIN" } else { "USER" }
     $tema = $Temas[$Random.Next($Temas.Count)]
-    
-    # Data aleatória entre os últimos 180 dias
+
     $diasAtras = $Random.Next(1, 180)
     $criadoEm = (Get-Date).AddDays(-$diasAtras).AddMinutes($Random.Next(0, 1440)).ToString("yyyy-MM-dd HH:mm:ss")
 
@@ -120,9 +103,6 @@ for ($i = 1; $i -le $TotalUsuarios; $i++) {
     $Usuarios.Add($u)
 }
 
-# ------------------------------------------------------------------------------
-# 2. Gerar Arquivo SQL: 01_carga_auth.sql
-# ------------------------------------------------------------------------------
 $FileAuth = Join-Path $ScriptDir "01_carga_auth.sql"
 Write-Host "2/4: Escrevendo arquivo SQL do auth ($FileAuth)..." -ForegroundColor Yellow
 
@@ -131,7 +111,7 @@ $swAuth = [System.IO.StreamWriter]::new($FileAuth, $false, $utf8WithoutBom)
 try {
     $swAuth.WriteLine("-- CARGA DE USUARIOS PARA telegrama_auth ($TotalUsuarios registros)")
     $swAuth.WriteLine("BEGIN;")
-    
+
     $batchSize = 1000
     for ($i = 0; $i -lt $Usuarios.Count; $i += $batchSize) {
         $swAuth.WriteLine("INSERT INTO usuarios (id, nome, node_id, email, senha, termos_aceitos, perfil, criado_em, atualizado_em) VALUES")
@@ -147,9 +127,6 @@ try {
     $swAuth.Dispose()
 }
 
-# ------------------------------------------------------------------------------
-# 3. Gerar Arquivo SQL: 02_carga_profile.sql (Perfis, Preferências, Seguidores)
-# ------------------------------------------------------------------------------
 $FileProfile = Join-Path $ScriptDir "02_carga_profile.sql"
 Write-Host "3/4: Escrevendo arquivo SQL do profile ($FileProfile)..." -ForegroundColor Yellow
 
@@ -158,7 +135,6 @@ try {
     $swProf.WriteLine("-- CARGA DE PERFIS E GRAFO DE SEGUIDORES PARA telegrama_profile")
     $swProf.WriteLine("BEGIN;")
 
-    # Inserção de Perfis
     $swProf.WriteLine("-- 1. Perfis de Usuarios")
     for ($i = 0; $i -lt $Usuarios.Count; $i += $batchSize) {
         $swProf.WriteLine("INSERT INTO perfis_usuarios (id, nome, node_id, email, bio, localizacao, avatar_url, banner_color, perfil, criado_em, atualizado_em) VALUES")
@@ -172,7 +148,6 @@ try {
         }
     }
 
-    # Inserção de Preferências (1:1)
     $swProf.WriteLine("-- 2. Preferencias dos Usuarios")
     for ($i = 0; $i -lt $Usuarios.Count; $i += $batchSize) {
         $swProf.WriteLine("INSERT INTO usuario_preferencias (id, usuario_id, private_frequency_mode, direct_transmissions, broadcast_node_activity, push_transmissions, acoustic_echos, zone_broadcast_alerts, two_factor_auth, theme, avatar_url, banner_color) VALUES")
@@ -185,14 +160,13 @@ try {
         }
     }
 
-    # Inserção de Grafo de Seguidores (N:M)
     $swProf.WriteLine("-- 3. Grafo de Seguidores ($TotalSeguidores relacionamentos)")
     $paresUnicos = New-Object "System.Collections.Generic.HashSet[string]"
     $seguidoresGerados = 0
     $tentativas = 0
 
     $swProf.WriteLine("INSERT INTO seguidores (id, seguidor_id, seguido_id, criado_em) VALUES")
-    
+
     while ($seguidoresGerados -lt $TotalSeguidores -and $tentativas -lt ($TotalSeguidores * 3)) {
         $tentativas++
         $idxSeguidor = $Random.Next($TotalUsuarios)
@@ -210,15 +184,12 @@ try {
             $swProf.WriteLine("('$relId', '$($uSeguidor.Id)', '$($uSeguido.Id)', '$dataRel')$virgula")
         }
     }
-    
+
     $swProf.WriteLine("COMMIT;")
 } finally {
     $swProf.Dispose()
 }
 
-# ------------------------------------------------------------------------------
-# 4. Gerar Arquivo JSON para MongoDB: 03_carga_posts.json (100.000 Postagens)
-# ------------------------------------------------------------------------------
 $FilePosts = Join-Path $ScriptDir "03_carga_posts.json"
 Write-Host "4/4: Gerando 100.000 documentos para o MongoDB ($FilePosts)..." -ForegroundColor Yellow
 
@@ -228,8 +199,7 @@ try {
     for ($p = 1; $p -le $TotalPosts; $p++) {
         $uAutor = $Usuarios[$Random.Next($TotalUsuarios)]
         $texto = $PostTextos[$Random.Next($PostTextos.Count)]
-        
-        # Gerar algumas curtidas reais usando outros usuários
+
         $qtdCurtidas = $Random.Next(0, 8)
         $listaCurtidasSet = New-Object "System.Collections.Generic.HashSet[string]"
         for ($c = 0; $c -lt $qtdCurtidas; $c++) {
@@ -239,7 +209,6 @@ try {
         $listaCurtidas = foreach ($curtiu in $listaCurtidasSet) { "`"$curtiu`"" }
         $curtidasJson = "[" + ($listaCurtidas -join ",") + "]"
 
-        # Gerar comentários estruturados (0 a 3 comentários) com suporte a parentId real
         $qtdComentarios = $Random.Next(0, 4)
         $comentariosArr = @()
         $primeiroComentarioId = $null
@@ -247,7 +216,7 @@ try {
         for ($k = 0; $k -lt $qtdComentarios; $k++) {
             $uComentou = $Usuarios[$Random.Next($TotalUsuarios)]
             $comentId = [System.Guid]::NewGuid().ToString()
-            
+
             $parentIdJson = "null"
             if ($k -eq 0) {
                 $primeiroComentarioId = $comentId
@@ -259,7 +228,7 @@ try {
 
             $comentTexto = "Concordo totalmente com você, $($uAutor.NodeId)!"
             $comentData = (Get-Date).AddMinutes(-$Random.Next(5, 5000)).ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
-            
+
             $comentariosArr += "{`"_id`":`"$comentId`",`"id`":`"$comentId`",`"parentId`":$parentIdJson,`"autorId`":`"$($uComentou.Id)`",`"autorNodeId`":`"$($uComentou.NodeId)`",`"autorNome`":`"$($uComentou.Nome)`",`"autorAvatarUrl`":`"$($uComentou.AvatarUrl)`",`"conteudo`":`"$comentTexto`",`"curtidas`":[],`"criadoEm`":{`"`$date`":`"$comentData`"}}"
         }
         $comentariosJson = "[" + ($comentariosArr -join ",") + "]"
@@ -268,7 +237,7 @@ try {
 
         $qtdCurtidasReal = $listaCurtidasSet.Count
         $jsonDoc = "{`"autorId`":`"$($uAutor.Id)`",`"autorNodeId`":`"$($uAutor.NodeId)`",`"autorNome`":`"$($uAutor.Nome)`",`"autorAvatarUrl`":`"$($uAutor.AvatarUrl)`",`"conteudo`":`"$texto`",`"curtidas`":$curtidasJson,`"salvos`":[],`"reposts`":[],`"comentarios`":$comentariosJson,`"quantidadeCurtidas`":$qtdCurtidasReal,`"quantidadeComentarios`":$qtdComentarios,`"quantidadeReposts`":0,`"criadoEm`":{`"`$date`":`"$dataPostIso`"},`"atualizadoEm`":{`"`$date`":`"$dataPostIso`"}}"
-        
+
         $swPosts.WriteLine($jsonDoc)
 
         if ($p % 20000 -eq 0) {

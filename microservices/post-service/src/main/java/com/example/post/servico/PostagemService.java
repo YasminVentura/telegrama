@@ -1,4 +1,4 @@
-package com.example.post.servico;
+﻿package com.example.post.servico;
 
 import com.example.post.cliente.AuthClient;
 import com.example.post.dto.ComentarioRespostaDto;
@@ -464,8 +464,6 @@ public class PostagemService {
         return mapearComentarioParaDto(alvo, usuarioLogado, perfilAutor);
     }
 
-    // --- Métodos Auxiliares ---
-
     private List<String> extrairIdentificadores(List<Postagem> postagens) {
         Set<String> idsUnicos = new HashSet<>();
         for (Postagem p : postagens) {
@@ -627,11 +625,11 @@ public class PostagemService {
         String dataCriacaoFormatada = formatarDataIso(postagem.getCriadoEm());
         String dataAtualizacaoFormatada = formatarDataIso(postagem.getAtualizadoEm());
 
-        String nomeAutor = (perfilAtual != null && perfilAtual.getNome() != null) 
+        String nomeAutor = (perfilAtual != null && perfilAtual.getNome() != null)
                 ? perfilAtual.getNome() : postagem.getAutorNome();
-        String handleAutor = (perfilAtual != null && perfilAtual.getNodeId() != null) 
+        String handleAutor = (perfilAtual != null && perfilAtual.getNodeId() != null)
                 ? perfilAtual.getNodeId() : postagem.getAutorNodeId();
-        String avatarAutor = (perfilAtual != null) 
+        String avatarAutor = (perfilAtual != null)
                 ? perfilAtual.getAvatarUrl() : postagem.getAutorAvatarUrl();
 
         return PostagemRespostaDto.builder()

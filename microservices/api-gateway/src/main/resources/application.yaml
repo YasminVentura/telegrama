@@ -12,7 +12,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true # Habilita a criação automática de rotas com base nos serviços registrados no Eureka
+          enabled: true
           lower-case-service-id: true
       globalcors:
         add-to-simple-url-handler-mapping: true
@@ -36,7 +36,7 @@ spring:
             allowCredentials: true
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Expose-Headers Access-Control-Allow-Methods, RETAIN_FIRST
-      # Podemos definir rotas manuais aqui posteriormente se necessário
+
       routes:
         - id: auth-service-route
           uri: lb://auth-service
@@ -47,16 +47,11 @@ spring:
           uri: lb://user-profile-service
           predicates:
             - Path=/usuarios/**
-            
+
         - id: post-service-route
           uri: lb://post-service
           predicates:
-            - Path=/posts/**, /api/posts/**
-
-        - id: feed-service-route
-          uri: lb://feed-service
-          predicates:
-            - Path=/api/feed/**
+            - Path=/posts/**, /api/posts/**, /api/feed/**
 
 eureka:
   client:

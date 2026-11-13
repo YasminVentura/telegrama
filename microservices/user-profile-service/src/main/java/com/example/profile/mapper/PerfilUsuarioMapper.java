@@ -1,4 +1,4 @@
-package com.example.profile.mapper;
+﻿package com.example.profile.mapper;
 
 import com.example.profile.dto.PerfilRespostaDto;
 import com.example.profile.dto.UsuarioPreferenciasDto;
@@ -20,4 +20,3 @@ public interface PerfilUsuarioMapper {
 
     UsuarioPreferenciasDto paraPreferenciasDto(UsuarioPreferencias preferencias);
 }
-

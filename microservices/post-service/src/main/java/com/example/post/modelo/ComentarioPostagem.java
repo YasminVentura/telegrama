@@ -1,4 +1,4 @@
-package com.example.post.modelo;
+﻿package com.example.post.modelo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,4 +48,3 @@ public class ComentarioPostagem {
         return idLegado;
     }
 }
-

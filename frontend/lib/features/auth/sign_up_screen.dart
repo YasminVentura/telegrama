@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 import 'package:frontend/data/models/user_preferences.dart';
 import 'package:frontend/data/repositories/auth_repository.dart';
@@ -80,9 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         avatarUrl: _selectedAvatarUrl,
       );
 
-      // Se for bem sucedido, chamamos o callback de sucesso (que provavelmente redireciona)
-      // Note que o registro no backend também pode precisar que você faça o login em seguida,
-      // ou se o seu backend já retorna os cookies de login no registro, já estaria logado.
       widget.onRegisterSuccess();
     } catch (e) {
       ScaffoldMessenger.of(
@@ -237,13 +234,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
 
-          // Rodapé: Widget de Frequência de Rádio[cite: 4]
         ],
       ),
     );
   }
 
-  // Lado Direito: Formulário de Registro
   Widget _buildRightFormPanel(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 30),
@@ -358,7 +353,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // Linha dupla: Display Name e Node ID[cite: 4]
               Row(
                 children: [
                   Expanded(
@@ -406,7 +400,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo Email[cite: 4]
               _buildFieldLabel('EMAIL'),
               const SizedBox(height: 6),
               TextField(
@@ -422,7 +415,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Campo Password[cite: 4]
               _buildFieldLabel('SENHA'),
               const SizedBox(height: 6),
               TextField(
@@ -447,7 +439,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Checkbox de Termos[cite: 4]
               Row(
                 children: [
                   SizedBox(
@@ -480,7 +471,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Botão Principal: CREATE MY NODE[cite: 4]
               MouseRegion(
                 onEnter: (_) => setState(() => _isHoveredButton = true),
                 onExit: (_) => setState(() => _isHoveredButton = false),
@@ -543,7 +533,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 18),
 
-              // Rodapé: Já possui conta / Sign in[cite: 4]
               Center(
                 child: Column(
                   children: [

@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'app_exceptions.dart';
@@ -117,7 +117,6 @@ class ApiClient {
     try {
       http.Response response = await req();
 
-      // Se a sessão expirou (401/403) e temos refreshToken, tenta renovar automaticamente
       final bool isAuthEndpoint = endpoint.startsWith('/auth/login') ||
           endpoint.startsWith('/auth/registro') ||
           endpoint.startsWith('/auth/refresh');

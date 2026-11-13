@@ -1,4 +1,4 @@
-package com.example.profile.cliente;
+﻿package com.example.profile.cliente;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,4 +10,3 @@ public interface AuthClient {
     @DeleteMapping("/auth/interno/usuarios/{identificador}")
     void excluirCredencialInterna(@PathVariable("identificador") String identificador);
 }
-

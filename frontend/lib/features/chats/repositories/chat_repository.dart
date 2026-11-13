@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 class MessageModel {
   final String text;
@@ -15,7 +15,7 @@ class MessageModel {
 }
 
 class ChatRepository {
-  // Simulação de banco de dados por chatId
+
   final Map<String, List<MessageModel>> _mockDatabase = {
     'chat_0': [
       MessageModel(text: 'The color grid is transmitting perfectly', isMe: false, time: DateTime.now().subtract(const Duration(minutes: 10))),
@@ -36,20 +36,20 @@ class ChatRepository {
   };
 
   Future<List<MessageModel>> getMessages(String chatId) async {
-    await Future.delayed(const Duration(milliseconds: 300)); // Simula network
+    await Future.delayed(const Duration(milliseconds: 300));
     return _mockDatabase[chatId] ?? [];
   }
 
   Future<MessageModel> sendMessage(String chatId, String text) async {
     final msg = MessageModel(text: text, isMe: true, time: DateTime.now(), isDelivered: false);
-    
+
     if (_mockDatabase[chatId] == null) {
       _mockDatabase[chatId] = [];
     }
     _mockDatabase[chatId]!.add(msg);
-    
-    await Future.delayed(const Duration(milliseconds: 500)); // Simula rede
-    
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
     return MessageModel(text: text, isMe: true, time: msg.time, isDelivered: true);
   }
 

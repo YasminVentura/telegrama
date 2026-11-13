@@ -1,4 +1,4 @@
-package com.example.profile.configuracao;
+﻿package com.example.profile.configuracao;
 
 import com.example.profile.seguranca.JwtFiltroAutenticacao;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +34,9 @@ public class ConfiguracaoSeguranca {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        // Chamadas inter-serviços (Feign do auth-service e post-service)
+
                         .requestMatchers("/usuarios/batch", "/usuarios/interno/**").permitAll()
-                        // Leitura pública de perfis e buscas
+
                         .requestMatchers(HttpMethod.GET, "/usuarios/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -62,4 +62,3 @@ public class ConfiguracaoSeguranca {
         return source;
     }
 }
-

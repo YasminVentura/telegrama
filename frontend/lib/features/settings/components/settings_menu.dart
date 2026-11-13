@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:frontend/core/themes/app_themes.dart';
 
 class SettingsMenu extends StatelessWidget {
@@ -26,7 +26,7 @@ class SettingsMenu extends StatelessWidget {
 
     return Column(
       children: [
-        // Container principal do menu
+
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
@@ -109,7 +109,7 @@ class SettingsMenu extends StatelessWidget {
               );
             }).toList(),
           ),
-        ), // Card de status do sinal na parte inferior
+        ),
       ],
     );
   }
